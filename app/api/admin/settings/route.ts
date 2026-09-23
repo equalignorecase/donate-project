@@ -9,6 +9,7 @@ export const dynamic = 'force-dynamic';
 function publicSettings(settings: Record<string, string>): Record<string, string> {
   return Object.fromEntries(Object.entries(settings).filter(([key]) =>
     key.startsWith('alert_') ||
+    key.startsWith('tts_') ||
     ['receiver_name', 'min_donate', 'tts_enabled', 'tts_min_amount'].includes(key)
   ));
 }

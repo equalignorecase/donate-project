@@ -88,6 +88,10 @@ export interface AlertSettings {
   alert_volume?: number | string;
   tts_enabled?: string | boolean;
   tts_min_amount?: number | string;
+  tts_voice?: string;
+  tts_speed?: number | string;
+  tts_pitch?: number | string;
+  tts_engine?: string;
   promptpay_id?: string;
   receiver_name?: string;
   receiver_account?: string;

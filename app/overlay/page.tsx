@@ -193,16 +193,33 @@ export default function OverlayPage() {
     }
   }
 
+  function fallbackWebSpeech(textToSpeak: string, volume: number) {
+    if (!('speechSynthesis' in window)) return;
+    try {
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(textToSpeak);
+      utterance.lang = 'th-TH';
+      utterance.rate = 1.0;
+      utterance.pitch = 1.0;
+      utterance.volume = volume;
+
+      const voices = window.speechSynthesis.getVoices();
+      const thaiVoice = voices.find(v => v.lang.startsWith('th'));
+      if (thaiVoice) utterance.voice = thaiVoice;
+
+      window.speechSynthesis.speak(utterance);
+    } catch (e) {
+      console.warn('Web Speech error:', e);
+    }
+  }
+
   function speakDonation(item: Donation) {
     const s = settingsRef.current;
     if (s.tts_enabled !== 'true' && s.tts_enabled !== true) return;
-    if (!('speechSynthesis' in window)) return;
 
     const minAmt = parseFloat(String(s.tts_min_amount || 0));
     const itemAmt = parseFloat(String(item.amount || 0));
     if (itemAmt < minAmt) return;
-
-    window.speechSynthesis.cancel();
 
     const donorName = item.name?.trim() || 'Anonymous';
     const actionText = (s.alert_action_text || 'โดเนทให้').trim();
@@ -211,19 +228,28 @@ export default function OverlayPage() {
       textToSpeak += ` ${item.message.trim()}`;
     }
 
-    const utterance = new SpeechSynthesisUtterance(textToSpeak);
-    utterance.lang = 'th-TH';
-    utterance.rate = 1.0;
-    utterance.pitch = 1.0;
-    utterance.volume = Math.min(Math.max(parseFloat(String(s.alert_volume || 80)) / 100, 0), 1);
+    const ttsVoice = String(s.tts_voice || 'th-TH-PremwadeeNeural');
+    const ttsEngine = String(s.tts_engine || 'edge');
+    const ttsSpeed = String(s.tts_speed || '+0%');
+    const ttsPitch = String(s.tts_pitch || '+0Hz');
+    const volume = Math.min(Math.max(parseFloat(String(s.alert_volume || 80)) / 100, 0), 1);
 
-    const voices = window.speechSynthesis.getVoices();
-    const thaiVoice = voices.find(v => v.lang.startsWith('th'));
-    if (thaiVoice) utterance.voice = thaiVoice;
+    if (ttsEngine === 'edge' || ttsVoice.startsWith('th-TH-')) {
+      const url = `/api/tts?text=${encodeURIComponent(textToSpeak)}&voice=${encodeURIComponent(ttsVoice)}&rate=${encodeURIComponent(ttsSpeed)}&pitch=${encodeURIComponent(ttsPitch)}`;
+      const audio = new Audio(url);
+      audio.volume = volume;
 
-    setTimeout(() => {
-      window.speechSynthesis.speak(utterance);
-    }, 1200);
+      setTimeout(() => {
+        audio.play().catch(err => {
+          console.warn('Edge TTS audio playback failed, falling back to Web Speech:', err);
+          fallbackWebSpeech(textToSpeak, volume);
+        });
+      }, 1200);
+    } else {
+      setTimeout(() => {
+        fallbackWebSpeech(textToSpeak, volume);
+      }, 1200);
+    }
   }
 
   function processQueue() {

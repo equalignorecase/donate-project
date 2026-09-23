@@ -392,6 +392,61 @@ export default function CustomizerPage() {
   const [testName, setTestName] = useState<string>('สมชาย ใจดี');
   const [testAmount, setTestAmount] = useState<number | string>(50);
   const [testMessage, setTestMessage] = useState<string>('สวัสดีครับ เป็นกำลังใจให้นะครับ สตรีมสนุกมาก!');
+  const [isPlayingTts, setIsPlayingTts] = useState<boolean>(false);
+  const testAudioRef = useRef<HTMLAudioElement | null>(null);
+
+  const handleTestTtsVoice = async () => {
+    if (testAudioRef.current) {
+      testAudioRef.current.pause();
+      testAudioRef.current = null;
+    }
+
+    let voice = settings.tts_voice || 'th-TH-PremwadeeNeural';
+    if (voice === 'th-TH-AcharaNeural') {
+      voice = 'th-TH-PremwadeeNeural';
+    }
+    const rate = settings.tts_speed || '+0%';
+    const pitch = settings.tts_pitch || '+0Hz';
+    const vol = Math.min(Math.max((Number(settings.alert_volume ?? 80)) / 100, 0), 1);
+    const donorName = (testName || 'สมชาย ใจดี').trim();
+    const actionText = (settings.alert_action_text || 'โดเนทให้').trim();
+    const amountVal = testAmount || 50;
+    const msg = (testMessage || '').trim();
+    let sampleText = `${donorName} ${actionText} ${amountVal} บาท`;
+    if (msg) sampleText += ` ${msg}`;
+
+    if (voice === 'browser_default') {
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        const u = new SpeechSynthesisUtterance(sampleText);
+        u.lang = 'th-TH';
+        u.volume = vol;
+        window.speechSynthesis.speak(u);
+      }
+      return;
+    }
+
+    try {
+      setIsPlayingTts(true);
+      const url = `/api/tts?text=${encodeURIComponent(sampleText)}&voice=${encodeURIComponent(voice)}&rate=${encodeURIComponent(rate)}&pitch=${encodeURIComponent(pitch)}`;
+      const audio = new Audio(url);
+      audio.volume = vol;
+      testAudioRef.current = audio;
+
+      audio.onended = () => {
+        setIsPlayingTts(false);
+      };
+      audio.onerror = () => {
+        setIsPlayingTts(false);
+        showToast('ไม่สามารถเล่นเสียงตัวอย่างได้');
+      };
+
+      await audio.play();
+    } catch (err: any) {
+      setIsPlayingTts(false);
+      showToast('เกิดข้อผิดพลาดในการเล่นเสียง');
+    }
+  };
 
   const handleLogout = async () => {
     try {
@@ -1811,6 +1866,193 @@ export default function CustomizerPage() {
                     onChange={(e) => updateField('alert_duration', parseInt(e.target.value))}
                   />
                 </div>
+              </div>
+            </div>
+
+            {/* 7. TTS & Voice Selection Section */}
+            <div className="panel-section">
+              <div className="section-title">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                  <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+                </svg>
+                ระบบเสียงและการเลือกเสียงอ่าน (Voice & Text-to-Speech)
+              </div>
+              <p className="section-desc">
+                เลือกเสียงอ่านข้อความโดเนทภาษาไทยด้วยระบบ <strong>Microsoft Neural AI</strong> (เสียงธรรมชาติเหมือนคนจริง ไม่ใช่ Google) พร้อมปรับสปีดและทดลองฟังเสียงสด
+              </p>
+
+              <div className="form-row">
+                <div className="form-group">
+                  <label className="form-label">สถานะระบบอ่านออกเสียง (TTS)</label>
+                  <select
+                    className="input-control"
+                    value={String(settings.tts_enabled ?? 'true')}
+                    onChange={(e) => updateField('tts_enabled', e.target.value)}
+                  >
+                    <option value="true">เปิดใช้งาน (อ่านชื่อ ยอดเงิน และข้อความ)</option>
+                    <option value="false">ปิดใช้งาน (ไม่ส่งเสียงอ่าน)</option>
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label className="form-label">ยอดเงินขั้นต่ำที่จะให้อ่าน TTS (บาท)</label>
+                  <input
+                    type="number"
+                    className="input-control"
+                    min="1"
+                    value={settings.tts_min_amount ?? 20}
+                    onChange={(e) => updateField('tts_min_amount', parseInt(e.target.value) || 0)}
+                  />
+                </div>
+              </div>
+
+              {/* Voice Actor Selection Cards */}
+              <div className="form-group" style={{ marginTop: '12px' }}>
+                <label className="form-label">เลือกเสียงผู้พูด (Voice Actor)</label>
+                <div className="tts-voice-grid">
+                  {[
+                    {
+                      id: 'th-TH-PremwadeeNeural',
+                      name: 'เปรมวดี (Premwadee)',
+                      gender: 'ผู้หญิง',
+                      desc: 'เสียงนุ่มนวล ชัดเจน เหมือนคนจริงมาก (สตรีมเมอร์นิยมที่สุด ⭐)',
+                      badge: 'Neural AI',
+                      avatar: '👩'
+                    },
+                    {
+                      id: 'th-TH-NiwatNeural',
+                      name: 'นิวัต (Niwat)',
+                      gender: 'ผู้ชาย',
+                      desc: 'เสียงทุ้ม นุ่ม อบอุ่น เป็นธรรมชาติ ฟังสบายหู',
+                      badge: 'Neural AI',
+                      avatar: '👨'
+                    },
+                    {
+                      id: 'th-TH-PremwadeeNeural-cute',
+                      name: 'เปรมวดี โทนสดใส (Premwadee - Lively)',
+                      gender: 'ผู้หญิง',
+                      desc: 'โทนเสียงคีย์สูง สดใส ร่าเริง สไตล์อนิเมะ/สตรีมเมอร์เกม',
+                      badge: 'Neural AI',
+                      avatar: '👧'
+                    },
+                    {
+                      id: 'browser_default',
+                      name: 'เสียงในเครื่อง (Browser Native)',
+                      gender: 'ระบบ',
+                      desc: 'ใช้เสียงสังเคราะห์ในเครื่องคอมพิวเตอร์ของคุณ',
+                      badge: 'Offline',
+                      avatar: '🌐'
+                    }
+                  ].map((v) => {
+                    const currentVoice = settings.tts_voice === 'th-TH-AcharaNeural' ? 'th-TH-PremwadeeNeural' : (settings.tts_voice || 'th-TH-PremwadeeNeural');
+                    const isSelected = currentVoice === v.id;
+                    return (
+                      <div
+                        key={v.id}
+                        className={`tts-voice-card ${isSelected ? 'active' : ''}`}
+                        onClick={() => {
+                          updateField('tts_voice', v.id);
+                          updateField('tts_engine', v.id === 'browser_default' ? 'web_speech' : 'edge');
+                        }}
+                      >
+                        <div className="tts-voice-top">
+                          <span className="tts-voice-avatar">{v.avatar}</span>
+                          <div className="tts-voice-info">
+                            <div className="tts-voice-name">{v.name}</div>
+                            <div className="tts-voice-gender">{v.gender}</div>
+                          </div>
+                          <span className={`tts-voice-badge ${v.badge === 'Neural AI' ? 'neural' : ''}`}>
+                            {v.badge}
+                          </span>
+                        </div>
+                        <p className="tts-voice-desc">{v.desc}</p>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Speed & Pitch Controls */}
+              <div className="form-row" style={{ marginTop: '14px' }}>
+                <div className="form-group">
+                  <label className="form-label">
+                    <span>ความเร็วในการพูด (Speed): {settings.tts_speed || '+0%'}</span>
+                  </label>
+                  <select
+                    className="input-control"
+                    value={settings.tts_speed || '+0%'}
+                    onChange={(e) => updateField('tts_speed', e.target.value)}
+                  >
+                    <option value="-20%">ช้ามาก (-20%)</option>
+                    <option value="-10%">ช้าเล็กน้อย (-10%)</option>
+                    <option value="+0%">ปกติ (Default 1.0x)</option>
+                    <option value="+10%">เร็วขึ้นเล็กน้อย (+10%)</option>
+                    <option value="+20%">เร็ว (+20%)</option>
+                    <option value="+35%">เร็วมาก (+35%)</option>
+                    <option value="+50%">เร็วติดสปีด (+50%)</option>
+                  </select>
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">
+                    <span>ระดับเสียงสูง-ต่ำ (Pitch): {settings.tts_pitch || '+0Hz'}</span>
+                  </label>
+                  <select
+                    className="input-control"
+                    value={settings.tts_pitch || '+0Hz'}
+                    onChange={(e) => updateField('tts_pitch', e.target.value)}
+                  >
+                    <option value="-15Hz">ทุ้มเข้ม (-15Hz)</option>
+                    <option value="-8Hz">ทุ้มเล็กน้อย (-8Hz)</option>
+                    <option value="+0Hz">ปกติ (Default 0Hz)</option>
+                    <option value="+8Hz">แหลมขึ้นเล็กน้อย (+8Hz)</option>
+                    <option value="+15Hz">แหลมสดใส (+15Hz)</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Sound & Volume */}
+              <div className="form-row" style={{ marginTop: '12px' }}>
+                <div className="form-group">
+                  <label className="form-label">
+                    <span>ระดับความดังเสียงแจ้งเตือน & TTS ({settings.alert_volume || 80}%)</span>
+                  </label>
+                  <input
+                    type="range"
+                    min="0"
+                    max="100"
+                    value={settings.alert_volume || 80}
+                    onChange={(e) => updateField('alert_volume', parseInt(e.target.value) || 0)}
+                  />
+                </div>
+              </div>
+
+              {/* Audio Listen Test Box */}
+              <div className="tts-test-box">
+                <div className="tts-test-input-wrap">
+                  <span className="tts-test-label">ข้อความจำลองที่จะทดสอบอ่าน:</span>
+                  <div className="tts-test-sample-text">
+                    "{testName || 'สมชาย ใจดี'} โดเนทให้ {testAmount || 50} บาท {testMessage || 'เป็นกำลังใจให้นะครับ สตรีมสนุกมาก!'}"
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  className={`btn-tts-listen ${isPlayingTts ? 'playing' : ''}`}
+                  onClick={handleTestTtsVoice}
+                  disabled={isPlayingTts}
+                >
+                  {isPlayingTts ? (
+                    <>
+                      <span className="pulse-dot active"></span>
+                      <span>กำลังเล่นเสียงตัวอย่าง...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>🎧</span>
+                      <span>ทดลองฟังเสียงที่เลือกทันที</span>
+                    </>
+                  )}
+                </button>
               </div>
             </div>
 
