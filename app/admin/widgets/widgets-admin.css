@@ -73,6 +73,13 @@
     --widget-button-hover: #ede9fe;
 }
 
+.widget-button-month {
+    --widget-button-bg: #f0fdf4;
+    --widget-button-border: #86efac;
+    --widget-button-color: #166534;
+    --widget-button-hover: #dcfce7;
+}
+
 .widget-button-save {
     --widget-button-bg: #2563eb;
     --widget-button-border: #2563eb;

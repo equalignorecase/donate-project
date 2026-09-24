@@ -67,6 +67,17 @@ export default function WidgetsAdmin() {
     <button className="widget-button widget-button-copy" type="button" onClick={async () => { try { await navigator.clipboard.writeText(`${origin}${path}`); showToast('คัดลอกลิงก์แล้ว'); } catch { showToast('กรุณาเลือกและคัดลอกลิงก์ในช่อง'); } }}>คัดลอก</button>
     <a className="widget-button widget-button-open" href={path} target="_blank" rel="noreferrer">เปิด</a>
   </div>)}</div>;
+  const getStartOfMonthIso = () => {
+    const now = new Date();
+    const bkkStr = new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'Asia/Bangkok',
+      year: 'numeric',
+      month: '2-digit'
+    }).format(now);
+    const [year, month] = bkkStr.split('-');
+    return new Date(`${year}-${month}-01T00:00:00+07:00`).toISOString();
+  };
+
   const disabled = loading || !!loadError || saving !== null;
   const supporterHeight = Number(savedSupporters.supporter_padding) * 2 + (savedSupporters.supporter_show_title === 'true' ? Number(savedSupporters.supporter_title_size) * 2 : 0) + Number(savedSupporters.supporter_limit) * (Math.max(Number(savedSupporters.supporter_name_size), Number(savedSupporters.supporter_amount_size), 30) * 2 + 28 + Number(savedSupporters.supporter_row_gap)) + 40;
 
@@ -83,7 +94,7 @@ export default function WidgetsAdmin() {
         <label>ยอดเป้าหมาย (บาท)<input type="number" min="0.01" max="9999999999" step="0.01" value={target} onChange={event => setTarget(event.target.value)} required disabled={disabled} /></label>
         <p>{startedAt ? `นับยอดตั้งแต่ ${new Date(startedAt).toLocaleString('th-TH', { timeZone: 'Asia/Bangkok' })}` : 'นับยอดบริจาคที่ตรวจสอบแล้วทั้งหมด'}</p>
         <GoalAppearanceEditor value={appearance} onChange={setAppearance} disabled={disabled} title={title} target={Number(target)} />
-        <div className="widget-actions"><button className="widget-button widget-button-reset" type="button" disabled={disabled} onClick={() => setStartedAt(new Date().toISOString())}>เริ่มนับเป้าหมายใหม่</button><button className="widget-button widget-button-total" type="button" disabled={disabled} onClick={() => setStartedAt('')}>นับยอดทั้งหมด</button><button className="widget-button widget-button-save" type="submit" disabled={disabled}>{saving === 'goal' ? 'กำลังบันทึก…' : 'บันทึกเป้าหมายโดเนท'}</button></div>
+        <div className="widget-actions"><button className="widget-button widget-button-month" type="button" disabled={disabled} onClick={() => setStartedAt(getStartOfMonthIso())}>นับยอดเดือนนี้</button><button className="widget-button widget-button-reset" type="button" disabled={disabled} onClick={() => setStartedAt(new Date().toISOString())}>เริ่มนับเป้าหมายใหม่</button><button className="widget-button widget-button-total" type="button" disabled={disabled} onClick={() => setStartedAt('')}>นับยอดทั้งหมด</button><button className="widget-button widget-button-save" type="submit" disabled={disabled}>{saving === 'goal' ? 'กำลังบันทึก…' : 'บันทึกเป้าหมายโดเนท'}</button></div>
         <p>การเริ่มนับใหม่จะมีผลเมื่อบันทึก และเก็บประวัติบริจาคเดิมไว้</p>
       </form>
       {sourceLinks([['หลอดเป้าหมาย', '/overlay/goal']])}
