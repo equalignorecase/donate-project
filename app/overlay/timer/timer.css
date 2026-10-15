@@ -355,3 +355,78 @@
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
 }
+
+/* ==========================================================
+   Timer Digits Shimmer Sweep (ลำแสงวิ่งพาดผ่านตัวเลขเวลานับถอยหลัง)
+   ========================================================== */
+
+.timer-digits.timer-shimmer-sweep {
+  display: inline-block;
+  background-size: 260% 100%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: timer-digits-shine-glide 3.8s cubic-bezier(0.22, 1, 0.36, 1) infinite;
+  will-change: background-position, filter;
+}
+
+.timer-digits.timer-shimmer-sweep.timer-shine-theme-crystal {
+  background-image: linear-gradient(
+    115deg,
+    var(--digits-color, #ffffff) 0%,
+    var(--digits-color, #ffffff) 32%,
+    #ffffff 50%,
+    var(--digits-color, #ffffff) 68%,
+    var(--digits-color, #ffffff) 100%
+  );
+  --shine-glow: rgba(255, 255, 255, 0.95);
+}
+
+.timer-digits.timer-shimmer-sweep.timer-shine-theme-cyan {
+  background-image: linear-gradient(
+    115deg,
+    var(--digits-color, #ffffff) 0%,
+    var(--digits-color, #ffffff) 30%,
+    #67e8f9 44%,
+    #ffffff 50%,
+    #67e8f9 56%,
+    var(--digits-color, #ffffff) 70%,
+    var(--digits-color, #ffffff) 100%
+  );
+  --shine-glow: rgba(6, 182, 212, 0.95);
+}
+
+.timer-digits.timer-shimmer-sweep.timer-shine-theme-gold {
+  background-image: linear-gradient(
+    115deg,
+    var(--digits-color, #ffffff) 0%,
+    var(--digits-color, #ffffff) 30%,
+    #fde68a 44%,
+    #ffffff 50%,
+    #fde68a 56%,
+    var(--digits-color, #ffffff) 70%,
+    var(--digits-color, #ffffff) 100%
+  );
+  --shine-glow: rgba(245, 158, 11, 0.95);
+}
+
+@keyframes timer-digits-shine-glide {
+  0% {
+    background-position: 135% 0;
+    filter: drop-shadow(0 0 0px transparent);
+  }
+  12% {
+    filter: drop-shadow(0 0 6px var(--shine-glow, rgba(255, 255, 255, 0.85)));
+  }
+  24% {
+    filter: drop-shadow(0 0 0px transparent);
+  }
+  35% {
+    background-position: -135% 0;
+    filter: drop-shadow(0 0 0px transparent);
+  }
+  100% {
+    background-position: -135% 0;
+    filter: drop-shadow(0 0 0px transparent);
+  }
+}

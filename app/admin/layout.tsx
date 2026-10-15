@@ -18,6 +18,34 @@ export default function AdminLayout({
   const [toastMessage, setToastMessage] = useState<string>('');
   const [donationCount, setDonationCount] = useState<number>(0);
   const [blacklistCount, setBlacklistCount] = useState<number>(0);
+  const [theme, setTheme] = useState<'light' | 'dark'>('light');
+
+  // Initialize theme from localStorage or system preference
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('admin_theme') as 'light' | 'dark' | null;
+      if (saved === 'dark' || saved === 'light') {
+        setTheme(saved);
+        document.documentElement.setAttribute('data-theme', saved);
+      } else {
+        const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const initial = prefersDark ? 'dark' : 'light';
+        setTheme(initial);
+        document.documentElement.setAttribute('data-theme', initial);
+      }
+    } catch (e) {}
+  }, []);
+
+  const toggleTheme = useCallback(() => {
+    setTheme(prev => {
+      const next = prev === 'dark' ? 'light' : 'dark';
+      try {
+        localStorage.setItem('admin_theme', next);
+      } catch (e) {}
+      document.documentElement.setAttribute('data-theme', next);
+      return next;
+    });
+  }, []);
 
   const showToast = useCallback((msg: string) => {
     setToastMessage(msg);
@@ -115,6 +143,7 @@ export default function AdminLayout({
     if (pathname?.startsWith('/admin/donations')) return 'ประวัติการโดเนท';
     if (pathname?.startsWith('/admin/settings')) return 'ตั้งค่าระบบ & OBS';
     if (pathname?.startsWith('/admin/widgets')) return 'วิดเจ็ต OBS & เป้าหมาย';
+    if (pathname?.startsWith('/admin/simulator')) return 'จำลองจอไลฟ์สตรีม (Live Studio Simulator)';
     if (pathname?.startsWith('/admin/timer')) return 'ระบบจับเวลา & Subathon (Timer)';
     if (pathname?.startsWith('/admin/blacklist')) return 'กรองคำหยาบ (Blacklist)';
     if (pathname?.startsWith('/admin/profile')) return 'จัดการโปรไฟล์ผู้ดูแลระบบ (Profile)';
@@ -130,7 +159,9 @@ export default function AdminLayout({
         refreshCounts: fetchCounts,
         donationCount,
         blacklistCount,
-        handleUnauthorized
+        handleUnauthorized,
+        theme,
+        toggleTheme
       }}
     >
       <div className="admin-layout">
@@ -144,6 +175,8 @@ export default function AdminLayout({
           blacklistCount={blacklistCount}
           currentUser={currentUser}
           onLogout={handleLogout}
+          theme={theme}
+          onToggleTheme={toggleTheme}
         />
 
         {/* Main Content Area */}
@@ -152,6 +185,8 @@ export default function AdminLayout({
             onOpenSidebar={() => setIsSidebarOpen(true)}
             title={getPageTitle()}
             rightAction={<span className="brand-badge">SlipOK + OBS</span>}
+            theme={theme}
+            onToggleTheme={toggleTheme}
           />
 
           <div className="container">

@@ -311,15 +311,7 @@ export default function AdminProfilePage() {
 
           {profileMessage && (
             <div
-              style={{
-                padding: '10px 14px',
-                borderRadius: 'var(--radius-sm)',
-                marginBottom: '16px',
-                fontSize: '13px',
-                background: profileMessage.isError ? '#fef2f2' : '#ecfdf5',
-                color: profileMessage.isError ? 'var(--danger)' : 'var(--success)',
-                border: `1px solid ${profileMessage.isError ? '#fecaca' : '#a7f3d0'}`
-              }}
+              className={`profile-alert-banner ${profileMessage.isError ? 'error' : 'success'}`}
             >
               {profileMessage.text}
             </div>
@@ -423,15 +415,7 @@ export default function AdminProfilePage() {
 
           {passwordMessage && (
             <div
-              style={{
-                padding: '10px 14px',
-                borderRadius: 'var(--radius-sm)',
-                marginBottom: '16px',
-                fontSize: '13px',
-                background: passwordMessage.isError ? '#fef2f2' : '#ecfdf5',
-                color: passwordMessage.isError ? 'var(--danger)' : 'var(--success)',
-                border: `1px solid ${passwordMessage.isError ? '#fecaca' : '#a7f3d0'}`
-              }}
+              className={`profile-alert-banner ${passwordMessage.isError ? 'error' : 'success'}`}
             >
               {passwordMessage.text}
             </div>

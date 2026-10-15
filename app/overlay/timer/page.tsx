@@ -244,6 +244,10 @@ export default function TimerOverlayPage() {
     '--digits-text-shadow': digitsTextShadow
   } as React.CSSProperties;
 
+  const isCardBeamEnabled = appearance.timer_card_beam !== false && isBackgroundVisible;
+  const isDigitsShineEnabled = appearance.timer_shine_sweep !== false;
+  const shineTheme = appearance.timer_shine_theme || 'cyan';
+
   return (
     <div
       style={{
@@ -258,6 +262,14 @@ export default function TimerOverlayPage() {
       }}
     >
       <div className={`timer-widget-container ${themeClass} ${!isBackgroundVisible ? 'no-background' : ''}`} style={containerStyle}>
+        {/* Card Specular Beam Sweep (เหมือนหลอดโด) */}
+        {isCardBeamEnabled && (
+          <div className="widget-card-beam-sweep" aria-hidden="true">
+            <span className="widget-card-beam" />
+            <span className="widget-card-sparkle" />
+          </div>
+        )}
+
         {/* Floating Animation Badges */}
         <div className="timer-floating-badge-container">
           {floatingBadges.map(badge => (
@@ -299,7 +311,15 @@ export default function TimerOverlayPage() {
           className={`timer-digits-wrapper ${pulseClass} ${isZero ? 'timer-zero-warning' : ''}`}
           style={{ fontSize: `${appearance.digits_size || 54}px` }}
         >
-          <span className="timer-digits" style={{ textShadow: digitsTextShadow }}>{formatted}</span>
+          <span
+            className={`timer-digits ${isDigitsShineEnabled ? `timer-shimmer-sweep timer-shine-theme-${shineTheme}` : ''}`}
+            style={{
+              textShadow: digitsTextShadow,
+              ['--digits-color' as any]: appearance.text_color || '#ffffff'
+            }}
+          >
+            {formatted}
+          </span>
         </div>
 
         {/* Footer / Latest Donor Attribution */}

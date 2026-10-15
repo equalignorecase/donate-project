@@ -2,8 +2,10 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import './overlay.css';
+import './widgets.css';
 import { supabase } from '@/lib/supabaseClient';
 import { Donation, AlertSettings } from '@/lib/types/database';
+import AlertCard from './alert/AlertCard';
 
 const ICONS: Record<string, React.ReactNode> = {
   gift: (
@@ -352,34 +354,13 @@ export default function OverlayPage() {
     }}>
       <audio ref={audioRef} src="/sounds/alert.mp3" preload="auto" />
 
-      <div className={`alert-wrapper ${animClass} ${alertAnimState}`}>
-        {currentAlert && (
-          <div className="alert-card">
-            <div className="alert-shimmer" />
-
-            <div className="alert-icon-wrap">
-              {IconComponent}
-            </div>
-
-            <div className="alert-title alert-headline">
-              <span className="donator-name">{currentAlert.name || 'ผู้สนับสนุน'}</span>
-              <span className="alert-action-text">{settings.alert_action_text || 'โดเนทให้'}</span>
-              <span className="alert-amount-wrap">
-                <span className="alert-amount-val">
-                  {(parseFloat(String(currentAlert.amount)) || 0).toLocaleString('th-TH')}
-                </span>
-                <span className="alert-currency">บาท</span>
-              </span>
-            </div>
-
-            {currentAlert.message && currentAlert.message.trim() !== '' && (
-              <div className="alert-message">
-                {currentAlert.message}
-              </div>
-            )}
-          </div>
-        )}
-      </div>
+      {currentAlert && (
+        <AlertCard
+          settings={settings}
+          alert={currentAlert}
+          animState={alertAnimState}
+        />
+      )}
     </div>
   );
 }

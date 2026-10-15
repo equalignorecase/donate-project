@@ -129,7 +129,10 @@ export function readTimerAppearance(settings: Record<string, string>): TimerAppe
         ...base,
         ...parsed,
         show_background: parsed.show_background !== undefined ? Boolean(parsed.show_background) : base.show_background,
-        show_digits_shadow: parsed.show_digits_shadow !== undefined ? Boolean(parsed.show_digits_shadow) : base.show_digits_shadow
+        show_digits_shadow: parsed.show_digits_shadow !== undefined ? Boolean(parsed.show_digits_shadow) : base.show_digits_shadow,
+        timer_card_beam: parsed.timer_card_beam !== undefined ? Boolean(parsed.timer_card_beam) : base.timer_card_beam,
+        timer_shine_sweep: parsed.timer_shine_sweep !== undefined ? Boolean(parsed.timer_shine_sweep) : base.timer_shine_sweep,
+        timer_shine_theme: parsed.timer_shine_theme || base.timer_shine_theme
       };
     } catch (e) {
       // fallback to individual keys or defaults
@@ -166,6 +169,15 @@ export function readTimerAppearance(settings: Record<string, string>): TimerAppe
   if (settings.timer_digits_shadow_blur !== undefined) base.digits_shadow_blur = Number(settings.timer_digits_shadow_blur) || base.digits_shadow_blur;
   if (settings.timer_digits_shadow_x !== undefined) base.digits_shadow_x = Number(settings.timer_digits_shadow_x) || base.digits_shadow_x;
   if (settings.timer_digits_shadow_y !== undefined) base.digits_shadow_y = Number(settings.timer_digits_shadow_y) || base.digits_shadow_y;
+  if (settings.timer_card_beam !== undefined) {
+    base.timer_card_beam = settings.timer_card_beam === 'true' || settings.timer_card_beam === '1';
+  }
+  if (settings.timer_shine_sweep !== undefined) {
+    base.timer_shine_sweep = settings.timer_shine_sweep === 'true' || settings.timer_shine_sweep === '1';
+  }
+  if (settings.timer_shine_theme && ['crystal', 'gold', 'cyan'].includes(settings.timer_shine_theme)) {
+    base.timer_shine_theme = settings.timer_shine_theme as any;
+  }
 
   return base;
 }

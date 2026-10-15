@@ -4,9 +4,11 @@ import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import '../admin/admin.css';
 import '../overlay/overlay.css';
+import '../overlay/widgets.css';
 import './customizer.css';
 import { AlertSettings } from '@/lib/types/database';
 import { Sidebar, MobileTopBar } from '@/app/components';
+import AlertCard from '@/app/overlay/alert/AlertCard';
 
 const ICONS: Record<string, React.ReactNode> = {
   gift: (
@@ -346,6 +348,9 @@ export default function CustomizerPage() {
     alert_glow: 'false',
     alert_shimmer_show: 'true',
     alert_shimmer_color: 'linear-gradient(90deg, #0f172a 0%, #2563eb 50%, #059669 100%)',
+    alert_card_beam: 'false',
+    alert_shine_sweep: 'true',
+    alert_shine_theme: 'crystal',
     alert_icon: 'gift',
     alert_icon_bg: '#f8fafc',
     alert_icon_color: '#0f172a',
@@ -660,7 +665,7 @@ export default function CustomizerPage() {
               <h1 style={{ fontSize: '17px', fontWeight: 700, color: 'var(--text-main)', margin: 0 }}>
                 สตูดิโอปรับแต่ง UI แจ้งเตือน OBS (Customizer Studio)
               </h1>
-              <span className="brand-badge" style={{ background: '#eff6ff', color: '#2563eb', borderColor: '#bfdbfe' }}>
+              <span className="brand-badge customizer-live-badge">
                 Live Sync
               </span>
             </div>
@@ -1185,6 +1190,37 @@ export default function CustomizerPage() {
                   </div>
                 </div>
               </div>
+
+              <div className="form-row" style={{ marginBottom: '12px' }}>
+                <div className="form-group" style={{ width: '100%' }}>
+                  <label className="form-label">ลำแสงวิ่งบนตัวอักษร (เหมือนอันดับ)</label>
+                  <select
+                    className="input-control"
+                    value={String(settings.alert_shine_sweep !== 'false')}
+                    onChange={(e) => updateField('alert_shine_sweep', e.target.value)}
+                  >
+                    <option value="true">💎 เปิดลำแสงวิ่งผ่านตัวอักษร (ชื่อ + โดเนทให้ + ยอดเงิน)</option>
+                    <option value="false">🚫 ปิดลำแสงวิ่งผ่านตัวอักษร</option>
+                  </select>
+                </div>
+              </div>
+
+              {settings.alert_shine_sweep !== 'false' && (
+                <div className="form-row" style={{ marginBottom: '12px' }}>
+                  <div className="form-group" style={{ width: '100%' }}>
+                    <label className="form-label">โทนสีประกายแสงวิ่งตัวอักษร</label>
+                    <select
+                      className="input-control"
+                      value={settings.alert_shine_theme || 'crystal'}
+                      onChange={(e) => updateField('alert_shine_theme', e.target.value)}
+                    >
+                      <option value="crystal">💎 คริสตัลประกายเพชร (Crystal Diamond)</option>
+                      <option value="gold">🏆 ประกายทองพรีเมียม (Golden Glow)</option>
+                      <option value="cyan">⚡ นีออนไซแอน (Cyber Cyan)</option>
+                    </select>
+                  </div>
+                </div>
+              )}
 
               <div className="form-row" style={{ marginBottom: '12px' }}>
                 <div className="form-group">
@@ -2126,125 +2162,15 @@ export default function CustomizerPage() {
 
             {/* Simulator Stage Area */}
             <div className={`preview-stage bg-${previewBg}`}>
-              {/* The Live Alert Element */}
-              <div
-                className={`alert-wrapper anim-${settings.alert_animation || 'slide-down'} ${isAnimating ? 'hide' : 'show'}`}
-                style={{
-                  width: `${settings.alert_card_width || 580}px`,
-                  fontFamily: `'${settings.alert_font || 'LINESeedSansTH'}', sans-serif`,
-                  transition: 'all 0.3s ease'
+              <AlertCard
+                settings={settings}
+                alert={{
+                  name: testName,
+                  amount: testAmount !== '' && !isNaN(Number(testAmount)) ? Number(testAmount) : 0,
+                  message: testMessage
                 }}
-              >
-                <div
-                  className="alert-card"
-                  style={{
-                    background: settings.alert_card_bg || '#ffffff',
-                    backdropFilter: settings.alert_card_blur ? `blur(${settings.alert_card_blur}px)` : 'none',
-                    WebkitBackdropFilter: settings.alert_card_blur ? `blur(${settings.alert_card_blur}px)` : 'none',
-                    border: `${settings.alert_border_width ?? 1.5}px solid ${settings.alert_border_color || '#e2e8f0'}`,
-                    borderRadius: `${settings.alert_border_radius ?? 24}px`,
-                    boxShadow:
-                      settings.alert_shadow_show === 'false'
-                        ? 'none'
-                        : settings.alert_glow === 'true'
-                          ? `0 25px 50px -12px rgba(0,0,0,0.3), 0 0 35px ${settings.alert_border_color || '#2563eb'}66`
-                          : '0 25px 50px -12px rgba(15, 23, 42, 0.16), 0 0 0 1px rgba(15, 23, 42, 0.04)'
-                  }}
-                >
-                  {settings.alert_shimmer_show !== 'false' && (
-                    <div
-                      className="alert-shimmer"
-                      style={{ background: settings.alert_shimmer_color || 'linear-gradient(90deg, #0f172a 0%, #2563eb 50%, #059669 100%)' }}
-                    />
-                  )}
-
-                  <div
-                    className="alert-icon-wrap"
-                    style={{
-                      background: settings.alert_icon_bg || '#f8fafc',
-                      color: settings.alert_icon_color || '#0f172a',
-                      border: settings.alert_icon_bg === 'transparent' ? 'none' : `1.5px solid ${settings.alert_icon_border || '#e2e8f0'}`,
-                      boxShadow: settings.alert_icon_bg === 'transparent' ? 'none' : '0 4px 12px rgba(15, 23, 42, 0.05)'
-                    }}
-                  >
-                    {IconComponent}
-                  </div>
-
-                  <div
-                    className="alert-title alert-headline"
-                    style={{
-                      fontSize: `${settings.alert_title_size || 26}px`,
-                      marginTop: `${settings.alert_text_margin_top ?? 0}px`,
-                      marginBottom: `${settings.alert_text_margin_bottom ?? 0}px`,
-                      marginLeft: `${settings.alert_text_margin_left ?? 0}px`,
-                      marginRight: `${settings.alert_text_margin_right ?? 0}px`,
-                      letterSpacing: `${settings.alert_letter_spacing ?? 0}px`,
-                      gap: `${settings.alert_word_gap ?? 8}px`,
-                      lineHeight: settings.alert_line_height ? Number(settings.alert_line_height) : 1.35,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      flexWrap: 'wrap'
-                    }}
-                  >
-                    <span
-                      className="donator-name"
-                      style={{
-                        color: settings.alert_name_color || '#0f172a',
-                        letterSpacing: `${settings.alert_letter_spacing ?? 0}px`,
-                        ...strokeStyle
-                      }}
-                    >
-                      {(testName || '').trim() || 'Anonymous'}
-                    </span>
-                    <span
-                      className="alert-action-text"
-                      style={{
-                        color: settings.alert_action_color || '#64748b',
-                        letterSpacing: `${settings.alert_letter_spacing ?? 0}px`,
-                        ...strokeStyle
-                      }}
-                    >
-                      {settings.alert_action_text || 'โดเนทให้'}
-                    </span>
-                    <span
-                      className="alert-amount-wrap"
-                      style={{
-                        background: settings.alert_amount_bg || '#ecfdf5',
-                        color: settings.alert_amount_color || '#059669',
-                        border: settings.alert_amount_bg === 'transparent' ? 'none' : `1.5px solid ${settings.alert_amount_border || '#a7f3d0'}`,
-                        fontSize: `${settings.alert_amount_size || 22}px`,
-                        boxShadow: 'none',
-                        padding: settings.alert_amount_bg === 'transparent' ? '0' : '2px 14px',
-                        letterSpacing: `${settings.alert_letter_spacing ?? 0}px`
-                      }}
-                    >
-                      <span className="alert-amount-val" style={{ ...strokeStyle }}>
-                        {testAmount !== '' && !isNaN(Number(testAmount)) ? Number(testAmount).toLocaleString('th-TH') : 0}
-                      </span>
-                      <span className="alert-currency" style={{ ...strokeStyle }}>บาท</span>
-                    </span>
-                  </div>
-
-                  {(testMessage || '').trim() !== '' && (
-                    <div
-                      className="alert-message"
-                      style={{
-                        background: settings.alert_msg_bg || '#f8fafc',
-                        color: settings.alert_msg_color || '#334155',
-                        fontSize: `${settings.alert_msg_size || 18}px`,
-                        border: settings.alert_msg_bg === 'transparent' ? 'none' : `1px solid ${settings.alert_msg_border || '#e2e8f0'}`,
-                        padding: settings.alert_msg_bg === 'transparent' ? '4px 0' : '12px 18px',
-                        letterSpacing: `${settings.alert_letter_spacing ?? 0}px`,
-                        marginTop: '-10px',
-                        ...strokeStyle
-                      }}
-                    >
-                      {testMessage}
-                    </div>
-                  )}
-                </div>
-              </div>
+                animState={!isAnimating}
+              />
             </div>
 
             {/* Test Alert Data Configuration Card */}

@@ -57,6 +57,9 @@ export interface AlertSettings {
   alert_glow?: string | boolean;
   alert_shimmer_show?: string | boolean;
   alert_shimmer_color?: string;
+  alert_card_beam?: string | boolean;
+  alert_shine_sweep?: string | boolean;
+  alert_shine_theme?: string;
   alert_icon?: string;
   alert_icon_bg?: string;
   alert_icon_color?: string;

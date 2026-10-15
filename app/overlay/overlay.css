@@ -356,7 +356,7 @@ body.overlay-body {
   background: var(--alert-msg-bg);
   border-radius: 14px;
   padding: 12px 18px;
-  margin-top: -10px; /* ดึงขึ้นมาติดชิด */
+  margin-top: 14px;
   border: var(--alert-msg-border-width, 1px) solid var(--alert-msg-border);
   word-break: break-word;
   line-height: 1.5;

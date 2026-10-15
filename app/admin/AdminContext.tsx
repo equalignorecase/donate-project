@@ -17,6 +17,8 @@ export interface AdminContextType {
   donationCount: number;
   blacklistCount: number;
   handleUnauthorized: () => void;
+  theme: 'light' | 'dark';
+  toggleTheme: () => void;
 }
 
 export const AdminContext = createContext<AdminContextType>({
@@ -26,8 +28,9 @@ export const AdminContext = createContext<AdminContextType>({
   refreshCounts: () => {},
   donationCount: 0,
   blacklistCount: 0,
-  handleUnauthorized: () => {}
+  handleUnauthorized: () => {},
+  theme: 'light',
+  toggleTheme: () => {}
 });
 
 export const useAdmin = () => useContext(AdminContext);
-

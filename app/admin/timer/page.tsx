@@ -1015,6 +1015,88 @@ export default function TimerAdminPage() {
                   </div>
                 </div>
               )}
+
+              {/* Card Specular Beam & Digits Shine Sweep (ลำแสงวิ่งการ์ดและตัวเลข) */}
+              <div style={{ marginTop: '20px', paddingTop: '16px', borderTop: '1px solid #f1f5f9' }}>
+                <div style={{ fontSize: '13px', fontWeight: '700', color: '#1e293b', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <span>✨ ลำแสงวิ่งกวาดการ์ดและตัวเลข (Beam & Shine Sweep)</span>
+                </div>
+
+                <div className="timer-form-row" style={{ marginBottom: '12px' }}>
+                  <div className="timer-form-group" style={{ flex: 1 }}>
+                    <label style={{ fontSize: '12px' }}>ลำแสงกวาดผ่านการ์ด (เหมือนหลอดโด)</label>
+                    <div className="stroke-toggle-grid">
+                      <button
+                        type="button"
+                        className={`stroke-toggle-btn ${config.timer_appearance.timer_card_beam === false ? 'active' : ''}`}
+                        onClick={() => setConfig(prev => ({
+                          ...prev,
+                          timer_appearance: { ...prev.timer_appearance, timer_card_beam: false }
+                        }))}
+                      >
+                        🚫 ปิดแสงการ์ด
+                      </button>
+                      <button
+                        type="button"
+                        className={`stroke-toggle-btn ${config.timer_appearance.timer_card_beam !== false ? 'active' : ''}`}
+                        onClick={() => setConfig(prev => ({
+                          ...prev,
+                          timer_appearance: { ...prev.timer_appearance, timer_card_beam: true }
+                        }))}
+                      >
+                        ✨ เปิดแสงการ์ด
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="timer-form-group" style={{ flex: 1 }}>
+                    <label style={{ fontSize: '12px' }}>ลำแสงวิ่งผ่านตัวเลข (เหมือนอันดับ)</label>
+                    <div className="stroke-toggle-grid">
+                      <button
+                        type="button"
+                        className={`stroke-toggle-btn ${config.timer_appearance.timer_shine_sweep === false ? 'active' : ''}`}
+                        onClick={() => setConfig(prev => ({
+                          ...prev,
+                          timer_appearance: { ...prev.timer_appearance, timer_shine_sweep: false }
+                        }))}
+                      >
+                        🚫 ปิดแสงตัวเลข
+                      </button>
+                      <button
+                        type="button"
+                        className={`stroke-toggle-btn ${config.timer_appearance.timer_shine_sweep !== false ? 'active' : ''}`}
+                        onClick={() => setConfig(prev => ({
+                          ...prev,
+                          timer_appearance: { ...prev.timer_appearance, timer_shine_sweep: true }
+                        }))}
+                      >
+                        💎 เปิดแสงตัวเลข
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {config.timer_appearance.timer_shine_sweep !== false && (
+                  <div className="timer-form-group" style={{ marginTop: '10px' }}>
+                    <label style={{ fontSize: '12px' }}>โทนสีประกายแสงวิ่งตัวเลข</label>
+                    <select
+                      value={config.timer_appearance.timer_shine_theme || 'cyan'}
+                      onChange={e => setConfig(prev => ({
+                        ...prev,
+                        timer_appearance: {
+                          ...prev.timer_appearance,
+                          timer_shine_theme: e.target.value as 'crystal' | 'gold' | 'cyan'
+                        }
+                      }))}
+                      style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1.5px solid #cbd5e1', fontSize: '13px' }}
+                    >
+                      <option value="cyan">⚡ นีออนไซแอน (Cyber Cyan - แนะนำสำหรับ Timer)</option>
+                      <option value="crystal">💎 คริสตัลประกายเพชร (Crystal Diamond)</option>
+                      <option value="gold">🏆 ประกายทองพรีเมียม (Golden Glow)</option>
+                    </select>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
@@ -1143,7 +1225,7 @@ export default function TimerAdminPage() {
                 }}
               >
                 <iframe
-                  key={`${previewKey}-${config.timer_appearance.show_background !== false ? 'bg' : 'nobg'}-${config.timer_appearance.show_digits_shadow !== false ? 'sh1' : 'sh0'}-${config.timer_appearance.digits_shadow_color}-${config.timer_appearance.digits_shadow_blur}-${config.timer_appearance.digits_shadow_x}-${config.timer_appearance.digits_shadow_y}`}
+                  key={`${previewKey}-${config.timer_appearance.show_background !== false ? 'bg' : 'nobg'}-${config.timer_appearance.timer_card_beam !== false ? 'bm1' : 'bm0'}-${config.timer_appearance.timer_shine_sweep !== false ? 'sn1' : 'sn0'}-${config.timer_appearance.timer_shine_theme || 'cyan'}-${config.timer_appearance.show_digits_shadow !== false ? 'sh1' : 'sh0'}-${config.timer_appearance.digits_shadow_color}-${config.timer_appearance.digits_shadow_blur}-${config.timer_appearance.digits_shadow_x}-${config.timer_appearance.digits_shadow_y}`}
                   title="Timer Live Preview"
                   src={`/overlay/timer?preview=1${config.timer_appearance.show_background === false ? '&bg=0' : '&bg=1'}${config.timer_appearance.show_digits_shadow === false ? '&shadow=0' : `&shadow=1&shadow_color=${encodeURIComponent(config.timer_appearance.digits_shadow_color || '#000000')}&shadow_blur=${config.timer_appearance.digits_shadow_blur ?? 8}`}`}
                   style={{

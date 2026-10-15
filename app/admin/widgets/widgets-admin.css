@@ -462,3 +462,174 @@
         transform: none;
     }
 }
+
+/* ==========================================================
+   Widgets Admin Dark Mode Overrides (Translucent Glow Theme)
+   ========================================================== */
+
+[data-theme="dark"] .widgets-admin h1,
+[data-theme="dark"] .widgets-admin h2,
+[data-theme="dark"] .widgets-admin strong {
+    color: #f8fafc;
+}
+
+[data-theme="dark"] .widgets-admin p {
+    color: #94a3b8;
+}
+
+[data-theme="dark"] .widget-settings {
+    background: #111827;
+    border-color: #1f293d;
+}
+
+[data-theme="dark"] .widget-settings label {
+    color: #cbd5e1;
+}
+
+[data-theme="dark"] .widgets-admin input:not([type="checkbox"]):not([type="radio"]):not([type="color"]) {
+    background: #141c2b;
+    border-color: #223049;
+    color: #f8fafc;
+}
+
+[data-theme="dark"] .widgets-admin input:not([type="checkbox"]):not([type="radio"]):not([type="color"]):focus {
+    border-color: #3b82f6;
+}
+
+/* Tabs */
+[data-theme="dark"] .widget-tab {
+    background: #172133;
+    border-color: #223049;
+    color: #94a3b8;
+}
+
+[data-theme="dark"] .widget-tab:hover {
+    background: #1e2b42;
+    color: #f8fafc;
+    border-color: #3b82f6;
+}
+
+[data-theme="dark"] .widget-tab.active {
+    background: #2563eb;
+    border-color: #3b82f6;
+    color: #ffffff;
+    box-shadow: 0 4px 14px rgba(37, 99, 235, 0.4);
+}
+
+/* Action Buttons (Dark Translucent Tint & Glow) */
+[data-theme="dark"] .widget-button-reset {
+    --widget-button-bg: rgba(245, 158, 11, 0.15);
+    --widget-button-border: rgba(245, 158, 11, 0.35);
+    --widget-button-color: #fbbf24;
+    --widget-button-hover: rgba(245, 158, 11, 0.25);
+}
+
+[data-theme="dark"] .widget-button-total {
+    --widget-button-bg: rgba(124, 58, 237, 0.15);
+    --widget-button-border: rgba(139, 92, 246, 0.35);
+    --widget-button-color: #c084fc;
+    --widget-button-hover: rgba(124, 58, 237, 0.25);
+}
+
+[data-theme="dark"] .widget-button-month {
+    --widget-button-bg: rgba(16, 185, 129, 0.15);
+    --widget-button-border: rgba(16, 185, 129, 0.35);
+    --widget-button-color: #34d399;
+    --widget-button-hover: rgba(16, 185, 129, 0.25);
+}
+
+[data-theme="dark"] .widget-button-copy {
+    --widget-button-bg: rgba(16, 185, 129, 0.15);
+    --widget-button-border: rgba(16, 185, 129, 0.35);
+    --widget-button-color: #34d399;
+    --widget-button-hover: rgba(16, 185, 129, 0.25);
+}
+
+[data-theme="dark"] .widget-button-open {
+    --widget-button-bg: rgba(37, 99, 235, 0.15);
+    --widget-button-border: rgba(59, 130, 246, 0.35);
+    --widget-button-color: #60a5fa;
+    --widget-button-hover: rgba(37, 99, 235, 0.25);
+}
+
+[data-theme="dark"] .widget-button-save {
+    --widget-button-bg: #2563eb;
+    --widget-button-border: #3b82f6;
+    --widget-button-color: #ffffff;
+    --widget-button-hover: #1d4ed8;
+}
+
+[data-theme="dark"] .widgets-admin .widget-button {
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="dark"] .widgets-admin .widget-button:hover:not(:disabled) {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.45);
+}
+
+/* OBS Source Links */
+[data-theme="dark"] .widget-section-links {
+    border-top-color: #1f293d;
+}
+
+[data-theme="dark"] .widget-preview {
+    background: #0f172a;
+    border: 1px solid #1f293d;
+}
+
+/* Goal Editor & Fieldsets */
+[data-theme="dark"] .goal-editor {
+    border-top-color: #1f293d;
+}
+
+[data-theme="dark"] .goal-editor-controls {
+    border-color: #223049;
+    background: #141c2b;
+}
+
+[data-theme="dark"] .goal-editor-controls legend {
+    color: #f8fafc;
+}
+
+[data-theme="dark"] .goal-font-control select {
+    background: #141c2b;
+    border-color: #223049;
+    color: #f8fafc;
+}
+
+[data-theme="dark"] .goal-style-option {
+    border-color: #223049;
+    background: #141c2b;
+    color: #f8fafc;
+}
+
+[data-theme="dark"] .goal-style-option:hover:not(:disabled) {
+    border-color: #3b82f6;
+    background: #182337;
+}
+
+[data-theme="dark"] .goal-style-option.selected {
+    border-color: #3b82f6;
+    background: rgba(37, 99, 235, 0.15);
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.35);
+    color: #93c5fd;
+}
+
+[data-theme="dark"] .goal-style-option small {
+    color: #94a3b8;
+}
+
+[data-theme="dark"] .goal-color-control code {
+    color: #94a3b8;
+}
+
+[data-theme="dark"] .goal-draft-preview {
+    background-color: #0b0f19;
+    background-image: conic-gradient(#162032 25%, transparent 0 50%, #162032 0 75%, transparent 0);
+}
+
+[data-theme="dark"] .widget-error {
+    background: rgba(239, 68, 68, 0.15);
+    color: #f87171;
+    border: 1px solid rgba(239, 68, 68, 0.35);
+}

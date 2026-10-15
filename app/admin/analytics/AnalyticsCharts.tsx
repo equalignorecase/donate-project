@@ -332,7 +332,7 @@ export function RevenueTrendChart({ daily, weekly, monthly }: RevenueTrendChartP
                     cy={p.y}
                     r={isHovered ? 6 : p.data.amount > 0 ? 3.5 : 2}
                     fill={isHovered ? '#f59e0b' : '#2563eb'}
-                    stroke="#ffffff"
+                    stroke="var(--bg-panel)"
                     strokeWidth={isHovered ? 2.5 : 1.5}
                     style={{ transition: 'all 0.15s ease' }}
                   />
@@ -709,13 +709,13 @@ export function TopDonatorsLeaderboard({
           <table className="leaderboard-table">
             <thead>
               <tr>
-                <th style={{ width: '70px', textAlign: 'center' }}>อันดับ</th>
+                <th style={{ width: '60px', textAlign: 'center' }}>อันดับ</th>
                 <th>ผู้สนับสนุน</th>
                 <th style={{ textAlign: 'right' }}>ยอดบริจาครวม</th>
-                <th style={{ width: '22%', minWidth: '130px' }}>สัดส่วนเทียบอันดับ 1</th>
+                <th className="col-hide-mobile" style={{ width: '22%', minWidth: '130px' }}>สัดส่วนเทียบอันดับ 1</th>
                 <th style={{ textAlign: 'center' }}>จำนวนครั้ง</th>
-                <th style={{ textAlign: 'right' }}>ยอดสูงสุด/ครั้ง</th>
-                <th style={{ textAlign: 'right' }}>ล่าสุด</th>
+                <th className="col-hide-mobile" style={{ textAlign: 'right' }}>ยอดสูงสุด/ครั้ง</th>
+                <th className="col-hide-mobile" style={{ textAlign: 'right' }}>ล่าสุด</th>
               </tr>
             </thead>
             <tbody>
@@ -751,7 +751,7 @@ export function TopDonatorsLeaderboard({
                     </td>
 
                     {/* Visual Comparison Progress Bar */}
-                    <td>
+                    <td className="col-hide-mobile">
                       <div className="ratio-bar-wrapper">
                         <div className="ratio-bar-track">
                           <div
@@ -769,12 +769,12 @@ export function TopDonatorsLeaderboard({
                     </td>
 
                     {/* Highest Single Donation */}
-                    <td style={{ textAlign: 'right', color: 'var(--text-muted)' }}>
+                    <td className="col-hide-mobile" style={{ textAlign: 'right', color: 'var(--text-muted)' }}>
                       ฿{donor.topSingle.toLocaleString('th-TH', { minimumFractionDigits: 2 })}
                     </td>
 
                     {/* Last Donated Date */}
-                    <td style={{ textAlign: 'right', fontSize: '12px', color: 'var(--text-dim)', whiteSpace: 'nowrap' }}>
+                    <td className="col-hide-mobile" style={{ textAlign: 'right', fontSize: '12px', color: 'var(--text-dim)', whiteSpace: 'nowrap' }}>
                       {donor.lastDonatedAt ? new Date(donor.lastDonatedAt).toLocaleDateString('th-TH') : '-'}
                     </td>
                   </tr>

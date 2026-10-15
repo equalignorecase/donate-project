@@ -34,6 +34,10 @@ export interface TimerAppearance {
   digits_shadow_blur?: number;
   digits_shadow_x?: number;
   digits_shadow_y?: number;
+  // ลำแสงกวาดผ่านการ์ดและตัวเลข (Card Specular Beam & Digits Shine Sweep)
+  timer_card_beam?: boolean;
+  timer_shine_sweep?: boolean;
+  timer_shine_theme?: 'crystal' | 'gold' | 'cyan';
 }
 
 export interface TimerConfig {
@@ -84,6 +88,9 @@ export const defaultTimerAppearance: TimerAppearance = {
   digits_shadow_blur: 8,
   digits_shadow_x: 0,
   digits_shadow_y: 2,
+  timer_card_beam: true,
+  timer_shine_sweep: true,
+  timer_shine_theme: 'cyan',
 };
 
 export const defaultTimerConfig: TimerConfig = {

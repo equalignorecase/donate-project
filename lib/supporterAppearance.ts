@@ -8,7 +8,7 @@ export const supporterDefaults = {
   supporter_border_color: '#64748b', supporter_row_color: '#1e293b', supporter_rank_color: '#fbbf24', supporter_rank_bg_color: '#334155',
   supporter_opacity: '90', supporter_width: '600', supporter_padding: '24', supporter_radius: '20',
   supporter_title_size: '24', supporter_name_size: '20', supporter_amount_size: '20', supporter_row_gap: '8', supporter_limit: '5',
-  supporter_show_bg: 'true', supporter_show_border: 'true', supporter_show_title: 'true', supporter_show_amount: 'true', supporter_show_rank: 'true', supporter_show_rank_bg: 'true',
+  supporter_show_bg: 'true', supporter_show_border: 'true', supporter_show_divider: 'true', supporter_show_title: 'true', supporter_show_amount: 'true', supporter_show_rank: 'true', supporter_show_rank_bg: 'true',
   supporter_shine_sweep: 'true', supporter_shine_theme: 'crystal', supporter_shine_delay: '4',
   supporter_border_beam: 'false', supporter_beam_theme: 'podium', supporter_beam_target: 'top3',
 };

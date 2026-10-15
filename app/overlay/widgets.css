@@ -115,6 +115,10 @@ body.widget-overlay-body {
     border-bottom: 0;
 }
 
+.supporter-widget.supporter-no-divider .supporter-rows li {
+    border-bottom: 0 !important;
+}
+
 .supporter-rows .supporter-name {
     flex: 1;
     min-width: 0;
@@ -506,55 +510,60 @@ body.widget-overlay-body {
 .supporter-shimmer-text {
     display: inline-block;
     max-width: 100%;
-    vertical-align: bottom;
+    vertical-align: baseline;
+    line-height: inherit;
     background-size: 260% 100%;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
     animation: supporter-text-shine-glide 3.8s cubic-bezier(0.22, 1, 0.36, 1) infinite;
     animation-delay: var(--text-shine-delay, 0s);
+    transform: translateZ(0);
     will-change: background-position, filter;
 }
 
 /* Crystal Theme (Default) - ประกายเพชรคริสตัล */
-.supporter-shine-theme-crystal .supporter-shimmer-text {
+.supporter-shine-theme-crystal .supporter-shimmer-text,
+.supporter-shine-theme-crystal.supporter-shimmer-text {
     background-image: linear-gradient(
         115deg,
-        var(--text-color) 0%,
-        var(--text-color) 35%,
+        var(--text-color, currentColor) 0%,
+        var(--text-color, currentColor) 35%,
         #ffffff 50%,
-        var(--text-color) 65%,
-        var(--text-color) 100%
+        var(--text-color, currentColor) 65%,
+        var(--text-color, currentColor) 100%
     );
     --shine-glow: rgba(255, 255, 255, 0.85);
 }
 
 /* Gold Theme - ประกายทองพรีเมียม */
-.supporter-shine-theme-gold .supporter-shimmer-text {
+.supporter-shine-theme-gold .supporter-shimmer-text,
+.supporter-shine-theme-gold.supporter-shimmer-text {
     background-image: linear-gradient(
         115deg,
-        var(--text-color) 0%,
-        var(--text-color) 32%,
+        var(--text-color, currentColor) 0%,
+        var(--text-color, currentColor) 32%,
         #fde68a 44%,
         #ffffff 50%,
         #fde68a 56%,
-        var(--text-color) 68%,
-        var(--text-color) 100%
+        var(--text-color, currentColor) 68%,
+        var(--text-color, currentColor) 100%
     );
     --shine-glow: rgba(245, 158, 11, 0.85);
 }
 
 /* Cyan Theme - นีออนไซแอน */
-.supporter-shine-theme-cyan .supporter-shimmer-text {
+.supporter-shine-theme-cyan .supporter-shimmer-text,
+.supporter-shine-theme-cyan.supporter-shimmer-text {
     background-image: linear-gradient(
         115deg,
-        var(--text-color) 0%,
-        var(--text-color) 32%,
+        var(--text-color, currentColor) 0%,
+        var(--text-color, currentColor) 32%,
         #67e8f9 44%,
         #ffffff 50%,
         #67e8f9 56%,
-        var(--text-color) 68%,
-        var(--text-color) 100%
+        var(--text-color, currentColor) 68%,
+        var(--text-color, currentColor) 100%
     );
     --shine-glow: rgba(6, 182, 212, 0.85);
 }
@@ -588,10 +597,119 @@ body.widget-overlay-body {
     .goal-bar-shine,
     .goal-bar-texture,
     .goal-bar-shine-sweep,
+    .widget-card-beam-sweep,
     .supporter-shimmer-text {
         animation: none !important;
         background-image: none !important;
         -webkit-text-fill-color: initial !important;
         color: var(--text-color) !important;
+    }
+}
+
+/* ==========================================================
+   Widget Card Specular Beam Sweep (ลำแสงหรูหราพาดผ่านการ์ด Alert / Timer)
+   ========================================================== */
+
+.widget-card-beam-sweep {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    border-radius: inherit;
+    overflow: hidden;
+    z-index: 2;
+}
+
+.widget-card-beam {
+    position: absolute;
+    top: -70%;
+    left: -50%;
+    width: clamp(54px, 18%, 110px);
+    height: 250%;
+    pointer-events: none;
+    background: linear-gradient(
+        115deg,
+        transparent 0%,
+        rgba(255, 255, 255, 0.03) 22%,
+        rgba(255, 255, 255, 0.24) 42%,
+        rgba(255, 255, 255, 0.92) 50%,
+        rgba(255, 255, 255, 0.24) 58%,
+        rgba(255, 255, 255, 0.03) 78%,
+        transparent 100%
+    );
+    transform: rotate(25deg);
+    box-shadow: 0 0 32px 10px rgba(255, 255, 255, 0.55), 0 0 60px 18px rgba(255, 255, 255, 0.25);
+    filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.75));
+    animation: widget-card-beam-sweep 3.6s cubic-bezier(0.22, 1, 0.36, 1) infinite;
+}
+
+.widget-card-sparkle {
+    position: absolute;
+    top: 50%;
+    left: -50%;
+    width: 16px;
+    height: 16px;
+    margin-top: -8px;
+    margin-left: 20px;
+    pointer-events: none;
+    border-radius: 50%;
+    background: radial-gradient(
+        circle,
+        #ffffff 15%,
+        rgba(255, 255, 255, 0.9) 45%,
+        rgba(255, 255, 255, 0.2) 70%,
+        transparent 85%
+    );
+    box-shadow:
+        0 0 14px 3px rgba(255, 255, 255, 0.95),
+        0 0 28px 7px rgba(255, 255, 255, 0.6),
+        0 0 45px 12px rgba(103, 232, 249, 0.5);
+    animation: widget-card-sparkle-sweep 3.6s cubic-bezier(0.22, 1, 0.36, 1) infinite;
+}
+
+.widget-card-sparkle::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 32px;
+    height: 2px;
+    transform: translate(-50%, -50%);
+    background: linear-gradient(90deg, transparent, #ffffff, transparent);
+    filter: drop-shadow(0 0 4px #ffffff);
+}
+
+@keyframes widget-card-beam-sweep {
+    0% {
+        left: -50%;
+        opacity: 0;
+    }
+    12% {
+        opacity: 1;
+    }
+    44% {
+        left: 140%;
+        opacity: 1;
+    }
+    45%, 100% {
+        left: 140%;
+        opacity: 0;
+    }
+}
+
+@keyframes widget-card-sparkle-sweep {
+    0% {
+        left: -50%;
+        opacity: 0;
+    }
+    12% {
+        opacity: 1;
+    }
+    44% {
+        left: 140%;
+        opacity: 1;
+    }
+    45%, 100% {
+        left: 140%;
+        opacity: 0;
     }
 }

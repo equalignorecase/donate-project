@@ -219,11 +219,11 @@ function AnalyticsPageContent() {
           title="รายได้เดือนนี้"
           value={`฿${summary.thisMonthRevenue.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
           subtitle={
-            <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+            <span className="stat-sub-growth">
               <span className={`badge-growth ${summary.growthPercent >= 0 ? 'up' : 'down'}`}>
                 {summary.growthPercent >= 0 ? `▲ +${summary.growthPercent}%` : `▼ ${summary.growthPercent}%`}
               </span>
-              <span>เทียบเดือนก่อน ({summary.thisMonthCount} รายการ)</span>
+              <span className="growth-text">เทียบเดือนก่อน ({summary.thisMonthCount} รายการ)</span>
             </span>
           }
         />
@@ -251,7 +251,7 @@ function AnalyticsPageContent() {
             </svg>
           }
           title="ช่วงเวลาทอง (Peak Window)"
-          value={<span style={{ fontSize: '18px' }}>{summary.peakHourWindow}</span>}
+          value={<span className="stat-val-highlight">{summary.peakHourWindow}</span>}
           subtitle={
             summary.peakHourAmount > 0
               ? `ยอดสะสมสูงสุด ฿${summary.peakHourAmount.toLocaleString()}`

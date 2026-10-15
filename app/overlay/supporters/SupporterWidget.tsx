@@ -4,6 +4,7 @@ import '../widgets.css';
 
 export default function SupporterWidget({ donors, appearance, mode }: { donors: Supporter[]; appearance: SupporterAppearance; mode: SupporterMode }) {
   const showBg = appearance.supporter_show_bg !== 'false';
+  const showDivider = appearance.supporter_show_divider !== 'false';
   const bg = showBg ? `${appearance.supporter_bg_color}${Math.round(Number(appearance.supporter_opacity) * 2.55).toString(16).padStart(2, '0')}` : 'transparent';
   const isShineEnabled = appearance.supporter_shine_sweep !== 'false';
   const shineTheme = appearance.supporter_shine_theme || 'crystal';
@@ -19,7 +20,7 @@ export default function SupporterWidget({ donors, appearance, mode }: { donors: 
 
   return (
     <section
-      className={`obs-widget supporter-widget supporter-layout-${appearance.supporter_layout}`}
+      className={`obs-widget supporter-widget supporter-layout-${appearance.supporter_layout} ${!showDivider ? 'supporter-no-divider' : ''}`}
       style={{
         fontFamily: `'${appearance.supporter_font}', sans-serif`,
         width: `${appearance.supporter_width}px`,
@@ -95,6 +96,8 @@ export default function SupporterWidget({ donors, appearance, mode }: { donors: 
                 style={{
                   background: hasBeam ? undefined : rowBg,
                   borderColor: appearance.supporter_border_color,
+                  borderBottomWidth: showDivider ? undefined : 0,
+                  borderBottomColor: showDivider ? undefined : 'transparent',
                   ['--row-bg' as any]: rowBg,
                 }}
               >
