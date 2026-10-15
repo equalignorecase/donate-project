@@ -76,7 +76,7 @@ export async function verifySlip({
   fileName,
   mimeType,
   expectedAmount,
-  log = false
+  log = true
 }: VerifySlipParams): Promise<VerifiedSlipResult> {
   const branchId = await getSettingValue('slipok_branch_id', process.env.SLIPOK_BRANCH_ID || '');
   const apiKey = await getSettingValue('slipok_api_key', process.env.SLIPOK_API_KEY || '');
@@ -124,7 +124,9 @@ export async function verifySlip({
 
   if (!apiResponse || !apiResponse.success || !apiResponse.data) {
     const msg = apiResponse?.message || 'สลิปไม่ถูกต้อง';
-    throw new Error(msg);
+    const customErr: any = new Error(msg);
+    customErr.details = apiResponse;
+    throw customErr;
   }
 
   const slipData = apiResponse.data;
@@ -132,18 +134,22 @@ export async function verifySlip({
   // 1. Check duplicate via transRef in Supabase
   const transRef: string = slipData.transRef;
   if (!transRef) {
-    throw new Error('ไม่พบรหัสอ้างอิงธุรกรรม (Transaction Ref) ในสลิป');
+    const err: any = new Error('ไม่พบรหัสอ้างอิงธุรกรรม (Transaction Ref) ในสลิป');
+    err.details = { slipData };
+    throw err;
   }
 
   const { data: existingDonation } = await supabaseAdmin
     .from('donations')
     .select('id, created_at')
     .eq('transaction_ref', transRef)
+    .neq('status', 'failed')
     .maybeSingle();
 
   if (existingDonation) {
     const err: any = new Error(`สลิปนี้ถูกใช้งานไปแล้วเมื่อ ${existingDonation.created_at || 'ก่อนหน้านี้'}`);
     err.code = 1012;
+    err.details = { transRef, slipData };
     throw err;
   }
 
@@ -154,39 +160,82 @@ export async function verifySlip({
     if (Math.abs(slipAmount - targetAmount) > 0.001) {
       const err: any = new Error(`ยอดเงินในสลิป (${slipAmount} บาท) ไม่ตรงกับยอดที่ต้องชำระ (${targetAmount} บาท)`);
       err.code = 1013;
+      err.details = { transRef, slipData };
       throw err;
     }
   }
 
-  // 3. Check Receiver
+  // 3. Check Receiver (Supports both PromptPay and Bank Accounts)
   const expectedReceiverName = await getSettingValue('receiver_name', process.env.RECEIVER_NAME || '');
   const expectedReceiverAccount = await getSettingValue('receiver_account', process.env.RECEIVER_ACCOUNT || '');
+  const promptpayId = await getSettingValue('promptpay_id', process.env.PROMPTPAY_ID || '');
 
-  if (!expectedReceiverName.trim() && !expectedReceiverAccount.trim()) {
-    throw new Error('กรุณาตั้งค่าชื่อหรือเลขบัญชีผู้รับก่อนเปิดรับโดเนท');
+  // Collect all acceptable receiver numbers (PromptPay + Bank Accounts)
+  const allAccountRawInputs = [expectedReceiverAccount, promptpayId]
+    .filter(Boolean)
+    .join(',')
+    .split(/[,;\s]+/)
+    .map((s) => s.replace(/[^0-9]/g, ''))
+    .filter((s) => s.length >= 4);
+
+  const allowedLast4Set = new Set(allAccountRawInputs.map((acc) => acc.slice(-4)));
+
+  if (!expectedReceiverName.trim() && allowedLast4Set.size === 0) {
+    throw new Error('กรุณาตั้งค่าชื่อหรือเลขบัญชี/พร้อมเพย์ผู้รับก่อนเปิดรับโดเนท');
   }
 
-  if (expectedReceiverName && expectedReceiverName.trim() !== '') {
-    const receiverDisplayName: string = slipData.receiver?.displayName || '';
-    const receiverName: string = slipData.receiver?.name || '';
-    const cleanExpected = expectedReceiverName.trim().toLowerCase();
-    const match1 = receiverDisplayName.toLowerCase().includes(cleanExpected);
-    const match2 = receiverName.toLowerCase().includes(cleanExpected);
-    if (!match1 && !match2) {
-      const err: any = new Error(`ชื่อบัญชีผู้รับในสลิปไม่ตรงกับที่กำหนดไว้ (${receiverDisplayName || receiverName})`);
+  // Name verification (supports aliases separated by comma, ignores placeholder "test test")
+  const cleanExpectedName = expectedReceiverName.trim();
+  const isPlaceholderName = cleanExpectedName.toLowerCase() === 'test test';
+  if (cleanExpectedName && !isPlaceholderName) {
+    const receiverDisplayName: string = (slipData.receiver?.displayName || '').toLowerCase();
+    const receiverName: string = (slipData.receiver?.name || '').toLowerCase();
+
+    // Remove titles like นาย, นาง, นางสาว, mr., mrs., ms. for fuzzy matching
+    const stripTitles = (str: string) =>
+      str.replace(/^(นาย|นางสาว|นาง|บจก\.|หจก\.|mr\.|mrs\.|ms\.|miss)\s*/gi, '').trim();
+
+    const nameAliases = cleanExpectedName
+      .split(/[,;|]+/)
+      .map((s) => stripTitles(s.trim().toLowerCase()))
+      .filter(Boolean);
+
+    const match = nameAliases.some((alias) => {
+      return (
+        receiverDisplayName.includes(alias) ||
+        receiverName.includes(alias) ||
+        stripTitles(receiverDisplayName).includes(alias) ||
+        stripTitles(receiverName).includes(alias)
+      );
+    });
+
+    if (!match) {
+      const shownReceiver = slipData.receiver?.displayName || slipData.receiver?.name || 'ไม่ระบุ';
+      const err: any = new Error(`ชื่อบัญชีผู้รับในสลิป (${shownReceiver}) ไม่ตรงกับชื่อที่กำหนดไว้ (${cleanExpectedName})`);
       err.code = 1014;
+      err.details = { transRef, slipData };
       throw err;
     }
   }
 
-  if (expectedReceiverAccount && expectedReceiverAccount.trim() !== '') {
-    const cleanExpectedAcc = expectedReceiverAccount.replace(/[^0-9]/g, '');
-    const accVal: string = (slipData.receiver?.account?.value || slipData.receiver?.proxy?.value || '').replace(/[^0-9xX]/g, '');
-    const last4Expected = cleanExpectedAcc.slice(-4);
-    const last4Slip = accVal.replace(/[^0-9]/g, '').slice(-4);
-    if (last4Expected && last4Expected !== last4Slip) {
-      const err: any = new Error(`เลขบัญชีผู้รับในสลิป (${accVal}) ไม่ตรงกับบัญชีที่กำหนด`);
+  // Account / PromptPay number verification
+  if (allowedLast4Set.size > 0) {
+    const candidateSlipValues = [
+      slipData.receiver?.account?.value,
+      slipData.receiver?.proxy?.value
+    ].filter(Boolean) as string[];
+
+    const slipNumbers = candidateSlipValues
+      .map((v) => v.replace(/[^0-9]/g, ''))
+      .filter((v) => v.length >= 4);
+
+    const matchesAnyAccount = slipNumbers.some((num) => allowedLast4Set.has(num.slice(-4)));
+
+    if (!matchesAnyAccount) {
+      const displaySlipVal = candidateSlipValues.join(' / ') || 'ไม่พบเลขบัญชี';
+      const err: any = new Error(`เลขบัญชี/พร้อมเพย์ผู้รับในสลิป (${displaySlipVal}) ไม่ตรงกับบัญชีที่กำหนด`);
       err.code = 1014;
+      err.details = { transRef, slipData };
       throw err;
     }
   }

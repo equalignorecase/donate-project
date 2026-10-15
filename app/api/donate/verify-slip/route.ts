@@ -94,11 +94,52 @@ export async function POST(request: Request) {
         fileBuffer,
         fileName: slipFile.name || 'slip.jpg',
         mimeType: slipFile.type || 'image/jpeg',
-        expectedAmount
+        expectedAmount,
+        log: true
       });
     } catch (err: any) {
+      const failReason = err.message || 'การตรวจสอบสลิปล้มเหลว';
+      const slipTransRef =
+        err.details?.data?.transRef ||
+        err.details?.transRef ||
+        err.details?.slipData?.transRef ||
+        '';
+      const uniqueFailRef = `FAIL-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+      const displayRef = `${uniqueFailRef} | ${failReason}${slipTransRef ? ` [Ref: ${slipTransRef}]` : ''}`;
+
+      try {
+        await supabaseAdmin.from('donations').insert([
+          {
+            name,
+            amount: expectedAmount,
+            message: cleanMessage,
+            transaction_ref: displayRef,
+            sender_name:
+              err.details?.data?.sender?.displayName ||
+              err.details?.data?.sender?.name ||
+              err.details?.slipData?.sender?.displayName ||
+              err.details?.slipData?.sender?.name ||
+              'ผู้สนับสนุนนิรนาม',
+            sender_bank:
+              err.details?.data?.sendingBank ||
+              err.details?.slipData?.sendingBank ||
+              '',
+            receiver_name:
+              err.details?.data?.receiver?.displayName ||
+              err.details?.data?.receiver?.name ||
+              err.details?.slipData?.receiver?.displayName ||
+              err.details?.slipData?.receiver?.name ||
+              '',
+            transaction_date: new Date().toISOString(),
+            status: 'failed'
+          }
+        ]);
+      } catch (logErr: any) {
+        console.warn('Could not record failed slip to database:', logErr.message);
+      }
+
       return NextResponse.json(
-        { success: false, message: err.message || 'การตรวจสอบสลิปล้มเหลว', code: err.code },
+        { success: false, message: failReason, code: err.code },
         { status: 400 }
       );
     }

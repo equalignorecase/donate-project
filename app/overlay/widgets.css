@@ -104,8 +104,11 @@ body.widget-overlay-body {
     display: flex;
     align-items: center;
     gap: 12px;
-    padding: 12px 0;
+    padding: 12px 14px;
     border-bottom: 1px solid;
+    position: relative;
+    overflow: hidden;
+    border-radius: 0;
 }
 
 .supporter-rows li:last-child {
@@ -116,10 +119,14 @@ body.widget-overlay-body {
     flex: 1;
     min-width: 0;
     overflow-wrap: anywhere;
+    position: relative;
+    z-index: 1;
 }
 
 .supporter-rows strong {
     flex-shrink: 0;
+    position: relative;
+    z-index: 1;
 }
 
 .supporter-rank {
@@ -132,12 +139,16 @@ body.widget-overlay-body {
     font-weight: 700;
     border-radius: 50%;
     background: rgba(148, 163, 184, .12);
+    position: relative;
+    z-index: 1;
 }
 
 .supporter-layout-cards .supporter-rows li {
     padding: 14px;
     border: 0;
     border-radius: 12px;
+    position: relative;
+    overflow: hidden;
 }
 
 .goal-values {
@@ -488,6 +499,87 @@ body.widget-overlay-body {
     color: #cbd5e1;
 }
 
+/* ==========================================================
+   Supporter Ranking Text Shine Sweep (ลำแสงวิ่งพาดผ่านตัวอักษร)
+   ========================================================== */
+
+.supporter-shimmer-text {
+    display: inline-block;
+    max-width: 100%;
+    vertical-align: bottom;
+    background-size: 260% 100%;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: supporter-text-shine-glide 3.8s cubic-bezier(0.22, 1, 0.36, 1) infinite;
+    animation-delay: var(--text-shine-delay, 0s);
+    will-change: background-position, filter;
+}
+
+/* Crystal Theme (Default) - ประกายเพชรคริสตัล */
+.supporter-shine-theme-crystal .supporter-shimmer-text {
+    background-image: linear-gradient(
+        115deg,
+        var(--text-color) 0%,
+        var(--text-color) 35%,
+        #ffffff 50%,
+        var(--text-color) 65%,
+        var(--text-color) 100%
+    );
+    --shine-glow: rgba(255, 255, 255, 0.85);
+}
+
+/* Gold Theme - ประกายทองพรีเมียม */
+.supporter-shine-theme-gold .supporter-shimmer-text {
+    background-image: linear-gradient(
+        115deg,
+        var(--text-color) 0%,
+        var(--text-color) 32%,
+        #fde68a 44%,
+        #ffffff 50%,
+        #fde68a 56%,
+        var(--text-color) 68%,
+        var(--text-color) 100%
+    );
+    --shine-glow: rgba(245, 158, 11, 0.85);
+}
+
+/* Cyan Theme - นีออนไซแอน */
+.supporter-shine-theme-cyan .supporter-shimmer-text {
+    background-image: linear-gradient(
+        115deg,
+        var(--text-color) 0%,
+        var(--text-color) 32%,
+        #67e8f9 44%,
+        #ffffff 50%,
+        #67e8f9 56%,
+        var(--text-color) 68%,
+        var(--text-color) 100%
+    );
+    --shine-glow: rgba(6, 182, 212, 0.85);
+}
+
+@keyframes supporter-text-shine-glide {
+    0% {
+        background-position: 135% 0;
+        filter: drop-shadow(0 0 0px transparent);
+    }
+    12% {
+        filter: drop-shadow(0 0 5px var(--shine-glow, rgba(255, 255, 255, 0.85)));
+    }
+    24% {
+        filter: drop-shadow(0 0 0px transparent);
+    }
+    35% {
+        background-position: -135% 0;
+        filter: drop-shadow(0 0 0px transparent);
+    }
+    100% {
+        background-position: -135% 0;
+        filter: drop-shadow(0 0 0px transparent);
+    }
+}
+
 @media (prefers-reduced-motion: reduce) {
     .goal-fill {
         transition: none;
@@ -495,7 +587,11 @@ body.widget-overlay-body {
 
     .goal-bar-shine,
     .goal-bar-texture,
-    .goal-bar-shine-sweep {
+    .goal-bar-shine-sweep,
+    .supporter-shimmer-text {
         animation: none !important;
+        background-image: none !important;
+        -webkit-text-fill-color: initial !important;
+        color: var(--text-color) !important;
     }
 }

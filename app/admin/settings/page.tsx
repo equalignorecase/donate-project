@@ -179,33 +179,50 @@ export default function AdminSettingsPage() {
           ระบบตรวจสอบความปลอดภัยสลิปเพิ่มเติม (Optional)
         </h3>
         <p style={{ fontSize: '12px', color: 'var(--text-dim)', marginBottom: '14px' }}>
-          หากระบุข้อมูลด้านล่าง ระบบจะปฏิเสธสลิปที่ชื่อหรือเลขบัญชีปลายทางไม่ตรงกับที่ระบุ (เว้นว่างไว้เพื่อตรวจเฉพาะยอดเงินและสลิปซ้ำ)
+          ระบุชื่อและเลขบัญชีปลายทางเพื่อป้องกันการส่งสลิปปลอมหรือโอนผิดบัญชี (รองรับทั้งพร้อมเพย์และเลขบัญชีธนาคาร)
         </p>
 
         <div className="form-row">
           <div className="form-group">
-            <label className="form-label" htmlFor="settingReceiverName">ชื่อผู้รับเงินในบัญชี (บางส่วนหรือเต็ม)</label>
+            <label className="form-label" htmlFor="settingReceiverName">
+              ชื่อผู้รับเงินในบัญชี (ภาษาไทย หรือ อังกฤษ ใส่หลายชื่อคั่นด้วย ",")
+            </label>
             <input
               type="text"
               id="settingReceiverName"
               className="input-control"
-              placeholder="เช่น นาย สวัสดี"
+              placeholder="เช่น นาย สมชาย ใจดี, SOMCHAI"
               value={settings.receiver_name || ''}
               onChange={(e) => setSettings({ ...settings, receiver_name: e.target.value })}
             />
           </div>
 
           <div className="form-group">
-            <label className="form-label" htmlFor="settingReceiverAccount">เลขบัญชีผู้รับเงิน (เฉพาะตัวเลข)</label>
+            <label className="form-label" htmlFor="settingReceiverAccount">
+              เลขบัญชีธนาคารผู้รับ (ใส่ได้หลายบัญชี คั่นด้วย ",")
+            </label>
             <input
               type="text"
               id="settingReceiverAccount"
               className="input-control"
-              placeholder="เช่น 0123456789"
+              placeholder="เช่น 1234567890, 9876543210"
               value={settings.receiver_account || ''}
               onChange={(e) => setSettings({ ...settings, receiver_account: e.target.value })}
             />
           </div>
+        </div>
+
+        <div style={{
+          marginTop: '8px',
+          padding: '12px 16px',
+          borderRadius: '8px',
+          background: 'rgba(56, 189, 248, 0.08)',
+          border: '1px solid rgba(56, 189, 248, 0.25)',
+          fontSize: '13px',
+          lineHeight: '1.5',
+          color: 'var(--text-main)'
+        }}>
+          📌 <strong>สำคัญมากสำหรับ SlipOK:</strong> หากต้องการให้ระบบตรวจผ่านทั้งการ <strong>"สแกนพร้อมเพย์"</strong> และการ <strong>"โอนเลขบัญชีธนาคารตรง"</strong> คุณต้องเข้าไปที่หน้าเว็บ <a href="https://slipok.com" target="_blank" rel="noopener noreferrer" style={{ color: '#38bdf8', textDecoration: 'underline' }}>SlipOK Dashboard</a> แล้วเพิ่มทั้ง <strong>เบอร์พร้อมเพย์</strong> และ <strong>เลขที่บัญชีธนาคาร</strong> ไว้ในสาขา (Branch) ของคุณด้วย มิฉะนั้น SlipOK จะปฏิเสธสลิปด้วย Error 1014 ทันที
         </div>
 
         <button type="submit" className="btn" style={{ marginTop: '14px' }} disabled={isSaving}>
