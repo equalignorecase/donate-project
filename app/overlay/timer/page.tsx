@@ -162,6 +162,13 @@ export default function TimerOverlayPage() {
   const [urlShadowOverride, setUrlShadowOverride] = useState<boolean | null>(null);
   const [urlShadowColor, setUrlShadowColor] = useState<string | null>(null);
   const [urlShadowBlur, setUrlShadowBlur] = useState<number | null>(null);
+  const [urlFontOverride, setUrlFontOverride] = useState<string | null>(() => {
+    if (typeof window !== 'undefined') {
+      const p = new URLSearchParams(window.location.search);
+      return p.get('font');
+    }
+    return null;
+  });
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -184,6 +191,10 @@ export default function TimerOverlayPage() {
       if (params.has('shadow_blur')) {
         const b = Number(params.get('shadow_blur'));
         if (!isNaN(b)) setUrlShadowBlur(b);
+      }
+      if (params.has('font')) {
+        const f = params.get('font');
+        if (f) setUrlFontOverride(f);
       }
     }
   }, []);
@@ -227,8 +238,10 @@ export default function TimerOverlayPage() {
     .toString(16)
     .padStart(2, '0');
 
+  const activeFont = urlFontOverride || appearance.font || 'LINESeedSansTH';
+
   const containerStyle: React.CSSProperties = {
-    fontFamily: `'${appearance.font || 'LINESeedSansTH'}', sans-serif`,
+    fontFamily: `'${activeFont}', sans-serif`,
     width: `${appearance.width || 480}px`,
     maxWidth: '96vw',
     padding: isBackgroundVisible ? `${appearance.padding || 24}px` : `${Math.min(appearance.padding || 16, 20)}px 12px`,
@@ -314,6 +327,7 @@ export default function TimerOverlayPage() {
           <span
             className={`timer-digits ${isDigitsShineEnabled ? `timer-shimmer-sweep timer-shine-theme-${shineTheme}` : ''}`}
             style={{
+              fontFamily: `'${activeFont}', sans-serif`,
               textShadow: digitsTextShadow,
               ['--digits-color' as any]: appearance.text_color || '#ffffff'
             }}

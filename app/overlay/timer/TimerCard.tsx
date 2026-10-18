@@ -134,6 +134,7 @@ export default function TimerCard({
         <span
           className={`timer-digits ${isDigitsShineEnabled ? `timer-shimmer-sweep timer-shine-theme-${shineTheme}` : ''}`}
           style={{
+            fontFamily: `'${appearance.font || 'LINESeedSansTH'}', sans-serif`,
             textShadow: digitsTextShadow,
             ['--digits-color' as any]: appearance.text_color || '#ffffff'
           }}

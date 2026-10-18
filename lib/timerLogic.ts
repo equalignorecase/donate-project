@@ -143,6 +143,7 @@ export function readTimerAppearance(settings: Record<string, string>): TimerAppe
     base.theme = settings.timer_theme as any;
   }
   if (settings.timer_title) base.title = settings.timer_title;
+  if (settings.timer_font) base.font = settings.timer_font;
   if (settings.timer_bg_color) base.bg_color = settings.timer_bg_color;
   if (settings.timer_text_color) base.text_color = settings.timer_text_color;
   if (settings.timer_accent_color) base.accent_color = settings.timer_accent_color;

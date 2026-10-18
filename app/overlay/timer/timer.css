@@ -1,6 +1,6 @@
 /* Subathon Timer Widget CSS */
 
-@import url('https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;600;700&family=JetBrains+Mono:wght@500;700;800&family=Outfit:wght@400;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700;800&family=Kanit:wght@400;500;600;700;800;900&family=Mitr:wght@400;500;600;700&family=Outfit:wght@400;500;600;700;800;900&family=Prompt:wght@400;500;600;700;800;900&display=swap');
 
 .timer-overlay-body {
   margin: 0;
@@ -18,6 +18,10 @@
   position: relative;
   box-sizing: border-box;
   transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.timer-widget-container * {
+  font-family: inherit;
 }
 
 /* ==========================================================================
@@ -41,7 +45,7 @@
   border: 2px solid var(--timer-accent, #38bdf8);
   box-shadow: 0 0 20px rgba(56, 189, 248, 0.35),
     inset 0 0 15px rgba(56, 189, 248, 0.15);
-  font-family: 'Chakra Petch', sans-serif !important;
+  font-family: 'Chakra Petch', sans-serif;
 }
 
 .timer-theme-neon .timer-digits {
@@ -61,7 +65,7 @@
   background: #000000;
   border: 3px solid #334155;
   box-shadow: inset 0 0 20px rgba(0, 255, 128, 0.15), 0 12px 30px rgba(0, 0, 0, 0.7);
-  font-family: 'JetBrains Mono', monospace !important;
+  font-family: 'JetBrains Mono', monospace;
 }
 
 .timer-theme-retro .timer-digits {
@@ -125,9 +129,9 @@
   align-items: baseline;
   justify-content: center;
   position: relative;
-  font-weight: 800;
+  font-weight: 700;
   line-height: 1;
-  font-variant-numeric: tabular-nums;
+  font-family: inherit;
   letter-spacing: 1px;
   transition: all 0.2s ease;
 }
@@ -135,6 +139,7 @@
 .timer-digits {
   display: inline-flex;
   align-items: center;
+  font-family: inherit;
 }
 
 .timer-digits-separator {
