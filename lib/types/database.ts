@@ -96,6 +96,7 @@ export interface AlertSettings {
   tts_pitch?: number | string;
   tts_engine?: string;
   promptpay_id?: string;
+  truemoney_phone?: string;
   receiver_name?: string;
   receiver_account?: string;
   min_donate?: string;

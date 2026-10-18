@@ -9,6 +9,7 @@ import './customizer.css';
 import { AlertSettings } from '@/lib/types/database';
 import { Sidebar, MobileTopBar } from '@/app/components';
 import AlertCard from '@/app/overlay/alert/AlertCard';
+import { amountToThaiWords } from '@/lib/thaiNumber';
 
 const ICONS: Record<string, React.ReactNode> = {
   gift: (
@@ -415,9 +416,9 @@ export default function CustomizerPage() {
     const vol = Math.min(Math.max((Number(settings.alert_volume ?? 80)) / 100, 0), 1);
     const donorName = (testName || 'สมชาย ใจดี').trim();
     const actionText = (settings.alert_action_text || 'โดเนทให้').trim();
-    const amountVal = testAmount || 50;
+    const thaiAmount = amountToThaiWords(testAmount || 50);
     const msg = (testMessage || '').trim();
-    let sampleText = `${donorName} ${actionText} ${amountVal} บาท`;
+    let sampleText = `${donorName} ${actionText} ${thaiAmount}`;
     if (msg) sampleText += ` ${msg}`;
 
     if (voice === 'browser_default') {

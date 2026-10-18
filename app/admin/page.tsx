@@ -88,6 +88,26 @@ function AdminOverviewContent() {
 
   const handleSendTestAlert = async () => {
     try {
+      // Broadcast locally via BroadcastChannel for instant same-browser cross-tab delivery
+      if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
+        try {
+          const bc = new BroadcastChannel('donation-alerts');
+          bc.postMessage({
+            type: 'donation',
+            payload: {
+              id: 'test-admin-' + Date.now(),
+              name: testName || 'ผู้ชมทดสอบ',
+              amount: parseFloat(testAmount) || 50,
+              message: testMessage || 'ทดสอบระบบ Alert ขึ้นจอ OBS',
+              sender_bank: 'TEST',
+              created_at: new Date().toLocaleTimeString('th-TH'),
+              isTest: true
+            }
+          });
+          bc.close();
+        } catch (e) {}
+      }
+
       const res = await fetch('/api/admin/test-alert', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

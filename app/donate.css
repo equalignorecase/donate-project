@@ -76,49 +76,71 @@
   --bg-card: #ffffff;
   --bg-subtle: #f1f5f9;
   --bg-input: #ffffff;
-  
+
   --border-subtle: #e2e8f0;
   --border-focus: #0f172a;
-  
+
   --text-main: #0f172a;
   --text-muted: #475569;
   --text-dim: #94a3b8;
-  
+
   --primary: #0f172a;
   --primary-hover: #1e293b;
-  
+
   --accent: #2563eb;
   --accent-light: #eff6ff;
-  
+
   --success: #059669;
   --success-light: #ecfdf5;
   --danger: #dc2626;
   --danger-light: #fef2f2;
-  
+
   --radius-xl: 24px;
   --radius-lg: 18px;
   --radius-md: 12px;
   --radius-sm: 8px;
-  
+
   --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.04);
   --shadow-card: 0 20px 45px -12px rgba(15, 23, 42, 0.08), 0 0 1px 1px rgba(15, 23, 42, 0.04);
   --shadow-pop: 0 25px 50px -12px rgba(15, 23, 42, 0.15);
-  
+
   --font-family: 'LINESeedSansTH', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-*, *::before, *::after {
+*,
+*::before,
+*::after {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
 
-html, body, button, input, select, textarea, optgroup, a, p, h1, h2, h3, h4, h5, h6, span, label, div {
+html,
+body,
+button,
+input,
+select,
+textarea,
+optgroup,
+a,
+p,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+span,
+label,
+div {
   font-family: var(--font-family);
 }
 
-button, input, select, textarea {
+button,
+input,
+select,
+textarea {
   font-family: inherit;
 }
 
@@ -147,7 +169,7 @@ body {
   height: 100vh;
   pointer-events: none;
   z-index: 0;
-  background: 
+  background:
     radial-gradient(circle at 10% 15%, rgba(37, 99, 235, 0.04) 0%, transparent 45%),
     radial-gradient(circle at 90% 20%, rgba(15, 23, 42, 0.03) 0%, transparent 40%),
     radial-gradient(circle at 50% 90%, rgba(5, 150, 105, 0.03) 0%, transparent 50%);
@@ -218,8 +240,17 @@ body {
 }
 
 @keyframes pulseLive {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.85; transform: scale(1.04); }
+
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  50% {
+    opacity: 0.85;
+    transform: scale(1.04);
+  }
 }
 
 .streamer-name {
@@ -244,8 +275,15 @@ body {
   border-radius: var(--radius-xl);
   padding: 32px 28px;
   box-shadow: var(--shadow-card);
-  transition: var(--transition);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   margin-bottom: 20px;
+  display: flex;
+  flex-direction: column;
+  min-height: 700px;
+}
+
+.card .btn-primary {
+  margin-top: auto;
 }
 
 .form-group {
@@ -298,6 +336,56 @@ textarea.input-control {
   resize: vertical;
   min-height: 90px;
   line-height: 1.5;
+}
+
+/* Inline Validation Styles */
+.input-control.has-error {
+  border-color: #ef4444 !important;
+  background: #fef2f2;
+}
+
+[data-theme='dark'] .input-control.has-error {
+  border-color: #ef4444 !important;
+  background: rgba(239, 68, 68, 0.1);
+}
+
+.input-control.has-error:focus {
+  border-color: #dc2626 !important;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.18) !important;
+}
+
+.dropzone.has-error {
+  border-color: #ef4444 !important;
+  background: #fef2f2 !important;
+}
+
+[data-theme='dark'] .dropzone.has-error {
+  border-color: #ef4444 !important;
+  background: rgba(239, 68, 68, 0.1) !important;
+}
+
+.inline-error {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #ef4444;
+  font-size: 12px;
+  font-weight: 500;
+  margin-top: 6px;
+  animation: fadeIn 0.2s ease-out;
+}
+
+.inline-error svg {
+  flex-shrink: 0;
+  color: #ef4444;
+}
+
+[data-theme='dark'] .inline-error {
+  color: #f87171;
+}
+
+[data-theme='dark'] .inline-error svg {
+  color: #f87171;
 }
 
 /* Minimal Preset Amount Buttons */
@@ -375,11 +463,14 @@ textarea.input-control {
 /* Payment Method Selector (2 Columns Horizontal) */
 .payment-method-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
+  width: 100%;
 }
 
 .payment-method-card {
+  width: 100%;
+  box-sizing: border-box;
   background: var(--bg-card);
   border: 1.5px solid var(--border-subtle);
   border-radius: var(--radius-md);
@@ -393,6 +484,7 @@ textarea.input-control {
   user-select: none;
   box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
   min-width: 0;
+  height: 100%;
 }
 
 .payment-method-card:hover {
@@ -430,6 +522,9 @@ textarea.input-control {
 .pm-icon-wrap {
   width: 38px;
   height: 38px;
+  min-width: 38px;
+  max-width: 38px;
+  box-sizing: border-box;
   border-radius: var(--radius-sm);
   display: flex;
   align-items: center;
@@ -440,12 +535,13 @@ textarea.input-control {
 }
 
 .pm-icon-wrap.pp {
-  background: #002D62;
-  padding: 4px;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  padding: 2px;
 }
 
 .pm-icon-wrap.tm {
-  background: #fff7ed;
+  background: #ffffff;
   border: 1px solid #fed7aa;
   padding: 2px;
 }
@@ -509,6 +605,176 @@ textarea.input-control {
   box-shadow: 0 0 6px #10b981;
   display: inline-block;
   flex-shrink: 0;
+}
+
+/* TrueMoney Voucher Section */
+.tm-voucher-group {
+  margin-top: 18px;
+  animation: fadeIn 0.3s ease;
+}
+
+.tm-voucher-input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.tm-voucher-input-wrap .input-control {
+  padding-right: 80px;
+}
+
+.tm-paste-btn {
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: var(--bg-surface, #ffffff);
+  border: 1px solid var(--border-color, #e2e8f0);
+  color: var(--text-main, #0f172a);
+  font-size: 12px;
+  font-weight: 700;
+  padding: 6px 12px;
+  border-radius: var(--radius-sm, 8px);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.tm-paste-btn:hover {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+}
+
+.tm-hint-box {
+  margin-top: 8px;
+  background: #fff7ed;
+  border: 1px solid #fed7aa;
+  border-radius: var(--radius-sm, 8px);
+  padding: 8px 12px;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 12px;
+  color: #9a3412;
+  line-height: 1.4;
+}
+
+.tm-hint-icon {
+  font-size: 14px;
+  flex-shrink: 0;
+  line-height: 1.2;
+}
+
+[data-theme='dark'] .tm-hint-box {
+  background: rgba(249, 115, 22, 0.12);
+  border-color: rgba(249, 115, 22, 0.3);
+  color: #fdba74;
+}
+
+[data-theme='dark'] .tm-paste-btn {
+  background: #1e293b;
+  border-color: #334155;
+  color: #f1f5f9;
+}
+
+[data-theme='dark'] .tm-paste-btn:hover {
+  background: #334155;
+}
+
+/* PromptPay Info Hint Group (Balances card height with TrueMoney) */
+.pp-hint-group {
+  margin-top: 14px;
+  margin-bottom: 18px;
+  animation: fadeIn 0.3s ease;
+}
+
+.pp-hint-box {
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: var(--radius-sm, 8px);
+  padding: 9px 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: #166534;
+  line-height: 1.45;
+}
+
+.pp-hint-icon {
+  font-size: 14px;
+  flex-shrink: 0;
+  line-height: 1.2;
+}
+
+[data-theme='dark'] .pp-hint-box {
+  background: rgba(16, 185, 129, 0.12);
+  border-color: rgba(16, 185, 129, 0.3);
+  color: #86efac;
+}
+
+/* TrueMoney Amount Notice Banner */
+.tm-amount-notice-group {
+  margin-bottom: 20px;
+  animation: fadeIn 0.25s ease-out;
+}
+
+.tm-amount-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  background: linear-gradient(135deg, rgba(249, 115, 22, 0.08) 0%, rgba(251, 146, 60, 0.04) 100%);
+  border: 1.5px solid rgba(249, 115, 22, 0.25);
+  border-radius: var(--radius-md, 12px);
+  padding: 14px 16px;
+  transition: all 0.2s ease;
+}
+
+.tm-amount-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: #ff6b00;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 4px 10px rgba(255, 107, 0, 0.25);
+}
+
+.tm-amount-text {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.tm-amount-text strong {
+  font-size: 14px;
+  font-weight: 700;
+  color: #c2410c;
+}
+
+.tm-amount-text span {
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: var(--text-secondary, #64748b);
+}
+
+[data-theme='dark'] .tm-amount-banner {
+  background: linear-gradient(135deg, rgba(249, 115, 22, 0.15) 0%, rgba(234, 88, 12, 0.05) 100%);
+  border-color: rgba(249, 115, 22, 0.35);
+}
+
+[data-theme='dark'] .tm-amount-text strong {
+  color: #fb923c;
+}
+
+[data-theme='dark'] .tm-amount-text span {
+  color: #cbd5e1;
 }
 
 .badge-dot.upcoming {
@@ -605,8 +871,15 @@ textarea.input-control {
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* Step 2 Header & Summary Pill */
@@ -706,8 +979,10 @@ textarea.input-control {
 
 /* Payment Channel Tabs (Step 2) */
 .payment-channel-tabs {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 8px;
+  width: 100%;
   margin-bottom: 20px;
   padding-bottom: 14px;
   border-bottom: 1px solid var(--border-subtle);
@@ -716,14 +991,18 @@ textarea.input-control {
 .channel-tab {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
+  width: 100%;
+  box-sizing: border-box;
   gap: 7px;
-  padding: 6px 12px;
+  padding: 7px 12px;
   border-radius: 20px;
   font-size: 12.5px;
   font-weight: 600;
   cursor: pointer;
   transition: var(--transition);
   user-select: none;
+  text-align: center;
 }
 
 .channel-tab.active {
@@ -762,22 +1041,27 @@ textarea.input-control {
   margin-left: 2px;
 }
 
-/* Grid Layout (Desktop: 2 columns, Mobile: 1 column) */
+/* Grid Layout (Desktop: 2 columns equal 50/50, Mobile: 1 column) */
 .payment-grid {
   display: grid;
-  grid-template-columns: 310px 1fr;
-  gap: 28px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px;
   align-items: start;
+  width: 100%;
 }
 
 .payment-col-qr {
   display: flex;
   flex-direction: column;
+  width: 100%;
+  min-width: 0;
 }
 
 .payment-col-upload {
   display: flex;
   flex-direction: column;
+  width: 100%;
+  min-width: 0;
 }
 
 /* QR Box */
@@ -794,9 +1078,11 @@ textarea.input-control {
 }
 
 .promptpay-logo {
-  height: 32px;
-  margin-bottom: 10px;
+  height: 44px;
+  width: 44px;
+  margin: 0 auto 10px;
   object-fit: contain;
+  display: block;
 }
 
 .qr-image-wrapper {
@@ -913,6 +1199,38 @@ textarea.input-control {
   border-radius: 12px;
   color: var(--text-muted);
   font-weight: 500;
+}
+
+/* QR Guide Box */
+.qr-guide-box {
+  background: var(--bg-subtle, #f8fafc);
+  border: 1px solid var(--border-subtle, #e2e8f0);
+  border-radius: var(--radius-md, 10px);
+  padding: 10px 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 12px;
+  color: var(--text-muted, #64748b);
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.qr-guide-box svg {
+  flex-shrink: 0;
+  color: var(--primary, #2563eb);
+}
+
+.qr-guide-box p {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+[data-theme='dark'] .qr-guide-box {
+  background: #1e293b;
+  border-color: #334155;
+  color: #94a3b8;
 }
 
 /* Mobile Banking Guide Tip */
@@ -1044,7 +1362,8 @@ textarea.input-control {
   margin-bottom: 16px;
 }
 
-.dropzone:hover, .dropzone.dragover {
+.dropzone:hover,
+.dropzone.dragover {
   border-color: var(--primary);
   background: #edf2f7;
   transform: translateY(-1px);
@@ -1219,8 +1538,15 @@ textarea.input-control {
 }
 
 @keyframes scalePop {
-  0% { transform: scale(0); opacity: 0; }
-  100% { transform: scale(1); opacity: 1; }
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
 
 .receipt-box {
@@ -1309,7 +1635,9 @@ textarea.input-control {
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* ==========================================================
@@ -1333,8 +1661,13 @@ textarea.input-control {
 }
 
 @keyframes modalFadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
 }
 
 .modal-alert-box,
@@ -1352,8 +1685,15 @@ textarea.input-control {
 }
 
 @keyframes modalPopUp {
-  0% { transform: scale(0.92); opacity: 0; }
-  100% { transform: scale(1); opacity: 1; }
+  0% {
+    transform: scale(0.92);
+    opacity: 0;
+  }
+
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
 
 .modal-alert-icon-wrap {
@@ -1457,6 +1797,7 @@ textarea.input-control {
   from {
     opacity: 0;
   }
+
   to {
     opacity: 1;
   }
@@ -1486,6 +1827,7 @@ textarea.input-control {
     opacity: 0;
     transform: translateY(22px) scale(0.97);
   }
+
   to {
     opacity: 1;
     transform: translateY(0) scale(1);
@@ -1571,6 +1913,7 @@ textarea.input-control {
   }
 
   .card {
+    min-height: auto;
     padding: 22px 18px;
     border-radius: var(--radius-lg);
   }
@@ -1602,6 +1945,7 @@ textarea.input-control {
       opacity: 0;
       transform: translateY(100%);
     }
+
     to {
       opacity: 1;
       transform: translateY(0);
@@ -1634,11 +1978,14 @@ textarea.input-control {
   }
 
   .payment-method-grid {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 8px;
+    width: 100%;
   }
 
   .payment-method-card {
+    width: 100%;
+    box-sizing: border-box;
     padding: 10px 10px;
     gap: 8px;
   }
@@ -1821,11 +2168,14 @@ textarea.input-control {
   }
 
   .payment-method-grid {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 6px;
+    width: 100%;
   }
 
   .payment-method-card {
+    width: 100%;
+    box-sizing: border-box;
     padding: 8px 7px;
     gap: 6px;
   }

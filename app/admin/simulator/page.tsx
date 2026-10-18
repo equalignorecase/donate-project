@@ -36,6 +36,7 @@ import { defaultTimerAppearance, TimerAppearance } from '@/lib/timerTypes';
 import { AlertSettings } from '@/lib/types/database';
 import { supabase } from '@/lib/supabaseClient';
 import { Supporter } from '@/lib/widgets';
+import { amountToThaiWords } from '@/lib/thaiNumber';
 import './simulator.css';
 import '@/app/overlay/overlay.css';
 import '@/app/overlay/widgets.css';
@@ -98,7 +99,9 @@ export default function SimulatorPage() {
 
   // Audio and timer for simulated alert
   const alertAudioRef = useRef<HTMLAudioElement | null>(null);
+  const simTtsAudioRef = useRef<HTMLAudioElement | null>(null);
   const alertTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const simTtsTimeoutRef = useRef<any>(null);
 
   // Load layout from localStorage
   useEffect(() => {
@@ -221,18 +224,78 @@ export default function SimulatorPage() {
     if (alertTimerRef.current) {
       clearTimeout(alertTimerRef.current);
     }
+    if (simTtsTimeoutRef.current) {
+      clearTimeout(simTtsTimeoutRef.current);
+    }
     setAlertSimKey(k => k + 1);
     setIsAlertShowing(true);
+    
+    const vol = Math.min(Math.max((Number(alertSettings.alert_volume ?? 80)) / 100, 0), 1);
     if (alertAudioRef.current) {
-      const vol = Math.min(Math.max((Number(alertSettings.alert_volume ?? 80)) / 100, 0), 1);
       alertAudioRef.current.volume = vol;
       alertAudioRef.current.currentTime = 0;
       alertAudioRef.current.play().catch(() => {});
     }
+
+    const testPayload = {
+      id: 'test-sim-' + Date.now(),
+      name: alertSample.name || 'คุณสมศักดิ์ นาวา',
+      amount: Number(alertSample.amount) || 500,
+      message: alertSample.message || 'ยินดีด้วยกับการสตรีมครับ!',
+      sender_bank: 'SIMULATOR',
+      created_at: new Date().toLocaleTimeString('th-TH'),
+      isTest: true
+    };
+
+    // Broadcast to open OBS overlay tabs via BroadcastChannel
+    if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
+      try {
+        const bc = new BroadcastChannel('donation-alerts');
+        bc.postMessage({ type: 'donation', payload: testPayload });
+        bc.close();
+      } catch (e) {}
+    }
+
     const duration = Math.max(3, Number(alertSettings.alert_duration) || 6);
+
+    // TTS speech preview in simulator
+    const ttsEnabled = alertSettings.tts_enabled === 'true' || alertSettings.tts_enabled === true;
+    const minAmt = Number(alertSettings.tts_min_amount || 0);
+    if (ttsEnabled && testPayload.amount >= minAmt) {
+      const thaiAmt = amountToThaiWords(testPayload.amount);
+      const actionText = (alertSettings.alert_action_text || 'โดเนทให้').trim();
+      const textToSpeak = `${testPayload.name} ${actionText} ${thaiAmt} ${testPayload.message}`;
+      const ttsVoice = String(alertSettings.tts_voice || 'th-TH-PremwadeeNeural');
+      const url = `/api/tts?text=${encodeURIComponent(textToSpeak)}&voice=${encodeURIComponent(ttsVoice)}`;
+
+      if (simTtsAudioRef.current) {
+        simTtsAudioRef.current.src = url;
+        simTtsAudioRef.current.volume = vol;
+        simTtsAudioRef.current.load();
+      }
+
+      simTtsTimeoutRef.current = setTimeout(() => {
+        if (simTtsAudioRef.current) {
+          simTtsAudioRef.current.play().catch(() => {});
+        }
+      }, 1200);
+
+      // Safety guard timeout
+      alertTimerRef.current = setTimeout(() => {
+        setIsAlertShowing(false);
+      }, 35000);
+    } else {
+      alertTimerRef.current = setTimeout(() => {
+        setIsAlertShowing(false);
+      }, duration * 1000);
+    }
+  };
+
+  const handleSimTtsEnded = () => {
+    if (alertTimerRef.current) clearTimeout(alertTimerRef.current);
     alertTimerRef.current = setTimeout(() => {
       setIsAlertShowing(false);
-    }, duration * 1000);
+    }, 1500);
   };
 
   // Drag and drop event handlers
@@ -350,8 +413,14 @@ export default function SimulatorPage() {
 
   return (
     <div className="simulator-container">
-      {/* Hidden audio for simulated alert sound */}
+      {/* Hidden audio for simulated alert sound and TTS preview */}
       <audio ref={alertAudioRef} src="/sounds/alert.mp3" preload="auto" />
+      <audio
+        ref={simTtsAudioRef}
+        preload="auto"
+        onEnded={handleSimTtsEnded}
+        onError={handleSimTtsEnded}
+      />
 
       {/* Header bar */}
       <div className="simulator-header">

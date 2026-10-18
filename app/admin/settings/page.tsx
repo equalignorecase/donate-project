@@ -107,6 +107,22 @@ export default function AdminSettingsPage() {
           </div>
 
           <div className="form-group">
+            <label className="form-label" htmlFor="settingTrueMoneyPhone">
+              เบอร์ TrueMoney Wallet รับเงิน (10 หลัก)
+            </label>
+            <input
+              type="text"
+              id="settingTrueMoneyPhone"
+              className="input-control"
+              placeholder="0649520055"
+              value={settings.truemoney_phone || ''}
+              onChange={(e) => setSettings({ ...settings, truemoney_phone: e.target.value })}
+            />
+          </div>
+        </div>
+
+        <div className="form-row">
+          <div className="form-group">
             <label className="form-label" htmlFor="settingMinDonate">ยอดโดเนทขั้นต่ำ (บาท)</label>
             <input
               type="number"
@@ -117,9 +133,7 @@ export default function AdminSettingsPage() {
               onChange={(e) => setSettings({ ...settings, min_donate: e.target.value })}
             />
           </div>
-        </div>
 
-        <div className="form-row">
           <div className="form-group">
             <label className="form-label" htmlFor="settingAlertDuration">ระยะเวลาแสดง Alert บน OBS (วินาที)</label>
             <input
@@ -132,7 +146,9 @@ export default function AdminSettingsPage() {
               onChange={(e) => setSettings({ ...settings, alert_duration: parseInt(e.target.value) || 8 })}
             />
           </div>
+        </div>
 
+        <div className="form-row">
           <div className="form-group">
             <label className="form-label" htmlFor="settingAlertVolume">
               ระดับเสียงแจ้งเตือน ({settings.alert_volume || 80}%)

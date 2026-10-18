@@ -6,6 +6,7 @@ import './widgets.css';
 import { supabase } from '@/lib/supabaseClient';
 import { Donation, AlertSettings } from '@/lib/types/database';
 import AlertCard from './alert/AlertCard';
+import { amountToThaiWords } from '@/lib/thaiNumber';
 
 const ICONS: Record<string, React.ReactNode> = {
   gift: (
@@ -67,6 +68,61 @@ export default function OverlayPage() {
   const isPlayingRef = useRef<boolean>(false);
   const settingsRef = useRef<AlertSettings>(settings);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const ttsAudioRef = useRef<HTMLAudioElement | null>(null);
+  const ttsTimeoutRef = useRef<any>(null);
+  const alertStartTimeRef = useRef<number>(0);
+  const alertDismissTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const isTtsSpeakingRef = useRef<boolean>(false);
+  const processedAlertIds = useRef<Set<string>>(new Set());
+  const [audioUnlocked, setAudioUnlocked] = useState<boolean>(false);
+  const [showBanner, setShowBanner] = useState<boolean>(true);
+
+  // Unlock audio context on user click/interaction
+  const unlockAudio = () => {
+    setAudioUnlocked(true);
+    try {
+      if (audioRef.current && audioRef.current.paused) {
+        audioRef.current.play().then(() => {
+          audioRef.current?.pause();
+          audioRef.current.currentTime = 0;
+        }).catch(() => {});
+      }
+      if (ttsAudioRef.current && ttsAudioRef.current.paused) {
+        ttsAudioRef.current.play().then(() => {
+          ttsAudioRef.current?.pause();
+          ttsAudioRef.current.currentTime = 0;
+        }).catch(() => {});
+      }
+      const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+      if (AudioCtx) {
+        const ctx = new AudioCtx();
+        if (ctx.state === 'suspended') {
+          ctx.resume().catch(() => {});
+        }
+      }
+    } catch (e) {}
+  };
+
+  // Listen to any user interaction to unlock audio
+  useEffect(() => {
+    const handleGesture = () => unlockAudio();
+    window.addEventListener('click', handleGesture);
+    window.addEventListener('pointerdown', handleGesture);
+    window.addEventListener('keydown', handleGesture);
+
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('obs') === '1' || params.get('clean') === '1') {
+        setShowBanner(false);
+      }
+    }
+
+    return () => {
+      window.removeEventListener('click', handleGesture);
+      window.removeEventListener('pointerdown', handleGesture);
+      window.removeEventListener('keydown', handleGesture);
+    };
+  }, []);
 
   useEffect(() => {
     document.body.classList.add('overlay-body');
@@ -195,8 +251,59 @@ export default function OverlayPage() {
     }
   }
 
+  function dismissAlert() {
+    if (alertDismissTimeoutRef.current) {
+      clearTimeout(alertDismissTimeoutRef.current);
+      alertDismissTimeoutRef.current = null;
+    }
+    // Cut off any remaining audio to ensure alert card and sound stop together
+    if (ttsAudioRef.current) {
+      try {
+        ttsAudioRef.current.pause();
+        ttsAudioRef.current.currentTime = 0;
+      } catch (e) {}
+    }
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      try {
+        window.speechSynthesis.cancel();
+      } catch (e) {}
+    }
+    isTtsSpeakingRef.current = false;
+
+    setAlertAnimState('hide');
+    setTimeout(() => {
+      setAlertAnimState('');
+      setCurrentAlert(null);
+      isPlayingRef.current = false;
+      processQueue();
+    }, 500);
+  }
+
+  function scheduleAlertDismiss(delayMs: number) {
+    if (alertDismissTimeoutRef.current) {
+      clearTimeout(alertDismissTimeoutRef.current);
+    }
+    alertDismissTimeoutRef.current = setTimeout(() => {
+      dismissAlert();
+    }, Math.max(delayMs, 0));
+  }
+
+  function onTtsEnded() {
+    if (!isPlayingRef.current) return;
+    isTtsSpeakingRef.current = false;
+    const minDurationMs = parseFloat(String(settingsRef.current.alert_duration || 8)) * 1000;
+    const elapsed = Date.now() - alertStartTimeRef.current;
+    // Keep showing card for 1.5s after TTS finishes speaking, or until minDurationMs is met
+    const remainingTime = Math.max(1500, minDurationMs - elapsed);
+    console.log(`[Overlay] TTS finished speaking. Remaining display time: ${remainingTime}ms`);
+    scheduleAlertDismiss(remainingTime);
+  }
+
   function fallbackWebSpeech(textToSpeak: string, volume: number) {
-    if (!('speechSynthesis' in window)) return;
+    if (!('speechSynthesis' in window)) {
+      onTtsEnded();
+      return;
+    }
     try {
       window.speechSynthesis.cancel();
       const utterance = new SpeechSynthesisUtterance(textToSpeak);
@@ -209,23 +316,33 @@ export default function OverlayPage() {
       const thaiVoice = voices.find(v => v.lang.startsWith('th'));
       if (thaiVoice) utterance.voice = thaiVoice;
 
+      utterance.onend = () => {
+        onTtsEnded();
+      };
+      utterance.onerror = (e) => {
+        console.warn('Web Speech utterance error:', e);
+        onTtsEnded();
+      };
+
       window.speechSynthesis.speak(utterance);
     } catch (e) {
       console.warn('Web Speech error:', e);
+      onTtsEnded();
     }
   }
 
-  function speakDonation(item: Donation) {
+  function speakDonation(item: Donation): boolean {
     const s = settingsRef.current;
-    if (s.tts_enabled !== 'true' && s.tts_enabled !== true) return;
+    if (s.tts_enabled !== 'true' && s.tts_enabled !== true) return false;
 
     const minAmt = parseFloat(String(s.tts_min_amount || 0));
     const itemAmt = parseFloat(String(item.amount || 0));
-    if (itemAmt < minAmt) return;
+    if (itemAmt < minAmt) return false;
 
     const donorName = item.name?.trim() || 'Anonymous';
     const actionText = (s.alert_action_text || 'โดเนทให้').trim();
-    let textToSpeak = `${donorName} ${actionText} ${itemAmt} บาท`;
+    const thaiAmount = amountToThaiWords(itemAmt);
+    let textToSpeak = `${donorName} ${actionText} ${thaiAmount}`;
     if (item.message && item.message.trim() !== '') {
       textToSpeak += ` ${item.message.trim()}`;
     }
@@ -236,71 +353,99 @@ export default function OverlayPage() {
     const ttsPitch = String(s.tts_pitch || '+0Hz');
     const volume = Math.min(Math.max(parseFloat(String(s.alert_volume || 80)) / 100, 0), 1);
 
+    if (ttsTimeoutRef.current) {
+      clearTimeout(ttsTimeoutRef.current);
+    }
+
     if (ttsEngine === 'edge' || ttsVoice.startsWith('th-TH-')) {
       const url = `/api/tts?text=${encodeURIComponent(textToSpeak)}&voice=${encodeURIComponent(ttsVoice)}&rate=${encodeURIComponent(ttsSpeed)}&pitch=${encodeURIComponent(ttsPitch)}`;
-      const audio = new Audio(url);
-      audio.volume = volume;
+      
+      if (ttsAudioRef.current) {
+        ttsAudioRef.current.src = url;
+        ttsAudioRef.current.volume = volume;
+        ttsAudioRef.current.load();
+      }
 
-      setTimeout(() => {
-        audio.play().catch(err => {
-          console.warn('Edge TTS audio playback failed, falling back to Web Speech:', err);
+      ttsTimeoutRef.current = setTimeout(() => {
+        if (ttsAudioRef.current) {
+          ttsAudioRef.current.play().catch(err => {
+            console.warn('[Overlay TTS] Audio play blocked or failed, falling back to Web Speech:', err);
+            fallbackWebSpeech(textToSpeak, volume);
+          });
+        } else {
           fallbackWebSpeech(textToSpeak, volume);
-        });
+        }
       }, 1200);
     } else {
-      setTimeout(() => {
+      ttsTimeoutRef.current = setTimeout(() => {
         fallbackWebSpeech(textToSpeak, volume);
       }, 1200);
     }
+
+    return true;
   }
 
   function processQueue() {
     if (isPlayingRef.current || queueRef.current.length === 0) return;
 
     isPlayingRef.current = true;
+    alertStartTimeRef.current = Date.now();
     const item = queueRef.current.shift()!;
     setCurrentAlert(item);
 
     playAlertSound();
-    speakDonation(item);
+    const willSpeak = speakDonation(item);
 
     setAlertAnimState('show');
 
-    const durationSec = parseFloat(String(settingsRef.current.alert_duration || 8));
-    const durationMs = durationSec * 1000;
+    const minDurationMs = parseFloat(String(settingsRef.current.alert_duration || 8)) * 1000;
 
-    setTimeout(() => {
-      setAlertAnimState('hide');
-      setTimeout(() => {
-        setAlertAnimState('');
-        setCurrentAlert(null);
-        isPlayingRef.current = false;
-        processQueue();
-      }, 500);
-    }, durationMs);
+    if (!willSpeak) {
+      scheduleAlertDismiss(minDurationMs);
+    } else {
+      isTtsSpeakingRef.current = true;
+      // Safety guard: dismiss if audio hangs longer than 35s
+      scheduleAlertDismiss(Math.max(minDurationMs, 35000));
+    }
   }
 
   function handleIncomingDonation(data: Donation) {
-    console.log('[OBS Overlay] Received donation alert:', data);
-    queueRef.current.push(data);
+    if (!data) return;
+    const id = String(data.id || `alert-${data.name}-${data.amount}-${Date.now()}`);
+    if (processedAlertIds.current.has(id)) {
+      return;
+    }
+    processedAlertIds.current.add(id);
+    if (processedAlertIds.current.size > 200) {
+      const first = processedAlertIds.current.values().next().value;
+      if (first) processedAlertIds.current.delete(first);
+    }
+
+    console.log('[OBS Overlay] Queued donation alert:', data);
+    queueRef.current.push({ ...data, id });
     processQueue();
   }
+
+  const triggerLocalTest = () => {
+    unlockAudio();
+    handleIncomingDonation({
+      id: 'test-direct-' + Date.now(),
+      name: 'ผู้สนับสนุนใจดี',
+      amount: 1000,
+      message: 'ทดสอบเสียงแจ้งเตือนและระบบอ่านภาษาไทย 1,000 บาทสำเร็จ!',
+      sender_bank: 'PROMPTPAY',
+      created_at: new Date().toLocaleTimeString('th-TH'),
+      isTest: true
+    });
+  };
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
       if (params.get('test') === '1' || params.get('preview') === '1') {
         setTimeout(() => {
-          handleIncomingDonation({
-            id: 'test-preview-' + Date.now(),
-            name: 'Anonymous',
-            amount: 100,
-            message: 'ทดสอบเสียงแจ้งเตือนและการแสดงผลบนหน้าจอ OBS สำเร็จ!',
-            sender_bank: 'PROMPTPAY',
-            created_at: new Date().toLocaleTimeString('th-TH'),
-            isTest: true
-          });
-        }, 800);
+          triggerLocalTest();
+        }, 1000);
       }
     }
   }, []);
@@ -314,6 +459,20 @@ export default function OverlayPage() {
         }
       })
       .catch(err => console.warn('Could not load initial settings:', err));
+
+    // Listen to local BroadcastChannel for zero-latency testing
+    let bc: BroadcastChannel | null = null;
+    if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
+      bc = new BroadcastChannel('donation-alerts');
+      bc.onmessage = (event) => {
+        if (event.data?.type === 'donation' && event.data?.payload) {
+          console.log('[OBS Overlay] Received via BroadcastChannel:', event.data.payload);
+          handleIncomingDonation(event.data.payload);
+        } else if (event.data?.type === 'settings_updated' && event.data?.payload) {
+          setSettings(prev => ({ ...prev, ...event.data.payload }));
+        }
+      };
+    }
 
     const channel = supabase.channel('donation-alerts');
 
@@ -333,6 +492,9 @@ export default function OverlayPage() {
 
     return () => {
       supabase.removeChannel(channel);
+      if (bc) bc.close();
+      if (ttsTimeoutRef.current) clearTimeout(ttsTimeoutRef.current);
+      if (alertDismissTimeoutRef.current) clearTimeout(alertDismissTimeoutRef.current);
     };
   }, []);
 
@@ -353,6 +515,81 @@ export default function OverlayPage() {
       position: 'relative'
     }}>
       <audio ref={audioRef} src="/sounds/alert.mp3" preload="auto" />
+      <audio
+        ref={ttsAudioRef}
+        preload="auto"
+        onEnded={onTtsEnded}
+        onError={() => onTtsEnded()}
+      />
+
+      {/* Browser Autoplay Notice & Local Sound Tester (Hidden in OBS via ?obs=1 or close button) */}
+      {showBanner && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 14,
+            left: '50%',
+            transform: 'translateX(-50%)',
+            zIndex: 99999,
+            background: audioUnlocked ? 'rgba(15, 23, 42, 0.88)' : 'rgba(220, 38, 38, 0.94)',
+            backdropFilter: 'blur(12px)',
+            color: '#ffffff',
+            padding: '8px 16px',
+            borderRadius: '9999px',
+            boxShadow: '0 8px 30px rgba(0,0,0,0.3)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '12px',
+            fontSize: '13px',
+            fontWeight: 500,
+            fontFamily: 'sans-serif',
+            transition: 'all 0.3s ease',
+            border: '1px solid rgba(255,255,255,0.15)'
+          }}
+        >
+          <span>
+            {audioUnlocked
+              ? '🔊 เสียงพร้อมทำงานแล้ว'
+              : '🔇 เบราว์เซอร์บล็อกเสียงอัตโนมัติ (คลิกที่นี่เพื่อเปิดเสียง)'}
+          </span>
+          <button
+            type="button"
+            onClick={triggerLocalTest}
+            style={{
+              background: '#ffffff',
+              color: '#0f172a',
+              border: 'none',
+              padding: '4px 12px',
+              borderRadius: '9999px',
+              fontSize: '12px',
+              fontWeight: 700,
+              cursor: 'pointer',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '4px',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.2)'
+            }}
+          >
+            ▶ ทดสอบ Alert + TTS (1,000฿)
+          </button>
+          <button
+            type="button"
+            onClick={() => setShowBanner(false)}
+            title="ซ่อนแถบนี้ (สำหรับ OBS หน้าจอโปร่งใสอยู่แล้ว)"
+            style={{
+              background: 'transparent',
+              border: 'none',
+              color: 'rgba(255, 255, 255, 0.7)',
+              cursor: 'pointer',
+              fontSize: '16px',
+              lineHeight: 1,
+              padding: '2px 4px',
+            }}
+          >
+            ✕
+          </button>
+        </div>
+      )}
 
       {currentAlert && (
         <AlertCard
