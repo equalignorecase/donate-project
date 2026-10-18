@@ -8,7 +8,7 @@ import '../overlay/widgets.css';
 import './customizer.css';
 import { AlertSettings } from '@/lib/types/database';
 import { Sidebar, MobileTopBar } from '@/app/components';
-import AlertCard from '@/app/overlay/alert/AlertCard';
+import AlertCard, { getAlertTier } from '@/app/overlay/alert/AlertCard';
 import { amountToThaiWords } from '@/lib/thaiNumber';
 
 const ICONS: Record<string, React.ReactNode> = {
@@ -374,6 +374,8 @@ export default function CustomizerPage() {
     alert_text_margin_bottom: 0,
     alert_text_margin_left: 0,
     alert_text_margin_right: 0,
+    alert_icon_margin_bottom: 8,
+    alert_msg_margin_top: 8,
     alert_line_height: 1.35,
     alert_text_stroke_enabled: 'false',
     alert_text_stroke_color: '#000000',
@@ -407,12 +409,6 @@ export default function CustomizerPage() {
       testAudioRef.current = null;
     }
 
-    let voice = settings.tts_voice || 'th-TH-PremwadeeNeural';
-    if (voice === 'th-TH-AcharaNeural') {
-      voice = 'th-TH-PremwadeeNeural';
-    }
-    const rate = settings.tts_speed || '+0%';
-    const pitch = settings.tts_pitch || '+0Hz';
     const vol = Math.min(Math.max((Number(settings.alert_volume ?? 80)) / 100, 0), 1);
     const donorName = (testName || 'สมชาย ใจดี').trim();
     const actionText = (settings.alert_action_text || 'โดเนทให้').trim();
@@ -421,20 +417,9 @@ export default function CustomizerPage() {
     let sampleText = `${donorName} ${actionText} ${thaiAmount}`;
     if (msg) sampleText += ` ${msg}`;
 
-    if (voice === 'browser_default') {
-      if ('speechSynthesis' in window) {
-        window.speechSynthesis.cancel();
-        const u = new SpeechSynthesisUtterance(sampleText);
-        u.lang = 'th-TH';
-        u.volume = vol;
-        window.speechSynthesis.speak(u);
-      }
-      return;
-    }
-
     try {
       setIsPlayingTts(true);
-      const url = `/api/tts?text=${encodeURIComponent(sampleText)}&voice=${encodeURIComponent(voice)}&rate=${encodeURIComponent(rate)}&pitch=${encodeURIComponent(pitch)}`;
+      const url = `/api/tts?text=${encodeURIComponent(sampleText)}`;
       const audio = new Audio(url);
       audio.volume = vol;
       testAudioRef.current = audio;
@@ -1534,8 +1519,10 @@ export default function CustomizerPage() {
                     type="button"
                     className="btn-text-action"
                     onClick={() => {
+                      updateField('alert_icon_margin_bottom', 8);
+                      updateField('alert_msg_margin_top', 8);
                       updateField('alert_text_margin_top', 0);
-                      updateField('alert_text_margin_bottom', 10);
+                      updateField('alert_text_margin_bottom', 0);
                       updateField('alert_text_margin_left', 0);
                       updateField('alert_text_margin_right', 0);
                       updateField('alert_letter_spacing', 0);
@@ -1544,6 +1531,55 @@ export default function CustomizerPage() {
                   >
                     รีเซ็ตระยะห่าง
                   </button>
+                </div>
+
+                {/* Vertical Gaps (ไอคอน ↔ ชื่อ ↔ ข้อความ) */}
+                <div style={{
+                  background: 'rgba(37, 99, 235, 0.05)',
+                  border: '1.5px solid rgba(37, 99, 235, 0.25)',
+                  borderRadius: 'var(--radius-md, 12px)',
+                  padding: '14px',
+                  marginBottom: '14px'
+                }}>
+                  <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-main)', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <span>🎯</span>
+                    <span>ปรับระยะห่างบน-ล่าง (ไอคอน ↔ ชื่อโดเนท ↔ ข้อความ)</span>
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px' }}>
+                    <div className="form-group">
+                      <label className="form-label">
+                        <span>🎁 ไอคอน ↔ ชื่อโดเนท</span>
+                        <span className="label-val">{settings.alert_icon_margin_bottom ?? 8}px</span>
+                      </label>
+                      <input
+                        type="range"
+                        min="0"
+                        max="40"
+                        value={settings.alert_icon_margin_bottom ?? 8}
+                        onChange={(e) => updateField('alert_icon_margin_bottom', parseInt(e.target.value))}
+                      />
+                      <div style={{ fontSize: '11px', color: 'var(--text-dim)', marginTop: '2px' }}>
+                        ระยะห่างระหว่างไอคอนของขวัญกับชื่อ
+                      </div>
+                    </div>
+
+                    <div className="form-group">
+                      <label className="form-label">
+                        <span>💬 ชื่อโดเนท ↔ ข้อความ</span>
+                        <span className="label-val">{settings.alert_msg_margin_top ?? 8}px</span>
+                      </label>
+                      <input
+                        type="range"
+                        min="0"
+                        max="40"
+                        value={settings.alert_msg_margin_top ?? 8}
+                        onChange={(e) => updateField('alert_msg_margin_top', parseInt(e.target.value))}
+                      />
+                      <div style={{ fontSize: '11px', color: 'var(--text-dim)', marginTop: '2px' }}>
+                        ระยะห่างระหว่างบรรทัดชื่อกับกล่องข้อความ
+                      </div>
+                    </div>
+                  </div>
                 </div>
 
                 {/* 4-way Spacing Grid (บน, ล่าง, ซ้าย, ขวา) */}
@@ -1555,13 +1591,13 @@ export default function CustomizerPage() {
                   marginBottom: '14px'
                 }}>
                   <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '10px' }}>
-                    ระยะห่างขอบข้อความ (Margins: บน - ล่าง - ซ้าย - ขวา)
+                    ปรับตำแหน่งกรอบตัวอักษรเพิ่มเติม (Fine-tune Margins)
                   </div>
-                  
+
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px' }}>
                     <div className="form-group">
                       <label className="form-label">
-                        <span>⬆️ บน (Top)</span>
+                        <span>⬆️ ดันลงล่าง (Top Margin)</span>
                         <span className="label-val">{settings.alert_text_margin_top ?? 0}px</span>
                       </label>
                       <input
@@ -1575,14 +1611,14 @@ export default function CustomizerPage() {
 
                     <div className="form-group">
                       <label className="form-label">
-                        <span>⬇️ ล่าง (Bottom)</span>
-                        <span className="label-val">{settings.alert_text_margin_bottom ?? 10}px</span>
+                        <span>⬇️ ดันขึ้นบน (Bottom Margin)</span>
+                        <span className="label-val">{settings.alert_text_margin_bottom ?? 0}px</span>
                       </label>
                       <input
                         type="range"
                         min="0"
                         max="60"
-                        value={settings.alert_text_margin_bottom ?? 10}
+                        value={settings.alert_text_margin_bottom ?? 0}
                         onChange={(e) => updateField('alert_text_margin_bottom', parseInt(e.target.value))}
                       />
                     </div>
@@ -1943,108 +1979,38 @@ export default function CustomizerPage() {
                 </div>
               </div>
 
-              {/* Voice Actor Selection Cards */}
-              <div className="form-group" style={{ marginTop: '12px' }}>
-                <label className="form-label">เลือกเสียงผู้พูด (Voice Actor)</label>
-                <div className="tts-voice-grid">
-                  {[
-                    {
-                      id: 'th-TH-PremwadeeNeural',
-                      name: 'เปรมวดี (Premwadee)',
-                      gender: 'ผู้หญิง',
-                      desc: 'เสียงนุ่มนวล ชัดเจน เหมือนคนจริงมาก (สตรีมเมอร์นิยมที่สุด ⭐)',
-                      badge: 'Neural AI',
-                      avatar: '👩'
-                    },
-                    {
-                      id: 'th-TH-NiwatNeural',
-                      name: 'นิวัต (Niwat)',
-                      gender: 'ผู้ชาย',
-                      desc: 'เสียงทุ้ม นุ่ม อบอุ่น เป็นธรรมชาติ ฟังสบายหู',
-                      badge: 'Neural AI',
-                      avatar: '👨'
-                    },
-                    {
-                      id: 'th-TH-PremwadeeNeural-cute',
-                      name: 'เปรมวดี โทนสดใส (Premwadee - Lively)',
-                      gender: 'ผู้หญิง',
-                      desc: 'โทนเสียงคีย์สูง สดใส ร่าเริง สไตล์อนิเมะ/สตรีมเมอร์เกม',
-                      badge: 'Neural AI',
-                      avatar: '👧'
-                    },
-                    {
-                      id: 'browser_default',
-                      name: 'เสียงในเครื่อง (Browser Native)',
-                      gender: 'ระบบ',
-                      desc: 'ใช้เสียงสังเคราะห์ในเครื่องคอมพิวเตอร์ของคุณ',
-                      badge: 'Offline',
-                      avatar: '🌐'
-                    }
-                  ].map((v) => {
-                    const currentVoice = settings.tts_voice === 'th-TH-AcharaNeural' ? 'th-TH-PremwadeeNeural' : (settings.tts_voice || 'th-TH-PremwadeeNeural');
-                    const isSelected = currentVoice === v.id;
-                    return (
-                      <div
-                        key={v.id}
-                        className={`tts-voice-card ${isSelected ? 'active' : ''}`}
-                        onClick={() => {
-                          updateField('tts_voice', v.id);
-                          updateField('tts_engine', v.id === 'browser_default' ? 'web_speech' : 'edge');
-                        }}
-                      >
-                        <div className="tts-voice-top">
-                          <span className="tts-voice-avatar">{v.avatar}</span>
-                          <div className="tts-voice-info">
-                            <div className="tts-voice-name">{v.name}</div>
-                            <div className="tts-voice-gender">{v.gender}</div>
-                          </div>
-                          <span className={`tts-voice-badge ${v.badge === 'Neural AI' ? 'neural' : ''}`}>
-                            {v.badge}
-                          </span>
-                        </div>
-                        <p className="tts-voice-desc">{v.desc}</p>
-                      </div>
-                    );
-                  })}
+              {/* Google TTS Engine Info Banner */}
+              <div style={{
+                marginTop: '16px',
+                padding: '14px 16px',
+                background: 'var(--bg-main, #f8fafc)',
+                border: '1px solid var(--border)',
+                borderRadius: 'var(--radius-md, 12px)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px'
+              }}>
+                <div style={{
+                  width: '40px',
+                  height: '40px',
+                  borderRadius: '10px',
+                  background: 'rgba(37, 99, 235, 0.1)',
+                  color: '#2563eb',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '22px',
+                  flexShrink: 0
+                }}>
+                  🌐
                 </div>
-              </div>
-
-              {/* Speed & Pitch Controls */}
-              <div className="form-row" style={{ marginTop: '14px' }}>
-                <div className="form-group">
-                  <label className="form-label">
-                    <span>ความเร็วในการพูด (Speed): {settings.tts_speed || '+0%'}</span>
-                  </label>
-                  <select
-                    className="input-control"
-                    value={settings.tts_speed || '+0%'}
-                    onChange={(e) => updateField('tts_speed', e.target.value)}
-                  >
-                    <option value="-20%">ช้ามาก (-20%)</option>
-                    <option value="-10%">ช้าเล็กน้อย (-10%)</option>
-                    <option value="+0%">ปกติ (Default 1.0x)</option>
-                    <option value="+10%">เร็วขึ้นเล็กน้อย (+10%)</option>
-                    <option value="+20%">เร็ว (+20%)</option>
-                    <option value="+35%">เร็วมาก (+35%)</option>
-                    <option value="+50%">เร็วติดสปีด (+50%)</option>
-                  </select>
-                </div>
-
-                <div className="form-group">
-                  <label className="form-label">
-                    <span>ระดับเสียงสูง-ต่ำ (Pitch): {settings.tts_pitch || '+0Hz'}</span>
-                  </label>
-                  <select
-                    className="input-control"
-                    value={settings.tts_pitch || '+0Hz'}
-                    onChange={(e) => updateField('tts_pitch', e.target.value)}
-                  >
-                    <option value="-15Hz">ทุ้มเข้ม (-15Hz)</option>
-                    <option value="-8Hz">ทุ้มเล็กน้อย (-8Hz)</option>
-                    <option value="+0Hz">ปกติ (Default 0Hz)</option>
-                    <option value="+8Hz">แหลมขึ้นเล็กน้อย (+8Hz)</option>
-                    <option value="+15Hz">แหลมสดใส (+15Hz)</option>
-                  </select>
+                <div>
+                  <div style={{ fontWeight: 700, fontSize: '13.5px', color: 'var(--text-main)' }}>
+                    ระบบอ่านออกเสียง: Google Translate Thai (100%)
+                  </div>
+                  <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '2px', lineHeight: 1.4 }}>
+                    ระบบใช้เสียงมาตรฐาน Google ภาษาไทย คมชัด เสถียรสูง รองรับข้อความยาวอัตโนมัติ ไม่ต้องตั้งค่าคีย์หรือเสียงเพิ่มเติม
+                  </div>
                 </div>
               </div>
 
@@ -2090,6 +2056,124 @@ export default function CustomizerPage() {
                     </>
                   )}
                 </button>
+              </div>
+            </div>
+
+            {/* Section: Tiered Alert Text Colors */}
+            <div className="panel-section">
+              <div className="section-title">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 20h9"></path>
+                  <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+                </svg>
+                ระบบเปลี่ยนสีตัวอักษรตามระดับยอดเงิน (Tiered Text Colors)
+              </div>
+              <p className="section-desc">
+                เปลี่ยนสีชื่อผู้โดเนทและยอดเงินตามระดับจำนวนเงินอัตโนมัติ (Common: สีตามธีมหลัก | Rare | Epic | Legendary)
+              </p>
+
+              <div className="form-row" style={{ marginBottom: '12px' }}>
+                <div className="form-group" style={{ width: '100%' }}>
+                  <label className="form-label">สถานะเปิดใช้งาน Tiered Text Colors</label>
+                  <select
+                    className="input-control"
+                    value={String(settings.alert_tiered_enabled !== 'false' && settings.alert_tiered_enabled !== false)}
+                    onChange={(e) => updateField('alert_tiered_enabled', e.target.value)}
+                  >
+                    <option value="true">เปิดใช้งาน (เปลี่ยนสีตัวอักษรชื่อและยอดเงินตามระดับ)</option>
+                    <option value="false">ปิดใช้งาน (ใช้สีตัวอักษรปกติเท่ากันทุกยอด)</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Rare Tier Controls */}
+              <div className="form-row" style={{ marginBottom: '12px' }}>
+                <div className="form-group">
+                  <label className="form-label">ยอดขั้นต่ำ Rare (บาท)</label>
+                  <input
+                    type="number"
+                    className="input-control"
+                    min="1"
+                    value={settings.alert_tiered_rare_min ?? 50}
+                    onChange={(e) => updateField('alert_tiered_rare_min', parseInt(e.target.value) || 0)}
+                  />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">สีตัวอักษร Rare</label>
+                  <div className="color-input-wrap">
+                    <input
+                      type="color"
+                      value={settings.alert_tiered_rare_color?.startsWith('#') ? settings.alert_tiered_rare_color : '#0284c7'}
+                      onChange={(e) => updateField('alert_tiered_rare_color', e.target.value)}
+                    />
+                    <input
+                      type="text"
+                      className="hex-input"
+                      value={settings.alert_tiered_rare_color || '#0284c7'}
+                      onChange={(e) => updateField('alert_tiered_rare_color', e.target.value)}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Epic Tier Controls */}
+              <div className="form-row" style={{ marginBottom: '12px' }}>
+                <div className="form-group">
+                  <label className="form-label">ยอดขั้นต่ำ Epic (บาท)</label>
+                  <input
+                    type="number"
+                    className="input-control"
+                    min="1"
+                    value={settings.alert_tiered_epic_min ?? 200}
+                    onChange={(e) => updateField('alert_tiered_epic_min', parseInt(e.target.value) || 0)}
+                  />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">สีตัวอักษร Epic</label>
+                  <div className="color-input-wrap">
+                    <input
+                      type="color"
+                      value={settings.alert_tiered_epic_color?.startsWith('#') ? settings.alert_tiered_epic_color : '#9333ea'}
+                      onChange={(e) => updateField('alert_tiered_epic_color', e.target.value)}
+                    />
+                    <input
+                      type="text"
+                      className="hex-input"
+                      value={settings.alert_tiered_epic_color || '#9333ea'}
+                      onChange={(e) => updateField('alert_tiered_epic_color', e.target.value)}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Legendary Tier Controls */}
+              <div className="form-row">
+                <div className="form-group">
+                  <label className="form-label">ยอดขั้นต่ำ Legendary (บาท)</label>
+                  <input
+                    type="number"
+                    className="input-control"
+                    min="1"
+                    value={settings.alert_tiered_legendary_min ?? 500}
+                    onChange={(e) => updateField('alert_tiered_legendary_min', parseInt(e.target.value) || 0)}
+                  />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">สีตัวอักษร Legendary</label>
+                  <div className="color-input-wrap">
+                    <input
+                      type="color"
+                      value={settings.alert_tiered_legendary_color?.startsWith('#') ? settings.alert_tiered_legendary_color : '#ea580c'}
+                      onChange={(e) => updateField('alert_tiered_legendary_color', e.target.value)}
+                    />
+                    <input
+                      type="text"
+                      className="hex-input"
+                      value={settings.alert_tiered_legendary_color || '#ea580c'}
+                      onChange={(e) => updateField('alert_tiered_legendary_color', e.target.value)}
+                    />
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -2184,39 +2268,61 @@ export default function CustomizerPage() {
                   </svg>
                   <span>กำหนดข้อความและข้อมูลทดสอบ</span>
                 </div>
-                <div className="test-presets-wrap">
+                <div className="test-presets-wrap" style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                   <button
                     type="button"
                     className="test-preset-btn"
                     onClick={() => {
                       setTestName('สมชาย ใจดี');
-                      setTestAmount(50);
+                      setTestAmount(20);
                       setTestMessage('สวัสดีครับ เป็นกำลังใจให้นะครับ สตรีมสนุกมาก!');
+                      setIsAnimating(true);
+                      setTimeout(() => setIsAnimating(false), 50);
                     }}
                   >
-                    ทั่วไป
+                    🟢 Common (20฿)
                   </button>
                   <button
                     type="button"
                     className="test-preset-btn"
+                    style={{ borderColor: settings.alert_tiered_rare_color || '#0284c7', color: 'var(--text-main)' }}
                     onClick={() => {
-                      setTestName('สายเปย์ ตัวจริง');
-                      setTestAmount(1000);
-                      setTestMessage('ขอให้มีความสุขกับการสตรีม เติมพลังให้ครับ 🎉');
-                    }}
-                  >
-                    สายเปย์
-                  </button>
-                  <button
-                    type="button"
-                    className="test-preset-btn"
-                    onClick={() => {
-                      setTestName('Anonymous');
+                      setTestName('ฟ้าใส สดชื่น');
                       setTestAmount(100);
-                      setTestMessage('');
+                      setTestMessage('ชอบคอนเทนต์และเสียงพูดมากครับ สู้ๆ ✨');
+                      setIsAnimating(true);
+                      setTimeout(() => setIsAnimating(false), 50);
                     }}
                   >
-                    ไม่มีข้อความ
+                    🔵 Rare (100฿)
+                  </button>
+                  <button
+                    type="button"
+                    className="test-preset-btn"
+                    style={{ borderColor: settings.alert_tiered_epic_color || '#9333ea', color: 'var(--text-main)' }}
+                    onClick={() => {
+                      setTestName('เสี่ยท็อป สายเปย์');
+                      setTestAmount(300);
+                      setTestMessage('สุดยอดมากครับ เป็นกำลังใจให้พัฒนาต่อไปเรื่อยๆ 💎');
+                      setIsAnimating(true);
+                      setTimeout(() => setIsAnimating(false), 50);
+                    }}
+                  >
+                    🟣 Epic (300฿)
+                  </button>
+                  <button
+                    type="button"
+                    className="test-preset-btn"
+                    style={{ borderColor: settings.alert_tiered_legendary_color || '#ea580c', color: 'var(--text-main)' }}
+                    onClick={() => {
+                      setTestName('สุลต่าน ใจป๋า');
+                      setTestAmount(1000);
+                      setTestMessage('เติมพลังให้สตรีมเมอร์ สู้ๆ นะครับ! 👑');
+                      setIsAnimating(true);
+                      setTimeout(() => setIsAnimating(false), 50);
+                    }}
+                  >
+                    🟠 Legendary (1,000฿)
                   </button>
                 </div>
               </div>

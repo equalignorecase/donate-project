@@ -191,6 +191,139 @@ export default function AdminSettingsPage() {
           </div>
         </div>
 
+        <h3 style={{ fontSize: '15px', margin: '24px 0 10px', color: 'var(--text-main)', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <span>🎨</span>
+          <span>ระบบเปลี่ยนสีตัวอักษรตามระดับยอดเงิน (Tiered Text Colors)</span>
+        </h3>
+        <p style={{ fontSize: '12px', color: 'var(--text-dim)', marginBottom: '14px' }}>
+          เปลี่ยนสีชื่อผู้โดเนทและยอดเงินตามระดับจำนวนเงินอัตโนมัติ (Common: สีตามธีม | Rare | Epic | Legendary)
+        </p>
+
+        <div className="form-row">
+          <div className="form-group" style={{ width: '100%' }}>
+            <label className="form-label" htmlFor="settingTieredEnabled">
+              สถานะเปิดใช้งาน Tiered Text Colors
+            </label>
+            <select
+              id="settingTieredEnabled"
+              className="input-control"
+              value={String(settings.alert_tiered_enabled !== 'false' && settings.alert_tiered_enabled !== false)}
+              onChange={(e) => setSettings({ ...settings, alert_tiered_enabled: e.target.value })}
+            >
+              <option value="true">เปิดใช้งาน (เปลี่ยนสีตัวอักษรชื่อและยอดเงินตามระดับ)</option>
+              <option value="false">ปิดใช้งาน (ใช้สีตัวอักษรปกติเท่ากันทุกยอด)</option>
+            </select>
+          </div>
+        </div>
+
+        <div className="form-row">
+          <div className="form-group">
+            <label className="form-label" htmlFor="settingTierRareMin">
+              ยอดเงินขั้นต่ำระดับ Rare (บาท)
+            </label>
+            <input
+              type="number"
+              id="settingTierRareMin"
+              className="input-control"
+              min="1"
+              value={settings.alert_tiered_rare_min ?? 50}
+              onChange={(e) => setSettings({ ...settings, alert_tiered_rare_min: parseInt(e.target.value) || 0 })}
+            />
+          </div>
+          <div className="form-group">
+            <label className="form-label" htmlFor="settingTierRareColor">
+              สีตัวอักษร Rare
+            </label>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <input
+                type="color"
+                id="settingTierRareColor"
+                value={settings.alert_tiered_rare_color?.startsWith('#') ? settings.alert_tiered_rare_color : '#0284c7'}
+                onChange={(e) => setSettings({ ...settings, alert_tiered_rare_color: e.target.value })}
+                style={{ width: '40px', height: '38px', borderRadius: '6px', border: '1px solid var(--border)', cursor: 'pointer', padding: '2px', background: 'transparent' }}
+              />
+              <input
+                type="text"
+                className="input-control"
+                value={settings.alert_tiered_rare_color || '#0284c7'}
+                onChange={(e) => setSettings({ ...settings, alert_tiered_rare_color: e.target.value })}
+              />
+            </div>
+          </div>
+        </div>
+
+        <div className="form-row">
+          <div className="form-group">
+            <label className="form-label" htmlFor="settingTierEpicMin">
+              ยอดเงินขั้นต่ำระดับ Epic (บาท)
+            </label>
+            <input
+              type="number"
+              id="settingTierEpicMin"
+              className="input-control"
+              min="1"
+              value={settings.alert_tiered_epic_min ?? 200}
+              onChange={(e) => setSettings({ ...settings, alert_tiered_epic_min: parseInt(e.target.value) || 0 })}
+            />
+          </div>
+          <div className="form-group">
+            <label className="form-label" htmlFor="settingTierEpicColor">
+              สีตัวอักษร Epic
+            </label>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <input
+                type="color"
+                id="settingTierEpicColor"
+                value={settings.alert_tiered_epic_color?.startsWith('#') ? settings.alert_tiered_epic_color : '#9333ea'}
+                onChange={(e) => setSettings({ ...settings, alert_tiered_epic_color: e.target.value })}
+                style={{ width: '40px', height: '38px', borderRadius: '6px', border: '1px solid var(--border)', cursor: 'pointer', padding: '2px', background: 'transparent' }}
+              />
+              <input
+                type="text"
+                className="input-control"
+                value={settings.alert_tiered_epic_color || '#9333ea'}
+                onChange={(e) => setSettings({ ...settings, alert_tiered_epic_color: e.target.value })}
+              />
+            </div>
+          </div>
+        </div>
+
+        <div className="form-row">
+          <div className="form-group">
+            <label className="form-label" htmlFor="settingTierLegendaryMin">
+              ยอดเงินขั้นต่ำระดับ Legendary (บาท)
+            </label>
+            <input
+              type="number"
+              id="settingTierLegendaryMin"
+              className="input-control"
+              min="1"
+              value={settings.alert_tiered_legendary_min ?? 500}
+              onChange={(e) => setSettings({ ...settings, alert_tiered_legendary_min: parseInt(e.target.value) || 0 })}
+            />
+          </div>
+          <div className="form-group">
+            <label className="form-label" htmlFor="settingTierLegendaryColor">
+              สีตัวอักษร Legendary
+            </label>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <input
+                type="color"
+                id="settingTierLegendaryColor"
+                value={settings.alert_tiered_legendary_color?.startsWith('#') ? settings.alert_tiered_legendary_color : '#ea580c'}
+                onChange={(e) => setSettings({ ...settings, alert_tiered_legendary_color: e.target.value })}
+                style={{ width: '40px', height: '38px', borderRadius: '6px', border: '1px solid var(--border)', cursor: 'pointer', padding: '2px', background: 'transparent' }}
+              />
+              <input
+                type="text"
+                className="input-control"
+                value={settings.alert_tiered_legendary_color || '#ea580c'}
+                onChange={(e) => setSettings({ ...settings, alert_tiered_legendary_color: e.target.value })}
+              />
+            </div>
+          </div>
+        </div>
+
         <h3 style={{ fontSize: '15px', margin: '24px 0 10px', color: 'var(--text-main)', fontWeight: 700 }}>
           ระบบตรวจสอบความปลอดภัยสลิปเพิ่มเติม (Optional)
         </h3>

@@ -744,6 +744,37 @@ export default function TimerAdminPage() {
               />
             </div>
 
+            <div className="timer-form-group">
+              <label>ฟอนต์ตัวอักษรและตัวเลข (Font Family)</label>
+              <select
+                value={config.timer_appearance.font || 'LINESeedSansTH'}
+                onChange={e => setConfig(prev => ({
+                  ...prev,
+                  timer_appearance: { ...prev.timer_appearance, font: e.target.value }
+                }))}
+                style={{
+                  width: '100%',
+                  padding: '9px 12px',
+                  borderRadius: '8px',
+                  border: '1.5px solid #cbd5e1',
+                  fontSize: '13.5px',
+                  background: '#ffffff',
+                  fontFamily: `'${config.timer_appearance.font || 'LINESeedSansTH'}', sans-serif`,
+                  cursor: 'pointer'
+                }}
+              >
+                <option value="LINESeedSansTH" style={{ fontFamily: 'LINESeedSansTH, sans-serif' }}>LINE Seed Sans TH (ปกติ)</option>
+                <option value="LINESeedSansTH-ExtraBold" style={{ fontFamily: 'LINESeedSansTH-ExtraBold, sans-serif' }}>LINE Seed Sans TH (หนาพิเศษ ExtraBold)</option>
+                <option value="Chakra Petch" style={{ fontFamily: 'Chakra Petch, sans-serif' }}>Chakra Petch (ไซไฟ / ดิจิทัลเกมมิ่ง)</option>
+                <option value="JetBrains Mono" style={{ fontFamily: 'JetBrains Mono, monospace' }}>JetBrains Mono (โมโนสเปซ / ดิจิทัลคลีน)</option>
+                <option value="Kanit" style={{ fontFamily: 'Kanit, sans-serif' }}>Kanit (คณิต - คมชัด ยอดนิยม)</option>
+                <option value="Prompt" style={{ fontFamily: 'Prompt, sans-serif' }}>Prompt (พร้อมท์ - เรียบหรู ทันสมัย)</option>
+                <option value="Mitr" style={{ fontFamily: 'Mitr, sans-serif' }}>Mitr (มิตร - โค้งมน สบายตา)</option>
+                <option value="Outfit" style={{ fontFamily: 'Outfit, sans-serif' }}>Outfit (เอาต์ฟิต - เรขาคณิต โมเดิร์น)</option>
+                <option value="Inter" style={{ fontFamily: 'Inter, sans-serif' }}>Inter (อินเตอร์ - มินิมอลสากล)</option>
+              </select>
+            </div>
+
             <div className="timer-form-row timer-form-row-colors">
               <div className="timer-form-group" style={{ flex: 1, opacity: config.timer_appearance.show_background === false ? 0.6 : 1 }}>
                 <label>สีพื้นหลัง {config.timer_appearance.show_background === false && '(ปิดอยู่)'}</label>
@@ -1225,9 +1256,9 @@ export default function TimerAdminPage() {
                 }}
               >
                 <iframe
-                  key={`${previewKey}-${config.timer_appearance.show_background !== false ? 'bg' : 'nobg'}-${config.timer_appearance.timer_card_beam !== false ? 'bm1' : 'bm0'}-${config.timer_appearance.timer_shine_sweep !== false ? 'sn1' : 'sn0'}-${config.timer_appearance.timer_shine_theme || 'cyan'}-${config.timer_appearance.show_digits_shadow !== false ? 'sh1' : 'sh0'}-${config.timer_appearance.digits_shadow_color}-${config.timer_appearance.digits_shadow_blur}-${config.timer_appearance.digits_shadow_x}-${config.timer_appearance.digits_shadow_y}`}
+                  key={`${previewKey}-${config.timer_appearance.font || 'LINESeedSansTH'}-${config.timer_appearance.show_background !== false ? 'bg' : 'nobg'}-${config.timer_appearance.timer_card_beam !== false ? 'bm1' : 'bm0'}-${config.timer_appearance.timer_shine_sweep !== false ? 'sn1' : 'sn0'}-${config.timer_appearance.timer_shine_theme || 'cyan'}-${config.timer_appearance.show_digits_shadow !== false ? 'sh1' : 'sh0'}-${config.timer_appearance.digits_shadow_color}-${config.timer_appearance.digits_shadow_blur}-${config.timer_appearance.digits_shadow_x}-${config.timer_appearance.digits_shadow_y}`}
                   title="Timer Live Preview"
-                  src={`/overlay/timer?preview=1${config.timer_appearance.show_background === false ? '&bg=0' : '&bg=1'}${config.timer_appearance.show_digits_shadow === false ? '&shadow=0' : `&shadow=1&shadow_color=${encodeURIComponent(config.timer_appearance.digits_shadow_color || '#000000')}&shadow_blur=${config.timer_appearance.digits_shadow_blur ?? 8}`}`}
+                  src={`/overlay/timer?preview=1${config.timer_appearance.show_background === false ? '&bg=0' : '&bg=1'}${config.timer_appearance.show_digits_shadow === false ? '&shadow=0' : `&shadow=1&shadow_color=${encodeURIComponent(config.timer_appearance.digits_shadow_color || '#000000')}&shadow_blur=${config.timer_appearance.digits_shadow_blur ?? 8}`}&font=${encodeURIComponent(config.timer_appearance.font || 'LINESeedSansTH')}`}
                   style={{
                     width: '100%',
                     height: '100%',

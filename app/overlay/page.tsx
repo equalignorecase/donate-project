@@ -5,7 +5,7 @@ import './overlay.css';
 import './widgets.css';
 import { supabase } from '@/lib/supabaseClient';
 import { Donation, AlertSettings } from '@/lib/types/database';
-import AlertCard from './alert/AlertCard';
+import AlertCard, { getAlertTier } from './alert/AlertCard';
 import { amountToThaiWords } from '@/lib/thaiNumber';
 
 const ICONS: Record<string, React.ReactNode> = {
@@ -347,40 +347,30 @@ export default function OverlayPage() {
       textToSpeak += ` ${item.message.trim()}`;
     }
 
-    const ttsVoice = String(s.tts_voice || 'th-TH-PremwadeeNeural');
-    const ttsEngine = String(s.tts_engine || 'edge');
-    const ttsSpeed = String(s.tts_speed || '+0%');
-    const ttsPitch = String(s.tts_pitch || '+0Hz');
     const volume = Math.min(Math.max(parseFloat(String(s.alert_volume || 80)) / 100, 0), 1);
 
     if (ttsTimeoutRef.current) {
       clearTimeout(ttsTimeoutRef.current);
     }
 
-    if (ttsEngine === 'edge' || ttsVoice.startsWith('th-TH-')) {
-      const url = `/api/tts?text=${encodeURIComponent(textToSpeak)}&voice=${encodeURIComponent(ttsVoice)}&rate=${encodeURIComponent(ttsSpeed)}&pitch=${encodeURIComponent(ttsPitch)}`;
-      
-      if (ttsAudioRef.current) {
-        ttsAudioRef.current.src = url;
-        ttsAudioRef.current.volume = volume;
-        ttsAudioRef.current.load();
-      }
-
-      ttsTimeoutRef.current = setTimeout(() => {
-        if (ttsAudioRef.current) {
-          ttsAudioRef.current.play().catch(err => {
-            console.warn('[Overlay TTS] Audio play blocked or failed, falling back to Web Speech:', err);
-            fallbackWebSpeech(textToSpeak, volume);
-          });
-        } else {
-          fallbackWebSpeech(textToSpeak, volume);
-        }
-      }, 1200);
-    } else {
-      ttsTimeoutRef.current = setTimeout(() => {
-        fallbackWebSpeech(textToSpeak, volume);
-      }, 1200);
+    const url = `/api/tts?text=${encodeURIComponent(textToSpeak)}`;
+    
+    if (ttsAudioRef.current) {
+      ttsAudioRef.current.src = url;
+      ttsAudioRef.current.volume = volume;
+      ttsAudioRef.current.load();
     }
+
+    ttsTimeoutRef.current = setTimeout(() => {
+      if (ttsAudioRef.current) {
+        ttsAudioRef.current.play().catch(err => {
+          console.warn('[Overlay TTS] Audio play blocked or failed, falling back to Web Speech:', err);
+          fallbackWebSpeech(textToSpeak, volume);
+        });
+      } else {
+        fallbackWebSpeech(textToSpeak, volume);
+      }
+    }, 1200);
 
     return true;
   }

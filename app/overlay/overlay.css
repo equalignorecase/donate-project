@@ -258,8 +258,9 @@ body.overlay-body {
   color: var(--alert-icon-color);
   border: var(--alert-icon-border-width, 1.5px) solid var(--alert-icon-border);
   box-shadow: var(--alert-icon-shadow, 0 4px 12px rgba(15, 23, 42, 0.05));
-  margin: 0 auto 12px;
+  margin: 0 auto var(--alert-icon-margin-bottom, 8px);
   animation: bounceGift 1.2s infinite ease-in-out alternate;
+  transition: all 0.3s ease;
 }
 
 .alert-icon-wrap svg {
@@ -356,7 +357,7 @@ body.overlay-body {
   background: var(--alert-msg-bg);
   border-radius: 14px;
   padding: 12px 18px;
-  margin-top: 14px;
+  margin-top: var(--alert-msg-margin-top, 8px);
   border: var(--alert-msg-border-width, 1px) solid var(--alert-msg-border);
   word-break: break-word;
   line-height: 1.5;
@@ -370,3 +371,13 @@ body.overlay-body {
 .alert-message:empty {
   display: none;
 }
+
+/* ==========================================================================
+   Tiered Alert Visuals (1.1: Text Color Transition)
+   ========================================================================== */
+.alert-card .donator-name,
+.alert-card .alert-amount-val,
+.alert-card .alert-amount-wrap {
+  transition: color 0.3s ease;
+}
+

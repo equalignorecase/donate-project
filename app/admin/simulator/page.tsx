@@ -29,7 +29,7 @@ import {
 import GoalWidget from '@/app/overlay/goal/GoalWidget';
 import SupporterWidget from '@/app/overlay/supporters/SupporterWidget';
 import TimerCard from '@/app/overlay/timer/TimerCard';
-import AlertCard, { defaultAlertSettings } from '@/app/overlay/alert/AlertCard';
+import AlertCard, { defaultAlertSettings, getAlertTier } from '@/app/overlay/alert/AlertCard';
 import { goalAppearanceDefaults, GoalAppearance } from '@/lib/goalAppearance';
 import { supporterDefaults, SupporterAppearance } from '@/lib/supporterAppearance';
 import { defaultTimerAppearance, TimerAppearance } from '@/lib/timerTypes';
@@ -220,7 +220,7 @@ export default function SimulatorPage() {
   };
 
   // Trigger test donation alert
-  const triggerTestAlert = () => {
+  const triggerTestAlert = (customAmt?: number, customName?: string, customMsg?: string) => {
     if (alertTimerRef.current) {
       clearTimeout(alertTimerRef.current);
     }
@@ -230,6 +230,16 @@ export default function SimulatorPage() {
     setAlertSimKey(k => k + 1);
     setIsAlertShowing(true);
     
+    const amountVal = customAmt !== undefined ? customAmt : (Number(alertSample.amount) || 500);
+    const nameVal = customName || alertSample.name || 'คุณสมศักดิ์ นาวา';
+    const msgVal = customMsg !== undefined ? customMsg : (alertSample.message || 'ยินดีด้วยกับการสตรีมครับ!');
+
+    setAlertSample({
+      name: nameVal,
+      amount: amountVal,
+      message: msgVal
+    });
+
     const vol = Math.min(Math.max((Number(alertSettings.alert_volume ?? 80)) / 100, 0), 1);
     if (alertAudioRef.current) {
       alertAudioRef.current.volume = vol;
@@ -239,9 +249,9 @@ export default function SimulatorPage() {
 
     const testPayload = {
       id: 'test-sim-' + Date.now(),
-      name: alertSample.name || 'คุณสมศักดิ์ นาวา',
-      amount: Number(alertSample.amount) || 500,
-      message: alertSample.message || 'ยินดีด้วยกับการสตรีมครับ!',
+      name: nameVal,
+      amount: amountVal,
+      message: msgVal,
       sender_bank: 'SIMULATOR',
       created_at: new Date().toLocaleTimeString('th-TH'),
       isTest: true
@@ -265,8 +275,7 @@ export default function SimulatorPage() {
       const thaiAmt = amountToThaiWords(testPayload.amount);
       const actionText = (alertSettings.alert_action_text || 'โดเนทให้').trim();
       const textToSpeak = `${testPayload.name} ${actionText} ${thaiAmt} ${testPayload.message}`;
-      const ttsVoice = String(alertSettings.tts_voice || 'th-TH-PremwadeeNeural');
-      const url = `/api/tts?text=${encodeURIComponent(textToSpeak)}&voice=${encodeURIComponent(ttsVoice)}`;
+      const url = `/api/tts?text=${encodeURIComponent(textToSpeak)}`;
 
       if (simTtsAudioRef.current) {
         simTtsAudioRef.current.src = url;
@@ -439,12 +448,52 @@ export default function SimulatorPage() {
           <button
             type="button"
             className="simulator-btn simulator-btn-primary"
-            onClick={triggerTestAlert}
+            onClick={() => triggerTestAlert()}
             title="ทดสอบเด้งแจ้งเตือนโดเนทจำลอง"
           >
             <Play size={15} />
             <span>ทดสอบยิง Alert</span>
           </button>
+
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', background: 'rgba(255, 255, 255, 0.05)', padding: '3px 6px', borderRadius: '8px', border: '1px solid rgba(255, 255, 255, 0.1)' }}>
+            <span style={{ fontSize: '11px', color: '#94a3b8', marginRight: '4px', fontWeight: 600 }}>Tier:</span>
+            <button
+              type="button"
+              className="simulator-btn sm"
+              style={{ padding: '3px 8px', fontSize: '11px', background: 'transparent', border: 'none', color: '#e2e8f0' }}
+              onClick={() => triggerTestAlert(20, 'สมชาย ใจดี', 'เป็นกำลังใจให้นะครับ สตรีมสนุกมาก!')}
+              title="ทดสอบระดับ Common (20 บาท - สีปกติ)"
+            >
+              🟢 20฿
+            </button>
+            <button
+              type="button"
+              className="simulator-btn sm"
+              style={{ padding: '3px 8px', fontSize: '11px', background: 'transparent', border: 'none', color: alertSettings.alert_tiered_rare_color || '#38bdf8' }}
+              onClick={() => triggerTestAlert(100, 'ฟ้าใส สดชื่น', 'ชอบสตรีมนี้มากครับ ✨')}
+              title="ทดสอบระดับ Rare (100 บาท - สีตัวอักษร Rare)"
+            >
+              🔵 100฿
+            </button>
+            <button
+              type="button"
+              className="simulator-btn sm"
+              style={{ padding: '3px 8px', fontSize: '11px', background: 'transparent', border: 'none', color: alertSettings.alert_tiered_epic_color || '#a855f7' }}
+              onClick={() => triggerTestAlert(300, 'เสี่ยท็อป สายเปย์', 'ขอให้ยอดปังๆ สู้ๆ 💎')}
+              title="ทดสอบระดับ Epic (300 บาท - สีตัวอักษร Epic)"
+            >
+              🟣 300฿
+            </button>
+            <button
+              type="button"
+              className="simulator-btn sm"
+              style={{ padding: '3px 8px', fontSize: '11px', background: 'rgba(234, 88, 12, 0.2)', border: '1px solid rgba(234, 88, 12, 0.4)', color: alertSettings.alert_tiered_legendary_color || '#ea580c', borderRadius: '4px' }}
+              onClick={() => triggerTestAlert(1000, 'สุลต่าน ใจป๋า', 'เติมพลังให้ครับ สู้ๆ! 👑')}
+              title="ทดสอบระดับ Legendary (1,000 บาท - สีตัวอักษร Legendary)"
+            >
+              🟠 1,000฿
+            </button>
+          </div>
 
           <button
             type="button"

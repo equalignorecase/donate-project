@@ -1,78 +1,101 @@
 import { NextResponse } from 'next/server';
-import { MsEdgeTTS, OUTPUT_FORMAT } from 'msedge-tts';
 import axios from 'axios';
 
 export const dynamic = 'force-dynamic';
 
-// In-memory audio buffer cache (keyed by voice:rate:pitch:text)
+// In-memory audio buffer cache (keyed by text)
 const audioCache = new Map<string, Buffer>();
-const MAX_CACHE_SIZE = 120;
+const MAX_CACHE_SIZE = 150;
 
-// Default to Thai Premwadee Neural voice
-const DEFAULT_VOICE = 'th-TH-PremwadeeNeural';
+/**
+ * Split text into chunks safe for Google Translate TTS (~160 chars max per request)
+ */
+function splitTextIntoChunks(text: string, maxLen = 160): string[] {
+  if (text.length <= maxLen) return [text];
 
-async function generateEdgeTts(text: string, voice: string, rate: string, pitch: string): Promise<Buffer> {
-  const tts = new MsEdgeTTS();
-  await tts.setMetadata(voice, OUTPUT_FORMAT.AUDIO_24KHZ_48KBITRATE_MONO_MP3);
+  const chunks: string[] = [];
+  let remaining = text.trim();
 
-  // If cute variant requested, bump pitch
-  let targetPitch = pitch;
-  let targetRate = rate;
-  if (voice === 'th-TH-PremwadeeNeural-cute') {
-    voice = 'th-TH-PremwadeeNeural';
-    if (pitch === '+0Hz') targetPitch = '+18Hz';
-    if (rate === '+0%') targetRate = '+5%';
+  while (remaining.length > 0) {
+    if (remaining.length <= maxLen) {
+      chunks.push(remaining);
+      break;
+    }
+
+    // Attempt to split at a space, newline, or punctuation before maxLen
+    let splitIdx = -1;
+    const searchSlice = remaining.slice(0, maxLen);
+
+    for (const delimiter of ['\n', ' ', '!', '?', ',', ':', '...']) {
+      const idx = searchSlice.lastIndexOf(delimiter);
+      if (idx > splitIdx && idx > maxLen * 0.3) {
+        splitIdx = idx;
+      }
+    }
+
+    // If no good delimiter found, hard split at maxLen
+    if (splitIdx === -1) {
+      splitIdx = maxLen;
+    } else {
+      splitIdx += 1; // include the delimiter in the chunk
+    }
+
+    const chunk = remaining.slice(0, splitIdx).trim();
+    if (chunk) chunks.push(chunk);
+    remaining = remaining.slice(splitIdx).trim();
   }
 
-  const { audioStream } = tts.toStream(text, { pitch: targetPitch, rate: targetRate });
-
-  return new Promise<Buffer>((resolve, reject) => {
-    const chunks: Buffer[] = [];
-    const timeout = setTimeout(() => {
-      audioStream.destroy();
-      reject(new Error('Edge TTS stream timeout (>6s)'));
-    }, 6000);
-
-    audioStream.on('data', chunk => chunks.push(Buffer.from(chunk)));
-    audioStream.on('end', () => {
-      clearTimeout(timeout);
-      resolve(Buffer.concat(chunks));
-    });
-    audioStream.on('error', err => {
-      clearTimeout(timeout);
-      reject(err);
-    });
-  });
+  return chunks;
 }
 
-async function generateGoogleTts(text: string): Promise<Buffer> {
-  const url = `https://translate.google.com/translate_tts?ie=UTF-8&tl=th&client=tw-ob&q=${encodeURIComponent(text.slice(0, 200))}`;
+/**
+ * Fetch TTS audio chunk from Google Translate API
+ */
+async function fetchGoogleChunk(chunk: string): Promise<Buffer> {
+  const url = `https://translate.google.com/translate_tts?ie=UTF-8&tl=th&client=tw-ob&q=${encodeURIComponent(chunk)}`;
   const res = await axios.get(url, {
     responseType: 'arraybuffer',
-    timeout: 4000,
+    timeout: 5000,
     headers: {
-      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+      'Referer': 'https://translate.google.com/'
     }
   });
   return Buffer.from(res.data);
+}
+
+/**
+ * Generate 100% Google Translate TTS audio, handling any length of text
+ */
+async function generateGoogleTts(text: string): Promise<Buffer> {
+  const chunks = splitTextIntoChunks(text, 160);
+  if (chunks.length === 1) {
+    return await fetchGoogleChunk(chunks[0]);
+  }
+
+  // Fetch all chunks in order
+  const buffers: Buffer[] = [];
+  for (const chunk of chunks) {
+    const buf = await fetchGoogleChunk(chunk);
+    if (buf && buf.length > 0) {
+      buffers.push(buf);
+    }
+  }
+
+  return Buffer.concat(buffers);
 }
 
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const rawText = searchParams.get('text') || '';
-    const text = rawText.trim().slice(0, 500);
+    const text = rawText.trim().slice(0, 1000);
 
     if (!text) {
       return new NextResponse('ข้อความต้องไม่ว่างเปล่า', { status: 400 });
     }
 
-    const requestedVoice = searchParams.get('voice') || DEFAULT_VOICE;
-    const voice = (requestedVoice.startsWith('th-TH-')) ? requestedVoice : DEFAULT_VOICE;
-    const rate = searchParams.get('rate') || '+0%';
-    const pitch = searchParams.get('pitch') || '+0Hz';
-
-    const cacheKey = `${voice}:${rate}:${pitch}:${text}`;
+    const cacheKey = text;
     if (audioCache.has(cacheKey)) {
       const cached = audioCache.get(cacheKey)!;
       return new NextResponse(new Uint8Array(cached), {
@@ -85,19 +108,13 @@ export async function GET(request: Request) {
       });
     }
 
-    let audioBuffer: Buffer;
-    try {
-      audioBuffer = await generateEdgeTts(text, voice, rate, pitch);
-    } catch (edgeErr: any) {
-      console.warn('Edge TTS failed, switching to Google TTS fallback:', edgeErr.message || edgeErr);
-      audioBuffer = await generateGoogleTts(text);
-    }
+    const audioBuffer = await generateGoogleTts(text);
 
     if (!audioBuffer || audioBuffer.length === 0) {
-      throw new Error('ไม่สามารถสังเคราะห์ไฟล์เสียงได้');
+      throw new Error('ไม่สามารถสังเคราะห์ไฟล์เสียงจาก Google TTS ได้');
     }
 
-    // Cache management
+    // Cache management (LRU evict oldest)
     if (audioCache.size >= MAX_CACHE_SIZE) {
       const firstKey = audioCache.keys().next().value;
       if (firstKey) audioCache.delete(firstKey);
@@ -113,7 +130,7 @@ export async function GET(request: Request) {
       },
     });
   } catch (error: any) {
-    console.error('TTS API error:', error);
-    return new NextResponse(`เกิดข้อผิดพลาดในการสร้างเสียง: ${error.message}`, { status: 500 });
+    console.error('Google TTS API error:', error?.message || error);
+    return new NextResponse(`เกิดข้อผิดพลาดในการสังเคราะห์เสียง: ${error?.message || error}`, { status: 500 });
   }
 }

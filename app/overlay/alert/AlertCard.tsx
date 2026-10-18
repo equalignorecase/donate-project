@@ -82,16 +82,51 @@ export const defaultAlertSettings: AlertSettings = {
   alert_text_margin_bottom: 0,
   alert_text_margin_left: 0,
   alert_text_margin_right: 0,
+  alert_icon_margin_bottom: 8,
+  alert_msg_margin_top: 8,
   alert_line_height: 1.35,
   alert_text_stroke_enabled: 'false',
   alert_text_stroke_color: '#000000',
   alert_text_stroke_width: 1.5,
   alert_card_beam: 'false',
-  alert_shine_sweep: 'true',
+  alert_tiered_enabled: 'true',
+  alert_tiered_rare_min: 50,
+  alert_tiered_epic_min: 200,
+  alert_tiered_legendary_min: 500,
+  alert_tiered_rare_color: '#0284c7',
+  alert_tiered_epic_color: '#9333ea',
+  alert_tiered_legendary_color: '#ea580c',
+  alert_text_shadow: 'soft',
+  alert_shine_sweep: 'false',
   alert_shine_theme: 'crystal',
   alert_animation: 'slide-down',
   alert_duration: 8
 };
+
+export type AlertTier = 'common' | 'rare' | 'epic' | 'legendary';
+
+export function getAlertTier(amount: number, settings?: AlertSettings): AlertTier {
+  if (!settings) return 'common';
+  if (settings.alert_tiered_enabled === 'false' || settings.alert_tiered_enabled === false) {
+    return 'common';
+  }
+  const rareMin = parseFloat(String(settings.alert_tiered_rare_min ?? 50)) || 50;
+  const epicMin = parseFloat(String(settings.alert_tiered_epic_min ?? 200)) || 200;
+  const legMin = parseFloat(String(settings.alert_tiered_legendary_min ?? 500)) || 500;
+
+  if (amount >= legMin) return 'legendary';
+  if (amount >= epicMin) return 'epic';
+  if (amount >= rareMin) return 'rare';
+  return 'common';
+}
+
+export function getTierTextColor(tier: AlertTier, settings?: AlertSettings): string | null {
+  if (!settings || tier === 'common') return null;
+  if (tier === 'rare') return settings.alert_tiered_rare_color || '#0284c7';
+  if (tier === 'epic') return settings.alert_tiered_epic_color || '#9333ea';
+  if (tier === 'legendary') return settings.alert_tiered_legendary_color || '#ea580c';
+  return null;
+}
 
 export interface AlertCardProps {
   settings?: AlertSettings;
@@ -114,11 +149,25 @@ export default function AlertCard({
 }: AlertCardProps) {
   const s = { ...defaultAlertSettings, ...settings };
 
+  // Text Shadow presets for superior legibility on both cards and live gameplay
+  const shadowMode = s.alert_text_shadow || 'soft';
+  let textShadowStyle = 'none';
+  if (shadowMode === 'soft') {
+    textShadowStyle = '0 1px 3px rgba(0, 0, 0, 0.18), 0 2px 6px rgba(0, 0, 0, 0.08)';
+  } else if (shadowMode === 'game') {
+    textShadowStyle = '0 2px 4px rgba(0, 0, 0, 0.95), 0 0 8px rgba(0, 0, 0, 0.75), 0 0 16px rgba(0, 0, 0, 0.5)';
+  } else if (shadowMode !== 'none' && typeof shadowMode === 'string') {
+    textShadowStyle = shadowMode;
+  }
+
   const isStrokeEnabled = s.alert_text_stroke_enabled === 'true' || s.alert_text_stroke_enabled === true;
-  const strokeStyle: React.CSSProperties = isStrokeEnabled ? {
-    WebkitTextStroke: `${s.alert_text_stroke_width || 1.5}px ${s.alert_text_stroke_color || '#000000'}`,
-    paintOrder: 'stroke fill'
-  } : {};
+  const strokeStyle: React.CSSProperties = {
+    textShadow: textShadowStyle !== 'none' ? textShadowStyle : undefined,
+    ...(isStrokeEnabled ? {
+      WebkitTextStroke: `${s.alert_text_stroke_width || 1}px ${s.alert_text_stroke_color || '#000000'}`,
+      paintOrder: 'stroke fill'
+    } : {})
+  };
 
   const iconKey = s.alert_icon || 'gift';
   const IconComponent = ALERT_ICONS[iconKey] || ALERT_ICONS.gift;
@@ -149,6 +198,31 @@ export default function AlertCard({
 
   const isAmountTransparent = s.alert_amount_bg === 'transparent';
   const isMsgTransparent = s.alert_msg_bg === 'transparent';
+
+  const tier = getAlertTier(numAmount, s);
+  const isTiered = s.alert_tiered_enabled !== 'false' && s.alert_tiered_enabled !== false;
+  const tierColor = isTiered ? getTierTextColor(tier, s) : null;
+  const donorNameColor = tierColor || s.alert_name_color || '#0f172a';
+  const amountColor = tierColor || s.alert_amount_color || '#059669';
+
+  // Tiered Icon and Amount Box styling (harmonious palette with soft tint)
+  const iconColor = tierColor || s.alert_icon_color || '#0f172a';
+  const iconBg = isIconTransparent
+    ? 'transparent'
+    : (tierColor ? `${tierColor}14` : (s.alert_icon_bg || '#f8fafc'));
+  const iconBorder = isIconTransparent
+    ? 'none'
+    : (tierColor ? `1.5px solid ${tierColor}3d` : `1.5px solid ${s.alert_icon_border || '#e2e8f0'}`);
+  const iconShadow = isIconTransparent
+    ? 'none'
+    : (tierColor ? `0 4px 14px ${tierColor}20` : '0 4px 12px rgba(15, 23, 42, 0.05)');
+
+  const amountBg = isAmountTransparent
+    ? 'transparent'
+    : (tierColor ? `${tierColor}14` : (s.alert_amount_bg || '#ecfdf5'));
+  const amountBorder = isAmountTransparent
+    ? 'none'
+    : (tierColor ? `1.5px solid ${tierColor}3d` : `1.5px solid ${s.alert_amount_border || '#a7f3d0'}`);
 
   return (
     <div
@@ -183,10 +257,11 @@ export default function AlertCard({
         <div
           className="alert-icon-wrap"
           style={{
-            background: s.alert_icon_bg || '#f8fafc',
-            color: s.alert_icon_color || '#0f172a',
-            border: isIconTransparent ? 'none' : `1.5px solid ${s.alert_icon_border || '#e2e8f0'}`,
-            boxShadow: isIconTransparent ? 'none' : '0 4px 12px rgba(15, 23, 42, 0.05)'
+            background: iconBg,
+            color: iconColor,
+            border: iconBorder,
+            boxShadow: iconShadow,
+            marginBottom: `${s.alert_icon_margin_bottom ?? 8}px`
           }}
         >
           {IconComponent}
@@ -212,7 +287,7 @@ export default function AlertCard({
           <span
             className="donator-name"
             style={{
-              color: s.alert_name_color || '#0f172a',
+              color: donorNameColor,
               letterSpacing: `${s.alert_letter_spacing ?? 0}px`,
               ...strokeStyle
             }}
@@ -220,7 +295,7 @@ export default function AlertCard({
             <span
               className={isTextShineEnabled ? 'supporter-shimmer-text' : undefined}
               style={isTextShineEnabled ? {
-                ['--text-color' as any]: s.alert_name_color || '#0f172a',
+                ['--text-color' as any]: donorNameColor,
                 ['--text-shine-delay' as any]: '0s',
                 ...strokeStyle
               } : undefined}
@@ -243,9 +318,9 @@ export default function AlertCard({
           <span
             className="alert-amount-wrap"
             style={{
-              background: s.alert_amount_bg || '#ecfdf5',
-              color: s.alert_amount_color || '#059669',
-              border: isAmountTransparent ? 'none' : `1.5px solid ${s.alert_amount_border || '#a7f3d0'}`,
+              background: amountBg,
+              color: amountColor,
+              border: amountBorder,
               fontSize: `${s.alert_amount_size || 22}px`,
               boxShadow: 'none',
               padding: isAmountTransparent ? '0' : '2px 14px',
@@ -255,14 +330,14 @@ export default function AlertCard({
             <span
               className="alert-amount-val"
               style={{
-                color: s.alert_amount_color || '#059669',
+                color: amountColor,
                 ...strokeStyle
               }}
             >
               <span
                 className={isTextShineEnabled ? 'supporter-shimmer-text' : undefined}
                 style={isTextShineEnabled ? {
-                  ['--text-color' as any]: s.alert_amount_color || '#059669',
+                  ['--text-color' as any]: amountColor,
                   ['--text-shine-delay' as any]: '0.2s',
                   ...strokeStyle
                 } : undefined}
@@ -270,7 +345,7 @@ export default function AlertCard({
                 {formattedAmount}
               </span>
             </span>
-            <span className="alert-currency" style={{ ...strokeStyle }}>บาท</span>
+            <span className="alert-currency" style={{ color: amountColor, ...strokeStyle }}>บาท</span>
           </span>
         </div>
 
@@ -284,7 +359,7 @@ export default function AlertCard({
               border: isMsgTransparent ? 'none' : `1px solid ${s.alert_msg_border || '#e2e8f0'}`,
               padding: isMsgTransparent ? '4px 0' : '12px 18px',
               letterSpacing: `${s.alert_letter_spacing ?? 0}px`,
-              marginTop: '14px',
+              marginTop: `${s.alert_msg_margin_top ?? 8}px`,
               ...strokeStyle
             }}
           >

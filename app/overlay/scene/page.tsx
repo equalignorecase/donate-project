@@ -11,7 +11,7 @@ import {
 import GoalWidget from '@/app/overlay/goal/GoalWidget';
 import SupporterWidget from '@/app/overlay/supporters/SupporterWidget';
 import TimerCard from '@/app/overlay/timer/TimerCard';
-import AlertCard, { defaultAlertSettings } from '@/app/overlay/alert/AlertCard';
+import AlertCard, { defaultAlertSettings, getAlertTier } from '@/app/overlay/alert/AlertCard';
 import { goalAppearanceDefaults, GoalAppearance } from '@/lib/goalAppearance';
 import { supporterDefaults, SupporterAppearance } from '@/lib/supporterAppearance';
 import { defaultTimerAppearance, TimerAppearance, TimerStatus } from '@/lib/timerTypes';
@@ -196,17 +196,13 @@ export default function OverlayScenePage() {
     if (item.message && item.message.trim() !== '') {
       textToSpeak += ` ${item.message.trim()}`;
     }
-
-    const ttsVoice = String(s.tts_voice || 'th-TH-PremwadeeNeural');
-    const ttsSpeed = String(s.tts_speed || '+0%');
-    const ttsPitch = String(s.tts_pitch || '+0Hz');
     const volume = Math.min(Math.max(parseFloat(String(s.alert_volume || 80)) / 100, 0), 1);
 
     if (ttsTimeoutRef.current) {
       clearTimeout(ttsTimeoutRef.current);
     }
 
-    const url = `/api/tts?text=${encodeURIComponent(textToSpeak)}&voice=${encodeURIComponent(ttsVoice)}&rate=${encodeURIComponent(ttsSpeed)}&pitch=${encodeURIComponent(ttsPitch)}`;
+    const url = `/api/tts?text=${encodeURIComponent(textToSpeak)}`;
     if (ttsAudioRef.current) {
       ttsAudioRef.current.src = url;
       ttsAudioRef.current.volume = volume;

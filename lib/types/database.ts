@@ -58,6 +58,13 @@ export interface AlertSettings {
   alert_shimmer_show?: string | boolean;
   alert_shimmer_color?: string;
   alert_card_beam?: string | boolean;
+  alert_tiered_enabled?: string | boolean;
+  alert_tiered_rare_min?: number | string;
+  alert_tiered_epic_min?: number | string;
+  alert_tiered_legendary_min?: number | string;
+  alert_tiered_rare_color?: string;
+  alert_tiered_epic_color?: string;
+  alert_tiered_legendary_color?: string;
   alert_shine_sweep?: string | boolean;
   alert_shine_theme?: string;
   alert_icon?: string;
@@ -78,10 +85,13 @@ export interface AlertSettings {
   alert_text_stroke_enabled?: string | boolean;
   alert_text_stroke_color?: string;
   alert_text_stroke_width?: number | string;
+  alert_text_shadow?: 'none' | 'soft' | 'game' | string;
   alert_amount_bg?: string;
   alert_amount_color?: string;
   alert_amount_border?: string;
   alert_amount_size?: number | string;
+  alert_icon_margin_bottom?: number | string;
+  alert_msg_margin_top?: number | string;
   alert_msg_bg?: string;
   alert_msg_color?: string;
   alert_msg_border?: string;
