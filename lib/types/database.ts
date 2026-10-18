@@ -99,6 +99,7 @@ export interface AlertSettings {
   alert_animation?: string;
   alert_duration?: number | string;
   alert_volume?: number | string;
+  alert_sound_url?: string;
   tts_enabled?: string | boolean;
   tts_min_amount?: number | string;
   tts_voice?: string;

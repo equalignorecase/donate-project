@@ -231,6 +231,10 @@ export default function OverlayScenePage() {
     setCurrentAlert(item);
 
     if (audioRef.current) {
+      const soundUrl = (alertSettings.alert_sound_url || '/sounds/alert.mp3').trim();
+      if (audioRef.current.src !== soundUrl && !audioRef.current.src.endsWith(soundUrl)) {
+        audioRef.current.src = soundUrl;
+      }
       const vol = Math.min(Math.max((Number(alertSettings.alert_volume ?? 80)) / 100, 0), 1);
       audioRef.current.volume = vol;
       audioRef.current.currentTime = 0;
@@ -313,7 +317,7 @@ export default function OverlayScenePage() {
         pointerEvents: 'none',
       }}
     >
-      <audio ref={audioRef} src="/sounds/alert.mp3" preload="auto" />
+      <audio ref={audioRef} src={alertSettings.alert_sound_url || "/sounds/alert.mp3"} preload="auto" />
       <audio
         ref={ttsAudioRef}
         preload="auto"

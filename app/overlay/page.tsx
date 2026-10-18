@@ -239,8 +239,13 @@ export default function OverlayPage() {
   }
 
   function playAlertSound() {
-    const vol = parseFloat(String(settingsRef.current.alert_volume || 80));
+    const s = settingsRef.current;
+    const vol = parseFloat(String(s.alert_volume || 80));
+    const soundUrl = (s.alert_sound_url || '/sounds/alert.mp3').trim();
     if (audioRef.current) {
+      if (audioRef.current.src !== soundUrl && !audioRef.current.src.endsWith(soundUrl)) {
+        audioRef.current.src = soundUrl;
+      }
       audioRef.current.volume = Math.min(Math.max(vol / 100, 0), 1);
       audioRef.current.currentTime = 0;
       audioRef.current.play().catch(() => {
@@ -504,7 +509,7 @@ export default function OverlayPage() {
       background: 'transparent',
       position: 'relative'
     }}>
-      <audio ref={audioRef} src="/sounds/alert.mp3" preload="auto" />
+      <audio ref={audioRef} src={settings.alert_sound_url || "/sounds/alert.mp3"} preload="auto" />
       <audio
         ref={ttsAudioRef}
         preload="auto"

@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { AlertSettings } from '@/lib/types/database';
 import { useAdmin } from '../AdminContext';
+import { ALERT_SOUND_PRESETS } from '@/lib/constants';
 
 export default function AdminSettingsPage() {
   const { showToast, handleUnauthorized } = useAdmin();
@@ -13,11 +14,81 @@ export default function AdminSettingsPage() {
     min_donate: '5',
     alert_duration: 8,
     alert_volume: 80,
+    alert_sound_url: '/sounds/alert.mp3',
     tts_enabled: 'true',
     tts_min_amount: 20
   });
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isSaving, setIsSaving] = useState<boolean>(false);
+  const [isPlayingAlertSound, setIsPlayingAlertSound] = useState<boolean>(false);
+  const [uploadingSound, setUploadingSound] = useState<boolean>(false);
+  const [soundMode, setSoundMode] = useState<'preset' | 'custom'>('preset');
+  const alertSoundRef = useRef<HTMLAudioElement | null>(null);
+
+  const handleTestAlertSound = () => {
+    if (alertSoundRef.current) {
+      alertSoundRef.current.pause();
+      alertSoundRef.current = null;
+    }
+
+    const soundUrl = (settings.alert_sound_url || '/sounds/alert.mp3').trim();
+    const vol = Math.min(Math.max((Number(settings.alert_volume ?? 80)) / 100, 0), 1);
+
+    try {
+      setIsPlayingAlertSound(true);
+      const audio = new Audio(soundUrl);
+      audio.volume = vol;
+      alertSoundRef.current = audio;
+
+      audio.onended = () => {
+        setIsPlayingAlertSound(false);
+      };
+      audio.onerror = () => {
+        setIsPlayingAlertSound(false);
+        alert('ไม่สามารถเล่นไฟล์เสียงกระดิ่งนี้ได้ ตรวจสอบ URL หรือไฟล์');
+      };
+
+      audio.play().catch(() => {
+        setIsPlayingAlertSound(false);
+      });
+    } catch (e) {
+      setIsPlayingAlertSound(false);
+    }
+  };
+
+  const handleSoundUpload = async (file: File) => {
+    setUploadingSound(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const adminToken = typeof window !== 'undefined' ? (localStorage.getItem('donate_admin_token') || '') : '';
+      const headers: Record<string, string> = {};
+      if (adminToken) {
+        headers['x-admin-token'] = adminToken;
+        headers['Authorization'] = `Bearer ${adminToken}`;
+      }
+
+      const res = await fetch('/api/admin/upload-media', {
+        method: 'POST',
+        headers,
+        body: formData
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.message || 'อัปโหลดเสียงไม่สำเร็จ');
+      }
+
+      setSettings(prev => ({ ...prev, alert_sound_url: data.url }));
+      setSoundMode('custom');
+      showToast('อัปโหลดไฟล์เสียงสำเร็จ!');
+    } catch (err: any) {
+      alert(err.message || 'เกิดข้อผิดพลาดในการอัปโหลดไฟล์เสียง');
+    } finally {
+      setUploadingSound(false);
+    }
+  };
 
   useEffect(() => {
     const fetchSettings = async () => {
@@ -33,6 +104,10 @@ export default function AdminSettingsPage() {
         const data = await res.json();
         if (data.success && data.settings) {
           setSettings((prev) => ({ ...prev, ...data.settings }));
+          if (data.settings.alert_sound_url) {
+            const isPreset = ALERT_SOUND_PRESETS.some(p => p.id !== 'custom' && p.id === data.settings.alert_sound_url);
+            setSoundMode(isPreset ? 'preset' : 'custom');
+          }
         }
       } catch (err) {
         console.error('Error fetching settings:', err);
@@ -162,6 +237,124 @@ export default function AdminSettingsPage() {
               onChange={(e) => setSettings({ ...settings, alert_volume: parseInt(e.target.value) || 0 })}
               style={{ width: '100%', marginTop: '10px' }}
             />
+          </div>
+        </div>
+
+        {/* Feature 2.1: Alert Sound Selection */}
+        <div className="form-row">
+          <div className="form-group" style={{ width: '100%' }}>
+            <div className="field-label-row" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
+              <label className="form-label" htmlFor="settingAlertSound" style={{ marginBottom: 0 }}>
+                🔔 เสียงกระดิ่งแจ้งเตือน (Alert Sound)
+              </label>
+              <button
+                type="button"
+                className="btn sm secondary"
+                onClick={handleTestAlertSound}
+                disabled={isPlayingAlertSound}
+                style={{ padding: '4px 10px', fontSize: '12px', cursor: 'pointer' }}
+              >
+                {isPlayingAlertSound ? '⏳ กำลังเล่นเสียง...' : '▶️ ทดลองฟังเสียงกระดิ่ง'}
+              </button>
+            </div>
+            {/* 2 Tabs: Preset vs Custom */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginTop: '8px', marginBottom: '10px' }}>
+              <button
+                type="button"
+                className={`btn sm ${soundMode === 'preset' ? '' : 'secondary'}`}
+                style={{
+                  fontWeight: 600,
+                  fontSize: '12px',
+                  background: soundMode === 'preset' ? '#2563eb' : undefined,
+                  color: soundMode === 'preset' ? '#ffffff' : undefined
+                }}
+                onClick={() => {
+                  setSoundMode('preset');
+                  const isCurrentPreset = ALERT_SOUND_PRESETS.some(p => p.id !== 'custom' && p.id === settings.alert_sound_url);
+                  if (!isCurrentPreset) {
+                    setSettings(prev => ({ ...prev, alert_sound_url: '/sounds/alert.mp3' }));
+                  }
+                }}
+              >
+                🔔 เสียงมาตรฐาน (5 แบบ)
+              </button>
+              <button
+                type="button"
+                className={`btn sm ${soundMode === 'custom' ? '' : 'secondary'}`}
+                style={{
+                  fontWeight: 600,
+                  fontSize: '12px',
+                  background: soundMode === 'custom' ? '#2563eb' : undefined,
+                  color: soundMode === 'custom' ? '#ffffff' : undefined
+                }}
+                onClick={() => setSoundMode('custom')}
+              >
+                📁 อัปโหลดไฟล์ / วางลิงก์เอง
+              </button>
+            </div>
+
+            {soundMode === 'preset' ? (
+              <select
+                id="settingAlertSound"
+                className="input-control"
+                value={
+                  ALERT_SOUND_PRESETS.some(p => p.id !== 'custom' && p.id === settings.alert_sound_url)
+                    ? settings.alert_sound_url
+                    : '/sounds/alert.mp3'
+                }
+                onChange={(e) => setSettings(prev => ({ ...prev, alert_sound_url: e.target.value }))}
+              >
+                {ALERT_SOUND_PRESETS.filter(p => p.id !== 'custom').map((p) => (
+                  <option key={p.id} value={p.id}>{p.label}</option>
+                ))}
+              </select>
+            ) : (
+              <div style={{
+                padding: '14px',
+                borderRadius: '10px',
+                border: '1.5px dashed var(--border)',
+                background: 'var(--bg-surface)',
+                marginTop: '8px'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <span style={{ fontSize: '13px', fontWeight: 600 }}>อัปโหลดหรือระบุลิงก์เสียง (.mp3, .wav, .ogg)</span>
+                  <button
+                    type="button"
+                    className="btn sm danger"
+                    onClick={() => {
+                      setSettings(prev => ({ ...prev, alert_sound_url: '/sounds/alert.mp3' }));
+                      setSoundMode('preset');
+                    }}
+                    style={{ padding: '3px 8px', fontSize: '11px' }}
+                  >
+                    รีเซ็ตเป็นกระดิ่งเดิม
+                  </button>
+                </div>
+
+                <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
+                  <label className="btn sm secondary" style={{ cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                    <input
+                      type="file"
+                      accept=".mp3,.wav,.ogg"
+                      style={{ display: 'none' }}
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) handleSoundUpload(file);
+                      }}
+                    />
+                    {uploadingSound ? '⏳ กำลังอัปโหลด...' : '📁 เลือกไฟล์เสียง'}
+                  </label>
+                  <input
+                    type="text"
+                    className="input-control"
+                    placeholder="URL ไฟล์เสียง เช่น /sounds/alert.mp3 หรือ https://..."
+                    value={settings.alert_sound_url || ''}
+                    onChange={(e) => setSettings(prev => ({ ...prev, alert_sound_url: e.target.value }))}
+                    style={{ fontSize: '12px' }}
+                  />
+                </div>
+              </div>
+            )}
           </div>
         </div>
 

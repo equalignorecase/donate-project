@@ -242,6 +242,10 @@ export default function SimulatorPage() {
 
     const vol = Math.min(Math.max((Number(alertSettings.alert_volume ?? 80)) / 100, 0), 1);
     if (alertAudioRef.current) {
+      const soundUrl = (alertSettings.alert_sound_url || '/sounds/alert.mp3').trim();
+      if (alertAudioRef.current.src !== soundUrl && !alertAudioRef.current.src.endsWith(soundUrl)) {
+        alertAudioRef.current.src = soundUrl;
+      }
       alertAudioRef.current.volume = vol;
       alertAudioRef.current.currentTime = 0;
       alertAudioRef.current.play().catch(() => {});
@@ -423,7 +427,7 @@ export default function SimulatorPage() {
   return (
     <div className="simulator-container">
       {/* Hidden audio for simulated alert sound and TTS preview */}
-      <audio ref={alertAudioRef} src="/sounds/alert.mp3" preload="auto" />
+      <audio ref={alertAudioRef} src={alertSettings.alert_sound_url || "/sounds/alert.mp3"} preload="auto" />
       <audio
         ref={simTtsAudioRef}
         preload="auto"

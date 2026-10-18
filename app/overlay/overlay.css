@@ -106,7 +106,7 @@
   --alert-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.16), 0 0 0 1px rgba(15, 23, 42, 0.04);
   --alert-shimmer: linear-gradient(90deg, #0f172a 0%, #2563eb 50%, #059669 100%);
   --alert-shimmer-height: 4px;
-  
+
   --alert-icon-bg: #f8fafc;
   --alert-icon-color: #0f172a;
   --alert-icon-border: #e2e8f0;
@@ -160,10 +160,12 @@ body.overlay-body {
   transform: translateY(-40px) scale(0.96);
   transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.35s ease;
 }
+
 .alert-wrapper.anim-slide-down.show {
   opacity: 1;
   transform: translateY(0) scale(1);
 }
+
 .alert-wrapper.anim-slide-down.hide {
   opacity: 0;
   transform: translateY(-25px) scale(0.96);
@@ -175,10 +177,12 @@ body.overlay-body {
   transform: scale(0.4);
   transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s ease;
 }
+
 .alert-wrapper.anim-bounce.show {
   opacity: 1;
   transform: scale(1);
 }
+
 .alert-wrapper.anim-bounce.hide {
   opacity: 0;
   transform: scale(0.8);
@@ -190,10 +194,12 @@ body.overlay-body {
   transform: scale(1.15);
   transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.35s ease;
 }
+
 .alert-wrapper.anim-zoom.show {
   opacity: 1;
   transform: scale(1);
 }
+
 .alert-wrapper.anim-zoom.hide {
   opacity: 0;
   transform: scale(0.92);
@@ -205,10 +211,12 @@ body.overlay-body {
   transform: translateX(-80px) scale(0.95);
   transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.35s ease;
 }
+
 .alert-wrapper.anim-slide-left.show {
   opacity: 1;
   transform: translateX(0) scale(1);
 }
+
 .alert-wrapper.anim-slide-left.hide {
   opacity: 0;
   transform: translateX(60px) scale(0.95);
@@ -268,8 +276,13 @@ body.overlay-body {
 }
 
 @keyframes bounceGift {
-  0% { transform: translateY(0) scale(1); }
-  100% { transform: translateY(-5px) scale(1.04); }
+  0% {
+    transform: translateY(0) scale(1);
+  }
+
+  100% {
+    transform: translateY(-5px) scale(1.04);
+  }
 }
 
 /* Title & Donator Name (Headline: α╕èα╕╖α╣êα╕¡ α╕éα╣ëα╕¡α╕äα╕ºα╕▓α╕íα╕ùα╕╡α╣êα╕üα╕│α╕½α╕Öα╕öα╣Çα╕¡α╕ç α╕êα╕│α╕Öα╕ºα╕Ö ... α╕Üα╕▓α╕ù) */
@@ -380,4 +393,3 @@ body.overlay-body {
 .alert-card .alert-amount-wrap {
   transition: color 0.3s ease;
 }
-
