@@ -1,11 +1,16 @@
 'use client';
+
 import { useEffect, useState } from 'react';
-import { Target, Trophy } from 'lucide-react';
+import { Target, Trophy, ExternalLink, Eye, RotateCcw, Sparkles } from 'lucide-react';
 import { useAdmin } from '../AdminContext';
 import { GoalAppearance, goalAppearanceDefaults, readGoalAppearance } from '@/lib/goalAppearance';
-import { SupporterAppearance, supporterDefaults, readSupporterAppearance } from '@/lib/supporterAppearance';
+import { SupporterAppearance, supporterDefaults, readSupporterAppearance, SupporterMode } from '@/lib/supporterAppearance';
 import GoalAppearanceEditor from './GoalAppearanceEditor';
 import SupporterAppearanceEditor from './SupporterAppearanceEditor';
+import GoalWidget from '@/app/overlay/goal/GoalWidget';
+import SupporterWidget from '@/app/overlay/supporters/SupporterWidget';
+import { WidgetData } from '@/lib/widgets';
+import '@/app/overlay/widgets.css';
 import './widgets-admin.css';
 
 export default function WidgetsAdmin() {
@@ -19,11 +24,12 @@ export default function WidgetsAdmin() {
   const [loadError, setLoadError] = useState('');
   const [saving, setSaving] = useState<'goal' | 'supporters' | null>(null);
   const [errors, setErrors] = useState({ goal: '', supporters: '' });
-  const [previewVersion, setPreviewVersion] = useState({ goal: 0, supporters: 0 });
   const [appearance, setAppearance] = useState<GoalAppearance>({ ...goalAppearanceDefaults });
   const [supporters, setSupporters] = useState<SupporterAppearance>({ ...supporterDefaults });
   const [savedGoal, setSavedGoal] = useState<GoalAppearance>({ ...goalAppearanceDefaults });
   const [savedSupporters, setSavedSupporters] = useState<SupporterAppearance>({ ...supporterDefaults });
+  const [widgetData, setWidgetData] = useState<WidgetData | null>(null);
+  const [previewBg, setPreviewBg] = useState<'checker' | 'game' | 'bright'>('checker');
 
   useEffect(() => {
     setOrigin(window.location.origin);
@@ -41,6 +47,12 @@ export default function WidgetsAdmin() {
         setStartedAt(result.settings.goal_started_at || '');
       }
     }).catch(error => { if (active) setLoadError(error.message); }).finally(() => { if (active) setLoading(false); });
+
+    fetch('/api/widgets', { cache: 'no-store' })
+      .then(res => res.json())
+      .then(res => { if (active && res.success) setWidgetData(res.data); })
+      .catch(err => console.warn('Widget data load error:', err));
+
     return () => { active = false; };
   }, [handleUnauthorized]);
 
@@ -57,16 +69,14 @@ export default function WidgetsAdmin() {
       if (kind === 'goal') setSavedGoal(readGoalAppearance(result.settings));
       else setSavedSupporters(readSupporterAppearance(result.settings));
       showToast(kind === 'goal' ? 'บันทึกเป้าหมายโดเนทแล้ว' : 'บันทึกอันดับผู้โดเนทแล้ว');
-      setPreviewVersion(previous => ({ ...previous, [kind]: previous[kind] + 1 }));
+      fetch('/api/widgets', { cache: 'no-store' })
+        .then(res => res.json())
+        .then(res => { if (res.success) setWidgetData(res.data); })
+        .catch(() => {});
     } catch (error) { setErrors(previous => ({ ...previous, [kind]: error instanceof Error ? error.message : 'บันทึกไม่สำเร็จ' })); }
     finally { setSaving(null); }
   };
 
-  const sourceLinks = (links: string[][]) => <div className="widget-section-links"><h2>ลิงก์สำหรับ OBS Browser Source</h2>{links.map(([label, path]) => <div className="widget-source" key={path}>
-    <strong>{label}</strong><input aria-label={`ลิงก์ ${label}`} value={`${origin}${path}`} readOnly onFocus={event => event.target.select()} />
-    <button className="widget-button widget-button-copy" type="button" onClick={async () => { try { await navigator.clipboard.writeText(`${origin}${path}`); showToast('คัดลอกลิงก์แล้ว'); } catch { showToast('กรุณาเลือกและคัดลอกลิงก์ในช่อง'); } }}>คัดลอก</button>
-    <a className="widget-button widget-button-open" href={path} target="_blank" rel="noreferrer">เปิด</a>
-  </div>)}</div>;
   const getStartOfMonthIso = () => {
     const now = new Date();
     const bkkStr = new Intl.DateTimeFormat('en-CA', {
@@ -81,36 +91,351 @@ export default function WidgetsAdmin() {
   const disabled = loading || !!loadError || saving !== null;
   const supporterHeight = Number(savedSupporters.supporter_padding) * 2 + (savedSupporters.supporter_show_title === 'true' ? Number(savedSupporters.supporter_title_size) * 2 : 0) + Number(savedSupporters.supporter_limit) * (Math.max(Number(savedSupporters.supporter_name_size), Number(savedSupporters.supporter_amount_size), 30) * 2 + 28 + Number(savedSupporters.supporter_row_gap)) + 40;
 
-  return <div className="widgets-admin"><h1>วิดเจ็ต OBS</h1><p>ปรับหน้าตาและบันทึกแต่ละวิดเจ็ตแยกกัน พรีวิวเปลี่ยนทันที และ OBS ใช้รูปแบบเมื่อบันทึก</p>
-    {loadError && <p role="alert" className="widget-error">{loadError}</p>}
-    <div className="widget-tabs" role="tablist" aria-label="เลือกวิดเจ็ต">
-      <button id="goal-tab" role="tab" type="button" aria-selected={section === 'goal'} aria-controls="goal-panel" className={`widget-tab${section === 'goal' ? ' active' : ''}`} onClick={() => setSection('goal')}><Target size={18} aria-hidden="true" />เป้าหมายโดเนท</button>
-      <button id="supporters-tab" role="tab" type="button" aria-selected={section === 'supporters'} aria-controls="supporters-panel" className={`widget-tab${section === 'supporters' ? ' active' : ''}`} onClick={() => setSection('supporters')}><Trophy size={18} aria-hidden="true" />อันดับผู้โดเนท</button>
+  const goalTargetNumber = Number(target) > 0 ? Number(target) : 15000;
+  const realCurrent = widgetData?.goal.current ?? 0;
+  const isGoalSample = realCurrent <= 0;
+  const goalCurrentDisplay = isGoalSample ? Math.round(goalTargetNumber * 0.5) : realCurrent;
+
+  const activeMode: SupporterMode = (supporters.supporter_mode === 'recent' || supporters.supporter_mode === 'daily' || supporters.supporter_mode === 'monthly' || supporters.supporter_mode === 'allTime') ? supporters.supporter_mode : 'allTime';
+  const realDonors = widgetData ? (widgetData[activeMode] || []) : [];
+  const hasRealDonors = realDonors.length > 0;
+  const sampleDonors = [
+    { name: 'Somchai TopDonator', amount: 2500 },
+    { name: 'Somsri Supporter', amount: 1200 },
+    { name: 'Anon StreamLover', amount: 500 },
+    { name: 'Kittisak Fan', amount: 300 },
+    { name: 'Nicha Gamer', amount: 150 }
+  ];
+  const displayDonors = hasRealDonors ? realDonors : sampleDonors;
+
+  const renderSidebarLink = (label: string, path: string) => (
+    <div className="widget-source-card-item" key={path}>
+      <div className="widget-source-card-label">
+        <span>{label}</span>
+        <a href={path} target="_blank" rel="noreferrer" style={{ color: 'var(--accent)', display: 'inline-flex', alignItems: 'center', gap: '3px', textDecoration: 'none' }}>
+          <span>เปิด</span>
+          <ExternalLink size={11} />
+        </a>
+      </div>
+      <div className="widget-source-card-row">
+        <input
+          aria-label={`ลิงก์ ${label}`}
+          value={`${origin}${path}`}
+          readOnly
+          onFocus={event => event.target.select()}
+        />
+        <button
+          className="widget-button widget-button-copy"
+          type="button"
+          style={{ minHeight: '34px', padding: '6px 18px', fontSize: '12.5px', borderRadius: '9999px', whiteSpace: 'nowrap', flexShrink: 0 }}
+          onClick={async () => {
+            try {
+              await navigator.clipboard.writeText(`${origin}${path}`);
+              showToast(`คัดลอกลิงก์ ${label} แล้ว`);
+            } catch {
+              showToast('กรุณาเลือกและคัดลอกลิงก์ในช่อง');
+            }
+          }}
+        >
+          คัดลอก
+        </button>
+      </div>
     </div>
-    <section id="goal-panel" role="tabpanel" aria-labelledby="goal-tab" hidden={section !== 'goal'}>
-      <form onSubmit={event => void save(event, 'goal')} className="widget-settings"><h2>เป้าหมายโดเนท</h2>
-        {errors.goal && <p role="alert" className="widget-error">{errors.goal}</p>}
-        <label>ชื่อเป้าหมาย<input value={title} onChange={event => setTitle(event.target.value)} maxLength={160} required disabled={disabled} /></label>
-        <label>ยอดเป้าหมาย (บาท)<input type="number" min="0.01" max="9999999999" step="0.01" value={target} onChange={event => setTarget(event.target.value)} required disabled={disabled} /></label>
-        <p>{startedAt ? `นับยอดตั้งแต่ ${new Date(startedAt).toLocaleString('th-TH', { timeZone: 'Asia/Bangkok' })}` : 'นับยอดบริจาคที่ตรวจสอบแล้วทั้งหมด'}</p>
-        <GoalAppearanceEditor value={appearance} onChange={setAppearance} disabled={disabled} title={title} target={Number(target)} />
-        <div className="widget-actions"><button className="widget-button widget-button-month" type="button" disabled={disabled} onClick={() => setStartedAt(getStartOfMonthIso())}>นับยอดเดือนนี้</button><button className="widget-button widget-button-reset" type="button" disabled={disabled} onClick={() => setStartedAt(new Date().toISOString())}>เริ่มนับเป้าหมายใหม่</button><button className="widget-button widget-button-total" type="button" disabled={disabled} onClick={() => setStartedAt('')}>นับยอดทั้งหมด</button><button className="widget-button widget-button-save" type="submit" disabled={disabled}>{saving === 'goal' ? 'กำลังบันทึก…' : 'บันทึกเป้าหมายโดเนท'}</button></div>
-        <p>การเริ่มนับใหม่จะมีผลเมื่อบันทึก และเก็บประวัติบริจาคเดิมไว้</p>
-      </form>
-      {sourceLinks([['หลอดเป้าหมาย', '/overlay/goal']])}
-      <p>ตั้งความกว้างตามที่บันทึก ({savedGoal.goal_width} px) และเพิ่มความสูงให้พอดีกับชื่อเป้าหมาย</p>
-      <h2>พรีวิวเป้าหมายที่บันทึกแล้ว</h2>{section === 'goal' && <iframe key={previewVersion.goal} title="พรีวิวเป้าหมายที่บันทึกแล้ว" src="/overlay/goal" className="widget-preview" style={{ maxWidth: `${Number(savedGoal.goal_width) + 20}px`, height: `${Number(savedGoal.goal_padding) * 2 + Number(savedGoal.goal_title_size) * 3 + Number(savedGoal.goal_amount_size) * 2 + Number(savedGoal.goal_bar_height) + 100}px` }} />}
-    </section>
-    <section id="supporters-panel" role="tabpanel" aria-labelledby="supporters-tab" hidden={section !== 'supporters'}>
-      <form onSubmit={event => void save(event, 'supporters')} className="widget-settings">
-        {errors.supporters && <p role="alert" className="widget-error">{errors.supporters}</p>}
-        <SupporterAppearanceEditor value={supporters} onChange={setSupporters} disabled={disabled} />
-        <p>อันดับรวมยอดตามชื่อที่ผู้บริจาคกรอก ใช้เวลาไทย และนับเฉพาะรายการที่ตรวจสอบแล้ว</p>
-        <button className="widget-button widget-button-save" type="submit" disabled={disabled}>{saving === 'supporters' ? 'กำลังบันทึก…' : 'บันทึกอันดับผู้โดเนท'}</button>
-      </form>
-      {sourceLinks([['โหมดที่ตั้งค่าไว้', '/overlay/supporters'], ['ผู้สนับสนุนล่าสุด', '/overlay/supporters?mode=recent'], ['อันดับวันนี้', '/overlay/supporters?mode=daily'], ['อันดับเดือนนี้', '/overlay/supporters?mode=monthly'], ['อันดับตลอดเวลา', '/overlay/supporters?mode=allTime']])}
-      <p>ตั้งความกว้าง {savedSupporters.supporter_width} px และความสูงประมาณ {Math.ceil(supporterHeight)} px รายชื่อยาวอาจต้องเพิ่มความสูง ลิงก์ระบุโหมดจะใช้โหมดนั้นพร้อมรูปแบบอันดับที่บันทึกไว้</p>
-      <h2>พรีวิวอันดับที่บันทึกแล้ว</h2>{section === 'supporters' && <iframe key={previewVersion.supporters} title="พรีวิวอันดับที่บันทึกแล้ว" src="/overlay/supporters" className="widget-preview" style={{ maxWidth: `${Number(savedSupporters.supporter_width) + 20}px`, height: `${supporterHeight}px` }} />}
-    </section>
-  </div>;
+  );
+
+  return (
+    <div className="widgets-admin">
+      {/* Top Header Bar */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '14px' }}>
+        <div>
+          <h1 style={{ margin: 0, fontSize: '22px', fontWeight: 800 }}>วิดเจ็ต OBS</h1>
+          <p style={{ margin: '4px 0 0', color: 'var(--text-muted)', fontSize: '13.5px' }}>
+            ปรับแต่งดีไซน์เป้าหมายและอันดับผู้โดเนท พร้อมรับลิงก์สำหรับใส่ใน OBS Studio
+          </p>
+        </div>
+
+        <div className="widget-tabs" role="tablist" aria-label="เลือกวิดเจ็ต" style={{ margin: 0 }}>
+          <button
+            id="goal-tab"
+            role="tab"
+            type="button"
+            aria-selected={section === 'goal'}
+            aria-controls="goal-panel"
+            className={`widget-tab${section === 'goal' ? ' active' : ''}`}
+            onClick={() => setSection('goal')}
+          >
+            <Target size={18} aria-hidden="true" />
+            <span>เป้าหมายโดเนท</span>
+          </button>
+          <button
+            id="supporters-tab"
+            role="tab"
+            type="button"
+            aria-selected={section === 'supporters'}
+            aria-controls="supporters-panel"
+            className={`widget-tab${section === 'supporters' ? ' active' : ''}`}
+            onClick={() => setSection('supporters')}
+          >
+            <Trophy size={18} aria-hidden="true" />
+            <span>อันดับผู้โดเนท</span>
+          </button>
+        </div>
+      </div>
+
+      {loadError && <p role="alert" className="widget-error">{loadError}</p>}
+
+      {/* ================= SECTION 1: GOAL ================= */}
+      <section id="goal-panel" role="tabpanel" aria-labelledby="goal-tab" hidden={section !== 'goal'}>
+        <div className="widgets-layout-grid">
+          {/* Left Column: Form & Design Editor */}
+          <div className="widgets-main-col">
+            <form id="goal-form" onSubmit={event => void save(event, 'goal')}>
+              {errors.goal && <p role="alert" className="widget-error">{errors.goal}</p>}
+
+              <div className="widget-settings" style={{ marginBottom: '20px' }}>
+                <h2 style={{ fontSize: '16px', fontWeight: 700, margin: '0 0 16px 0' }}>ข้อมูลเป้าหมาย</h2>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '16px' }}>
+                  <label style={{ margin: 0 }}>
+                    <span style={{ fontSize: '13px', fontWeight: 600 }}>ชื่อเป้าหมาย</span>
+                    <input value={title} onChange={event => setTitle(event.target.value)} maxLength={160} required disabled={disabled} />
+                  </label>
+                  <label style={{ margin: 0 }}>
+                    <span style={{ fontSize: '13px', fontWeight: 600 }}>ยอดเป้าหมาย (บาท)</span>
+                    <input type="number" min="0.01" max="9999999999" step="0.01" value={target} onChange={event => setTarget(event.target.value)} required disabled={disabled} />
+                  </label>
+                </div>
+
+                <div style={{ marginTop: '16px', paddingTop: '14px', borderTop: '1px solid var(--border)' }}>
+                  <div style={{ fontSize: '13px', color: 'var(--text-muted)', marginBottom: '10px' }}>
+                    {startedAt ? `กำลังนับยอดตั้งแต่: ${new Date(startedAt).toLocaleString('th-TH', { timeZone: 'Asia/Bangkok' })}` : 'สถานะ: นับยอดบริจาคที่ตรวจสอบแล้วทั้งหมด'}
+                  </div>
+                  <div className="widget-actions">
+                    <button className="widget-button widget-button-month" type="button" disabled={disabled} onClick={() => setStartedAt(getStartOfMonthIso())}>
+                      นับยอดเดือนนี้
+                    </button>
+                    <button className="widget-button widget-button-reset" type="button" disabled={disabled} onClick={() => setStartedAt(new Date().toISOString())}>
+                      เริ่มนับเป้าหมายใหม่
+                    </button>
+                    <button className="widget-button widget-button-total" type="button" disabled={disabled} onClick={() => setStartedAt('')}>
+                      นับยอดทั้งหมด
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <GoalAppearanceEditor value={appearance} onChange={setAppearance} disabled={disabled} title={title} target={Number(target)} />
+            </form>
+          </div>
+
+          {/* Right Column: Sticky Sidebar with Links & Live Output Preview */}
+          <aside className="widgets-side-col">
+            <div className="widgets-sticky-sidebar">
+              {/* Quick Save Card */}
+              <div className="widget-sidebar-card">
+                <button
+                  className="widget-button widget-button-save"
+                  type="submit"
+                  form="goal-form"
+                  disabled={disabled}
+                  style={{ width: '100%', minHeight: '46px', fontSize: '15px' }}
+                >
+                  {saving === 'goal' ? 'กำลังบันทึก…' : 'บันทึกเป้าหมายโดเนท'}
+                </button>
+                <div style={{ fontSize: '12px', color: 'var(--text-muted)', textAlign: 'center', marginTop: '8px' }}>
+                  บันทึกแล้ว OBS จะใช้รูปแบบนี้ทันที
+                </div>
+              </div>
+
+              {/* OBS Browser Source Links Card */}
+              <div className="widget-sidebar-card">
+                <div className="widget-sidebar-card-header">
+                  <div className="widget-sidebar-card-title">
+                    <ExternalLink size={16} />
+                    <span>ลิงก์สำหรับ OBS Browser Source</span>
+                  </div>
+                  <span className="brand-badge">
+                    {savedGoal.goal_width} px
+                  </span>
+                </div>
+
+                {renderSidebarLink('หลอดเป้าหมาย', '/overlay/goal')}
+
+                <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '12px', lineHeight: 1.5 }}>
+                  💡 <strong>ตั้งค่าใน OBS:</strong> Width = <strong>{savedGoal.goal_width}</strong> px และปรับความสูงให้พอดีกับชื่อเป้าหมาย
+                </div>
+              </div>
+
+              {/* Live Preview Card */}
+              <div className="widget-sidebar-card">
+                <div className="widget-sidebar-card-header">
+                  <div className="widget-sidebar-card-title">
+                    <Eye size={16} />
+                    <span>Live Preview (สดทันที)</span>
+                  </div>
+                  <div className="preview-bg-switch">
+                    <button
+                      type="button"
+                      className={`preview-bg-pill ${previewBg === 'checker' ? 'active' : ''}`}
+                      onClick={() => setPreviewBg('checker')}
+                      title="พื้นหลังโปร่งใส Checker"
+                    >
+                      Checker
+                    </button>
+                    <button
+                      type="button"
+                      className={`preview-bg-pill ${previewBg === 'game' ? 'active' : ''}`}
+                      onClick={() => setPreviewBg('game')}
+                      title="พื้นหลังมืด Dark"
+                    >
+                      Dark
+                    </button>
+                    <button
+                      type="button"
+                      className={`preview-bg-pill ${previewBg === 'bright' ? 'active' : ''}`}
+                      onClick={() => setPreviewBg('bright')}
+                      title="พื้นหลังสว่าง Light"
+                    >
+                      Light
+                    </button>
+                  </div>
+                </div>
+
+                <div className={`widget-preview-frame bg-${previewBg}`}>
+                  <div className="widget-preview-content">
+                    {section === 'goal' && (
+                      <GoalWidget
+                        title={title.trim() || 'เป้าหมายโดเนท'}
+                        target={goalTargetNumber}
+                        current={goalCurrentDisplay}
+                        appearance={appearance}
+                      />
+                    )}
+                  </div>
+                </div>
+
+                {isGoalSample && (
+                  <div className="preview-sample-notice">
+                    <Sparkles size={13} style={{ color: 'var(--accent)' }} />
+                    <span>จำลองยอด 50% เพื่อให้เห็นสีหลอดและเอฟเฟกต์สด</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          </aside>
+        </div>
+      </section>
+
+      {/* ================= SECTION 2: SUPPORTERS ================= */}
+      <section id="supporters-panel" role="tabpanel" aria-labelledby="supporters-tab" hidden={section !== 'supporters'}>
+        <div className="widgets-layout-grid">
+          {/* Left Column: Form & Design Editor */}
+          <div className="widgets-main-col">
+            <form id="supporters-form" onSubmit={event => void save(event, 'supporters')}>
+              {errors.supporters && <p role="alert" className="widget-error">{errors.supporters}</p>}
+              <SupporterAppearanceEditor value={supporters} onChange={setSupporters} disabled={disabled} />
+            </form>
+          </div>
+
+          {/* Right Column: Sticky Sidebar with Links & Live Output Preview */}
+          <aside className="widgets-side-col">
+            <div className="widgets-sticky-sidebar">
+              {/* Quick Save Card */}
+              <div className="widget-sidebar-card">
+                <button
+                  className="widget-button widget-button-save"
+                  type="submit"
+                  form="supporters-form"
+                  disabled={disabled}
+                  style={{ width: '100%', minHeight: '46px', fontSize: '15px' }}
+                >
+                  {saving === 'supporters' ? 'กำลังบันทึก…' : 'บันทึกอันดับผู้โดเนท'}
+                </button>
+                <div style={{ fontSize: '12px', color: 'var(--text-muted)', textAlign: 'center', marginTop: '8px' }}>
+                  นับเฉพาะรายการที่ตรวจสอบสลิปผ่านแล้ว
+                </div>
+              </div>
+
+              {/* OBS Browser Source Links Card */}
+              <div className="widget-sidebar-card">
+                <div className="widget-sidebar-card-header">
+                  <div className="widget-sidebar-card-title">
+                    <ExternalLink size={16} />
+                    <span>ลิงก์สำหรับ OBS Browser Source</span>
+                  </div>
+                  <span className="brand-badge">
+                    {savedSupporters.supporter_width} px
+                  </span>
+                </div>
+
+                {renderSidebarLink('โหมดที่ตั้งค่าไว้', '/overlay/supporters')}
+                {renderSidebarLink('ผู้สนับสนุนล่าสุด', '/overlay/supporters?mode=recent')}
+                {renderSidebarLink('อันดับวันนี้', '/overlay/supporters?mode=daily')}
+                {renderSidebarLink('อันดับเดือนนี้', '/overlay/supporters?mode=monthly')}
+                {renderSidebarLink('อันดับตลอดเวลา', '/overlay/supporters?mode=allTime')}
+
+                <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '12px', lineHeight: 1.5 }}>
+                  💡 <strong>ตั้งค่าใน OBS:</strong> Width = <strong>{savedSupporters.supporter_width}</strong> px, Height = <strong>{Math.ceil(supporterHeight)}</strong> px
+                </div>
+              </div>
+
+              {/* Live Preview Card */}
+              <div className="widget-sidebar-card">
+                <div className="widget-sidebar-card-header">
+                  <div className="widget-sidebar-card-title">
+                    <Eye size={16} />
+                    <span>Live Preview (สดทันที)</span>
+                  </div>
+                  <div className="preview-bg-switch">
+                    <button
+                      type="button"
+                      className={`preview-bg-pill ${previewBg === 'checker' ? 'active' : ''}`}
+                      onClick={() => setPreviewBg('checker')}
+                      title="พื้นหลังโปร่งใส Checker"
+                    >
+                      Checker
+                    </button>
+                    <button
+                      type="button"
+                      className={`preview-bg-pill ${previewBg === 'game' ? 'active' : ''}`}
+                      onClick={() => setPreviewBg('game')}
+                      title="พื้นหลังมืด Dark"
+                    >
+                      Dark
+                    </button>
+                    <button
+                      type="button"
+                      className={`preview-bg-pill ${previewBg === 'bright' ? 'active' : ''}`}
+                      onClick={() => setPreviewBg('bright')}
+                      title="พื้นหลังสว่าง Light"
+                    >
+                      Light
+                    </button>
+                  </div>
+                </div>
+
+                <div className={`widget-preview-frame bg-${previewBg}`}>
+                  <div className="widget-preview-content">
+                    {section === 'supporters' && (
+                      <SupporterWidget
+                        donors={displayDonors}
+                        appearance={supporters}
+                        mode={activeMode}
+                      />
+                    )}
+                  </div>
+                </div>
+
+                {!hasRealDonors && (
+                  <div className="preview-sample-notice">
+                    <Sparkles size={13} style={{ color: 'var(--accent)' }} />
+                    <span>แสดงรายชื่อตัวอย่างเพื่อให้เห็นโพเดียมและเอฟเฟกต์สด</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          </aside>
+        </div>
+      </section>
+    </div>
+  );
 }

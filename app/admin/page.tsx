@@ -190,69 +190,6 @@ function AdminOverviewContent() {
           subtitle="Top Supporter"
         />
       </div>
-
-
-      {/* Test Alert Panel */}
-      <div className="panel">
-        <div className="panel-header">
-          <h2 className="panel-title">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="12" cy="12" r="10"></circle>
-              <line x1="22" y1="12" x2="18" y2="12"></line>
-              <line x1="6" y1="12" x2="2" y2="12"></line>
-              <line x1="12" y1="6" x2="12" y2="2"></line>
-              <line x1="12" y1="22" x2="12" y2="18"></line>
-            </svg>
-            ทดสอบระบบ Alert ขึ้นจอ OBS (Test Alert)
-          </h2>
-        </div>
-        <p style={{ color: 'var(--text-muted)', fontSize: '14px', marginBottom: '20px' }}>
-          กดปุ่มนี้เพื่อส่งข้อมูลตัวอย่างขึ้นหน้าจอ OBS Overlay ทันทีโดยไม่ต้องโอนเงินจริง (มีเสียงเอฟเฟกต์และเสียงอ่าน TTS ตามที่ตั้งค่าไว้)
-        </p>
-
-        <div className="form-row">
-          <div className="form-group">
-            <label className="form-label" htmlFor="testName">ชื่อผู้สนับสนุนตัวอย่าง</label>
-            <input
-              type="text"
-              id="testName"
-              className="input-control"
-              value={testName}
-              onChange={(e) => setTestName(e.target.value)}
-            />
-          </div>
-          <div className="form-group">
-            <label className="form-label" htmlFor="testAmount">จำนวนเงิน (บาท)</label>
-            <input
-              type="number"
-              id="testAmount"
-              className="input-control"
-              value={testAmount}
-              onChange={(e) => setTestAmount(e.target.value)}
-            />
-          </div>
-        </div>
-
-        <div className="form-group">
-          <label className="form-label" htmlFor="testMessage">ข้อความตัวอย่าง</label>
-          <input
-            type="text"
-            id="testMessage"
-            className="input-control"
-            value={testMessage}
-            onChange={(e) => setTestMessage(e.target.value)}
-          />
-        </div>
-
-        <button type="button" className="btn" onClick={handleSendTestAlert}>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <line x1="22" y1="2" x2="11" y2="13"></line>
-            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
-          </svg>
-          ส่ง Test Alert ขึ้นหน้าจอ OBS
-        </button>
-      </div>
-
       {/* Recent Donations Preview */}
       <div className="panel">
         <div className="panel-header">

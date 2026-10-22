@@ -8,9 +8,28 @@ import '../overlay/widgets.css';
 import './customizer.css';
 import { AlertSettings } from '@/lib/types/database';
 import { Sidebar, MobileTopBar } from '@/app/components';
-import AlertCard, { getAlertTier } from '@/app/overlay/alert/AlertCard';
+import AlertCard, { getAlertTier, TEXT_GRADIENT_PRESETS } from '@/app/overlay/alert/AlertCard';
 import { amountToThaiWords } from '@/lib/thaiNumber';
 import { ALERT_SOUND_PRESETS } from '@/lib/constants';
+import {
+  Palette,
+  Type,
+  Coins,
+  Volume2,
+  RotateCcw,
+  Send,
+  Save,
+  Eye,
+  Sliders,
+  Play,
+  Link2,
+  Copy,
+  LayoutTemplate,
+  SquareDashed,
+  Upload,
+  Sun,
+  Moon
+} from 'lucide-react';
 
 const ICONS: Record<string, React.ReactNode> = {
   gift: (
@@ -349,8 +368,10 @@ export default function CustomizerPage() {
     alert_shadow_show: 'true',
     alert_glow: 'false',
     alert_shimmer_show: 'true',
-    alert_shimmer_color: 'linear-gradient(90deg, #0f172a 0%, #2563eb 50%, #059669 100%)',
-    alert_card_beam: 'false',
+    alert_card_beam: 'true',
+    alert_card_beam_color: 'auto',
+    alert_confetti_enabled: 'true',
+    alert_particle_style: 'confetti',
     alert_shine_sweep: 'true',
     alert_shine_theme: 'crystal',
     alert_icon: 'gift',
@@ -381,11 +402,23 @@ export default function CustomizerPage() {
     alert_text_stroke_enabled: 'false',
     alert_text_stroke_color: '#000000',
     alert_text_stroke_width: 1.5,
+    alert_text_gradient_enabled: 'false',
+    alert_text_gradient_preset: 'sunset',
+    alert_text_gradient_from: '#ff512f',
+    alert_text_gradient_to: '#dd2476',
+    alert_text_gradient_angle: 135,
+    alert_tiered_rare_from: '#00c6ff',
+    alert_tiered_rare_to: '#0072ff',
+    alert_tiered_epic_from: '#da22ff',
+    alert_tiered_epic_to: '#9733ee',
+    alert_tiered_legendary_from: '#f12711',
+    alert_tiered_legendary_to: '#f5af19',
     alert_animation: 'slide-down',
     alert_duration: 8,
     alert_sound_url: '/sounds/alert.mp3'
   });
 
+  const [activeCategoryTab, setActiveCategoryTab] = useState<'design' | 'typography' | 'tiered' | 'media'>('design');
   const [activePreset, setActivePreset] = useState<string>('modern_light');
   const [activeMode, setActiveMode] = useState<'frameless' | 'card'>('card');
   const [cardOpacity, setCardOpacity] = useState<number>(100);
@@ -397,6 +430,34 @@ export default function CustomizerPage() {
   const [obsUrl, setObsUrl] = useState<string>('http://localhost:3000/overlay');
   const [currentUser, setCurrentUser] = useState<{ username: string; displayName?: string } | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(false);
+  const [theme, setTheme] = useState<'light' | 'dark'>('light');
+
+  // Initialize theme from localStorage or system preference
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('admin_theme') as 'light' | 'dark' | null;
+      if (saved === 'dark' || saved === 'light') {
+        setTheme(saved);
+        document.documentElement.setAttribute('data-theme', saved);
+      } else {
+        const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const initial = prefersDark ? 'dark' : 'light';
+        setTheme(initial);
+        document.documentElement.setAttribute('data-theme', initial);
+      }
+    } catch (e) { }
+  }, []);
+
+  const toggleTheme = () => {
+    setTheme(prev => {
+      const next = prev === 'dark' ? 'light' : 'dark';
+      try {
+        localStorage.setItem('admin_theme', next);
+      } catch (e) { }
+      document.documentElement.setAttribute('data-theme', next);
+      return next;
+    });
+  };
 
   // Sound Testing & Upload State
   const [isPlayingAlertSound, setIsPlayingAlertSound] = useState<boolean>(false);
@@ -617,7 +678,7 @@ export default function CustomizerPage() {
       if (!data.success) {
         throw new Error(data.message || 'บันทึกไม่สำเร็จ');
       }
-      showToast('✓ บันทึกและซิงค์สไตล์ขึ้นจอ OBS สำเร็จแล้ว!');
+      showToast('บันทึกและซิงค์การตั้งค่าขึ้นจอ OBS สำเร็จ');
     } catch (err: any) {
       showToast(err.message || 'เกิดข้อผิดพลาดในการบันทึก');
     } finally {
@@ -643,7 +704,7 @@ export default function CustomizerPage() {
       });
       const data = await res.json();
       if (data.success) {
-        showToast('🚀 ส่ง Test Alert ไปที่จอ OBS Studio เรียบร้อยแล้ว!');
+        showToast('ส่ง Test Alert ไปยัง OBS Studio เรียบร้อยแล้ว');
       } else {
         alert(data.message || 'เกิดข้อผิดพลาดในการส่ง Test Alert');
       }
@@ -681,7 +742,7 @@ export default function CustomizerPage() {
   } : {};
 
   return (
-    <div className="admin-layout">
+    <div className="admin-layout customizer-page-root">
       {/* Reusable Sidebar Navigation */}
       <Sidebar
         isOpen={isSidebarOpen}
@@ -689,6 +750,8 @@ export default function CustomizerPage() {
         activeTab="tabCustomizer"
         currentUser={currentUser}
         onLogout={handleLogout}
+        theme={theme}
+        onToggleTheme={toggleTheme}
       />
 
       {/* Main Content Area */}
@@ -698,6 +761,8 @@ export default function CustomizerPage() {
           onOpenSidebar={() => setIsSidebarOpen(true)}
           title="OBS Alert Customizer"
           subtitle="สตูดิโอปรับแต่ง UI สตรีม"
+          theme={theme}
+          onToggleTheme={toggleTheme}
           rightAction={
             <Link
               href="/overlay"
@@ -711,57 +776,54 @@ export default function CustomizerPage() {
         />
 
         {/* Customizer Workspace Action Header */}
-        <div style={{
-          background: 'var(--bg-panel)',
-          borderBottom: '1px solid var(--border)',
-          padding: '16px 28px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          flexWrap: 'wrap',
-          gap: '14px',
-          boxShadow: 'var(--shadow-sm)'
-        }}>
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ fontSize: '20px' }}>🎨</span>
-              <h1 style={{ fontSize: '17px', fontWeight: 700, color: 'var(--text-main)', margin: 0 }}>
-                สตูดิโอปรับแต่ง UI แจ้งเตือน OBS (Customizer Studio)
-              </h1>
-              <span className="brand-badge customizer-live-badge">
-                Live Sync
-              </span>
-            </div>
-            <p style={{ fontSize: '12.5px', color: 'var(--text-muted)', margin: '3px 0 0 0' }}>
-              ปรับแต่งสไตล์การแจ้งเตือนโดเนทขึ้นจอ OBS Studio ซิงค์แบบ Real-time ทันที
+        <div className="customizer-header">
+          <div className="customizer-header-left">
+            <h1 className="customizer-page-title">
+              ปรับแต่ง Alert Overlay
+            </h1>
+            <p className="customizer-page-desc">
+              ปรับแต่งสไตล์การแจ้งเตือนโดเนทสำหรับ OBS Studio
             </p>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+          <div className="customizer-header-actions">
+            <button
+              type="button"
+              className="btn secondary sm"
+              onClick={toggleTheme}
+              title={theme === 'dark' ? 'เปลี่ยนเป็นโหมดสว่าง' : 'เปลี่ยนเป็นโหมดมืด'}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+            >
+              {theme === 'dark' ? <Sun size={14} /> : <Moon size={14} />}
+              <span>{theme === 'dark' ? 'โหมดสว่าง' : 'โหมดมืด'}</span>
+            </button>
             <button
               type="button"
               className="btn secondary sm"
               onClick={handleResetDefault}
-              style={{ fontSize: '12.5px', padding: '8px 14px' }}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
             >
-              ↺ คืนค่าเริ่มต้น
+              <RotateCcw size={14} />
+              <span>รีเซ็ต</span>
             </button>
             <button
               type="button"
               className="btn secondary sm"
               onClick={handleTestRealObs}
-              style={{ fontSize: '12.5px', padding: '8px 14px' }}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
             >
-              ทดสอบแจ้งเตือน
+              <Send size={14} />
+              <span>ทดสอบส่งเข้า OBS</span>
             </button>
             <button
               type="button"
               className="btn sm"
               onClick={handleSave}
               disabled={isSaving}
-              style={{ fontSize: '12.5px', padding: '8px 18px', fontWeight: 700 }}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
             >
-              {isSaving ? 'กำลังบันทึก...' : '💾 บันทึกและซิงค์ OBS'}
+              <Save size={14} />
+              <span>{isSaving ? 'กำลังบันทึก...' : 'บันทึกการตั้งค่า'}</span>
             </button>
           </div>
         </div>
@@ -773,10 +835,7 @@ export default function CustomizerPage() {
             className={`mobile-view-btn ${mobileView === 'controls' ? 'active' : ''}`}
             onClick={() => setMobileView('controls')}
           >
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="12" cy="12" r="3"></circle>
-              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
-            </svg>
+            <Sliders size={15} />
             <span>แผงปรับแต่ง</span>
           </button>
           <button
@@ -784,10 +843,7 @@ export default function CustomizerPage() {
             className={`mobile-view-btn ${mobileView === 'preview' ? 'active' : ''}`}
             onClick={() => setMobileView('preview')}
           >
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-              <circle cx="12" cy="12" r="3"></circle>
-            </svg>
+            <Eye size={15} />
             <span>ดูพรีวิวบนจอ OBS</span>
           </button>
         </div>
@@ -798,7 +854,7 @@ export default function CustomizerPage() {
           className="floating-view-toggle"
           onClick={() => setMobileView(mobileView === 'controls' ? 'preview' : 'controls')}
         >
-          <span>{mobileView === 'controls' ? '👁️' : '⚙️'}</span>
+          {mobileView === 'controls' ? <Eye size={16} /> : <Sliders size={16} />}
           <span>{mobileView === 'controls' ? 'ดูพรีวิวสด' : 'แก้ไขดีไซน์'}</span>
         </button>
 
@@ -806,1561 +862,1990 @@ export default function CustomizerPage() {
         <div className="customizer-container" data-mobile-view={mobileView}>
           {/* Left Column: Controls */}
           <div className="controls-panel">
-            {/* Quick Mode Switcher Banner */}
-            <div className="quick-mode-banner">
-              <div className="mode-info">
-                <div className="mode-icon">
-                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                    <rect x="3" y="3" width="18" height="18" rx="3" ry="3"></rect>
-                    <line x1="3" y1="9" x2="21" y2="9"></line>
-                    <line x1="9" y1="21" x2="9" y2="9"></line>
-                  </svg>
-                </div>
-                <div className="mode-text-wrap">
-                  <div className="mode-title">สลับรูปแบบการแจ้งเตือนด่วน</div>
-                  <div className="mode-sub">เลือกระหว่าง "แบบการ์ดปกติ" หรือ "แบบลอยโปร่งใส ไร้กรอบ ไร้พื้นหลัง"</div>
-                </div>
-              </div>
-              <div className="mode-buttons">
-                <button
-                  type="button"
-                  className={`btn-mode-toggle ${activeMode === 'frameless' ? 'active-frameless' : ''}`}
-                  onClick={() => handleModeToggle('frameless')}
-                >
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
-                  </svg>
-                  <span>ไร้กรอบ ไร้พื้นหลัง ทั้งหมด (All Frameless)</span>
-                </button>
-                <button
-                  type="button"
-                  className={`btn-mode-toggle ${activeMode === 'card' ? 'active' : ''}`}
-                  onClick={() => handleModeToggle('card')}
-                >
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-                  </svg>
-                  <span>มีกรอบและการ์ดปกติ (Card Mode)</span>
-                </button>
-              </div>
+
+            {/* Category Tabs Navigator */}
+            <div className="customizer-tabs-nav">
+              <button
+                type="button"
+                className={`customizer-tab-btn ${activeCategoryTab === 'design' ? 'active' : ''}`}
+                onClick={() => setActiveCategoryTab('design')}
+              >
+                <span className="tab-icon"><Palette size={18} strokeWidth={2.2} /></span>
+                <span className="tab-label">รูปแบบการ์ด</span>
+              </button>
+              <button
+                type="button"
+                className={`customizer-tab-btn ${activeCategoryTab === 'typography' ? 'active' : ''}`}
+                onClick={() => setActiveCategoryTab('typography')}
+              >
+                <span className="tab-icon"><Type size={18} strokeWidth={2.2} /></span>
+                <span className="tab-label">ข้อความ &amp; ไล่สี</span>
+              </button>
+              <button
+                type="button"
+                className={`customizer-tab-btn ${activeCategoryTab === 'tiered' ? 'active' : ''}`}
+                onClick={() => setActiveCategoryTab('tiered')}
+              >
+                <span className="tab-icon"><Coins size={18} strokeWidth={2.2} /></span>
+                <span className="tab-label">ระดับยอดเงิน</span>
+              </button>
+              <button
+                type="button"
+                className={`customizer-tab-btn ${activeCategoryTab === 'media' ? 'active' : ''}`}
+                onClick={() => setActiveCategoryTab('media')}
+              >
+                <span className="tab-icon"><Volume2 size={18} strokeWidth={2.2} /></span>
+                <span className="tab-label">เสียง &amp; อนิเมชัน</span>
+              </button>
             </div>
 
-            {/* Preset Themes */}
-            <div className="panel-section">
-              <div className="section-title">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
-                </svg>
-                ธีมสำเร็จรูป (1-Click Presets)
-              </div>
-              <p className="section-desc">คลิกเลือกธีมสำเร็จรูปเพื่อนำไปปรับแต่งต่อได้อย่างรวดเร็ว</p>
-              <div className="presets-grid">
-                <button
-                  type="button"
-                  className={`preset-card ${activePreset === 'frameless_clear' ? 'active' : ''}`}
-                  onClick={() => applyPreset('frameless_clear')}
-                >
-                  <div className="preset-preview preview-checker" style={{ border: '1.5px dashed #38bdf8', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'transparent' }}>
-                    <span style={{ fontSize: '10px', fontWeight: 800, color: '#0284c7', background: 'rgba(255,255,255,0.85)', padding: '2px 6px', borderRadius: '4px' }}>
-                      ไร้กรอบ & ไร้พื้นหลัง
-                    </span>
+            {/* TAB 1: DESIGN & CARD LAYOUT */}
+            {activeCategoryTab === 'design' && (
+              <>
+                {/* Section: Card Shape & Structure */}
+                <div className="panel-section">
+                  <div className="section-title">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                      <line x1="3" y1="9" x2="21" y2="9"></line>
+                      <line x1="9" y1="21" x2="9" y2="9"></line>
+                    </svg>
+                    การ์ดและโครงสร้าง (Card Layout)
                   </div>
-                  <span>✨ ไร้กรอบ ลอยโปร่งใส</span>
-                </button>
 
-                <button
-                  type="button"
-                  className={`preset-card ${activePreset === 'modern_light' ? 'active' : ''}`}
-                  onClick={() => applyPreset('modern_light')}
-                >
-                  <div className="preset-preview" style={{ background: '#ffffff', border: '1.5px solid #e2e8f0' }}>
-                    <div style={{ height: '4px', background: 'linear-gradient(90deg, #0f172a, #2563eb, #059669)', borderRadius: '4px 4px 0 0' }}></div>
-                    <div style={{ padding: '6px', fontSize: '11px', color: '#0f172a', fontWeight: 'bold' }}>Modern Light</div>
-                  </div>
-                  <span>มินิมอลขาวสว่าง</span>
-                </button>
-
-                <button
-                  type="button"
-                  className={`preset-card ${activePreset === 'dark_luxury' ? 'active' : ''}`}
-                  onClick={() => applyPreset('dark_luxury')}
-                >
-                  <div className="preset-preview" style={{ background: '#0f172a', border: '1.5px solid #334155' }}>
-                    <div style={{ height: '4px', background: 'linear-gradient(90deg, #f59e0b, #fbbf24, #d97706)', borderRadius: '4px 4px 0 0' }}></div>
-                    <div style={{ padding: '6px', fontSize: '11px', color: '#f8fafc', fontWeight: 'bold' }}>Dark Luxury</div>
-                  </div>
-                  <span>ดาร์กโหมดหรูหรา</span>
-                </button>
-
-                <button
-                  type="button"
-                  className={`preset-card ${activePreset === 'cyber_neon' ? 'active' : ''}`}
-                  onClick={() => applyPreset('cyber_neon')}
-                >
-                  <div className="preset-preview" style={{ background: '#090d16', border: '1.5px solid #06b6d4', boxShadow: '0 0 10px rgba(6,182,212,0.4)' }}>
-                    <div style={{ height: '4px', background: 'linear-gradient(90deg, #ec4899, #8b5cf6, #06b6d4)', borderRadius: '4px 4px 0 0' }}></div>
-                    <div style={{ padding: '6px', fontSize: '11px', color: '#38bdf8', fontWeight: 'bold' }}>Cyber Neon</div>
-                  </div>
-                  <span>เกมมิ่งนีออน</span>
-                </button>
-
-                <button
-                  type="button"
-                  className={`preset-card ${activePreset === 'sweet_pastel' ? 'active' : ''}`}
-                  onClick={() => applyPreset('sweet_pastel')}
-                >
-                  <div className="preset-preview" style={{ background: '#fff5f7', border: '1.5px solid #fecdd3' }}>
-                    <div style={{ height: '4px', background: 'linear-gradient(90deg, #f43f5e, #fb7185, #fda4af)', borderRadius: '4px 4px 0 0' }}></div>
-                    <div style={{ padding: '6px', fontSize: '11px', color: '#e11d48', fontWeight: 'bold' }}>Sweet Pastel</div>
-                  </div>
-                  <span>พาสเทลหวานละมุน</span>
-                </button>
-
-                <button
-                  type="button"
-                  className={`preset-card ${activePreset === 'glass_frost' ? 'active' : ''}`}
-                  onClick={() => applyPreset('glass_frost')}
-                >
-                  <div className="preset-preview" style={{ background: 'rgba(255,255,255,0.85)', border: '1.5px solid rgba(255,255,255,0.6)', backdropFilter: 'blur(8px)' }}>
-                    <div style={{ height: '4px', background: 'linear-gradient(90deg, #3b82f6, #60a5fa, #93c5fd)', borderRadius: '4px 4px 0 0' }}></div>
-                    <div style={{ padding: '6px', fontSize: '11px', color: '#1e3a8a', fontWeight: 'bold' }}>Glass Frost</div>
-                  </div>
-                  <span>กระจกฝ้าโปร่งแสง</span>
-                </button>
-
-                <button
-                  type="button"
-                  className={`preset-card ${activePreset === 'pure_clear' ? 'active' : ''}`}
-                  onClick={() => applyPreset('pure_clear')}
-                >
-                  <div className="preset-preview preview-checker" style={{ border: '1.5px solid rgba(255,255,255,0.6)', boxShadow: '0 0 10px rgba(56,189,248,0.4)' }}>
-                    <div style={{ height: '4px', background: 'linear-gradient(90deg, #38bdf8, #818cf8, #c084fc)', borderRadius: '4px 4px 0 0' }}></div>
-                    <div style={{ padding: '6px', fontSize: '11px', color: '#0284c7', fontWeight: 'bold', background: 'rgba(255,255,255,0.4)', backdropFilter: 'blur(4px)' }}>Pure Clear</div>
-                  </div>
-                  <span>✨ โปร่งใสทะลุจอ</span>
-                </button>
-
-                <button
-                  type="button"
-                  className={`preset-card ${activePreset === 'dark_glass' ? 'active' : ''}`}
-                  onClick={() => applyPreset('dark_glass')}
-                >
-                  <div className="preset-preview" style={{ background: 'rgba(15, 23, 42, 0.65)', border: '1.5px solid #06b6d4', backdropFilter: 'blur(10px)' }}>
-                    <div style={{ height: '4px', background: 'linear-gradient(90deg, #06b6d4, #3b82f6, #6366f1)', borderRadius: '4px 4px 0 0' }}></div>
-                    <div style={{ padding: '6px', fontSize: '11px', color: '#38bdf8', fontWeight: 'bold' }}>Dark Glass</div>
-                  </div>
-                  <span>💎 กระจกดำนีออน</span>
-                </button>
-
-                <button
-                  type="button"
-                  className={`preset-card ${activePreset === 'emerald_cash' ? 'active' : ''}`}
-                  onClick={() => applyPreset('emerald_cash')}
-                >
-                  <div className="preset-preview" style={{ background: '#f0fdf4', border: '1.5px solid #86efac' }}>
-                    <div style={{ height: '4px', background: 'linear-gradient(90deg, #059669, #10b981, #34d399)', borderRadius: '4px 4px 0 0' }}></div>
-                    <div style={{ padding: '6px', fontSize: '11px', color: '#065f46', fontWeight: 'bold' }}>Emerald Cash</div>
-                  </div>
-                  <span>เขียวมรกตสดชื่น</span>
-                </button>
-              </div>
-            </div>
-
-            {/* Section: Card Shape & Structure */}
-            <div className="panel-section">
-              <div className="section-title">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-                  <line x1="3" y1="9" x2="21" y2="9"></line>
-                  <line x1="9" y1="21" x2="9" y2="9"></line>
-                </svg>
-                การ์ดและโครงสร้าง (Card Layout)
-              </div>
-
-              <div className="form-row">
-                <div className="form-group">
-                  <label className="form-label">
-                    <span>ความกว้างการ์ด ({settings.alert_card_width || 580}px)</span>
-                  </label>
-                  <input
-                    type="range"
-                    min="400"
-                    max="750"
-                    step="10"
-                    value={settings.alert_card_width || 580}
-                    onChange={(e) => updateField('alert_card_width', parseInt(e.target.value))}
-                  />
-                </div>
-                <div className="form-group">
-                  <label className="form-label">
-                    <span>ความมนขอบ ({settings.alert_border_radius ?? 24}px)</span>
-                  </label>
-                  <input
-                    type="range"
-                    min="0"
-                    max="40"
-                    step="2"
-                    value={settings.alert_border_radius ?? 24}
-                    onChange={(e) => updateField('alert_border_radius', parseInt(e.target.value))}
-                  />
-                </div>
-              </div>
-
-              <div className="form-row">
-                <div className="form-group">
-                  <label className="form-label">
-                    <span>ความหนาเส้นขอบ ({settings.alert_border_width ?? 1.5}px)</span>
+                  {/* Mode Segmented Toggle: Card vs Frameless */}
+                  <div className="segmented-control" style={{ marginBottom: '16px' }}>
                     <button
                       type="button"
-                      className="btn-text-action"
-                      onClick={() => updateField('alert_border_width', 0)}
+                      className={`segmented-btn ${activeMode === 'card' ? 'active' : ''}`}
+                      onClick={() => handleModeToggle('card')}
                     >
-                      🚫 ไม่เอาเส้นขอบ (0px)
+                      <LayoutTemplate size={15} />
+                      <span>แบบมีการ์ด (Card Mode)</span>
                     </button>
-                  </label>
-                  <input
-                    type="range"
-                    min="0"
-                    max="6"
-                    step="0.5"
-                    value={settings.alert_border_width ?? 1.5}
-                    onChange={(e) => updateField('alert_border_width', parseFloat(e.target.value))}
-                  />
-                </div>
-                <div className="form-group">
-                  <label className="form-label">เงาการ์ดและแสงเรือง (Shadow & Glow)</label>
-                  <select
-                    className="input-control"
-                    value={
-                      settings.alert_shadow_show === 'false'
-                        ? 'none'
-                        : settings.alert_glow === 'true'
-                          ? 'true'
-                          : 'false'
-                    }
-                    onChange={(e) => {
-                      const v = e.target.value;
-                      if (v === 'none') {
-                        updateField('alert_shadow_show', 'false');
-                        updateField('alert_glow', 'false');
-                      } else if (v === 'true') {
-                        updateField('alert_shadow_show', 'true');
-                        updateField('alert_glow', 'true');
-                      } else {
-                        updateField('alert_shadow_show', 'true');
-                        updateField('alert_glow', 'false');
-                      }
-                    }}
-                  >
-                    <option value="false">เงาการ์ดมาตรฐาน</option>
-                    <option value="true">แสงนีออนเรืองแสงรอบการ์ด (Neon Glow)</option>
-                    <option value="none">🚫 ไม่เอาเงา (ปิดเงากล่อง)</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="color-picker-grid">
-                <div className="color-field">
-                  <div className="field-label-row">
-                    <label>สีพื้นหลังการ์ด</label>
                     <button
                       type="button"
-                      className="btn-text-action"
-                      onClick={() => {
-                        updateField('alert_card_bg', 'transparent');
-                        setCardOpacity(0);
-                      }}
+                      className={`segmented-btn ${activeMode === 'frameless' ? 'active' : ''}`}
+                      onClick={() => handleModeToggle('frameless')}
                     >
-                      🚫 ไม่เอาพื้นหลัง
+                      <SquareDashed size={15} />
+                      <span>แบบไร้กรอบโปร่งใส (Frameless)</span>
                     </button>
                   </div>
-                  <div className="color-input-wrap">
-                    <input
-                      type="color"
-                      value={settings.alert_card_bg?.startsWith('#') ? settings.alert_card_bg : '#ffffff'}
-                      onChange={(e) => updateField('alert_card_bg', e.target.value)}
-                    />
-                    <input
-                      type="text"
-                      className="hex-input"
-                      value={settings.alert_card_bg || '#ffffff'}
-                      onChange={(e) => updateField('alert_card_bg', e.target.value)}
-                    />
-                  </div>
-                </div>
-                <div className="color-field">
-                  <div className="field-label-row">
-                    <label>สีเส้นขอบการ์ด</label>
-                    <button
-                      type="button"
-                      className="btn-text-action"
-                      onClick={() => updateField('alert_border_color', 'transparent')}
-                    >
-                      🚫 ขอบใส
-                    </button>
-                  </div>
-                  <div className="color-input-wrap">
-                    <input
-                      type="color"
-                      value={settings.alert_border_color?.startsWith('#') ? settings.alert_border_color : '#e2e8f0'}
-                      onChange={(e) => updateField('alert_border_color', e.target.value)}
-                    />
-                    <input
-                      type="text"
-                      className="hex-input"
-                      value={settings.alert_border_color || '#e2e8f0'}
-                      onChange={(e) => updateField('alert_border_color', e.target.value)}
-                    />
-                  </div>
-                </div>
-              </div>
 
-              {/* Card Background Transparency & Blur Controls */}
-              <div className="transparency-control-box">
-                <div className="form-row" style={{ marginBottom: '8px' }}>
-                  <div className="form-group">
-                    <label className="form-label">
-                      <span>ความโปร่งใสพื้นหลัง ({cardOpacity}%)</span>
-                      <span className="label-hint">{cardOpacity === 100 ? 'ทึบแสง' : cardOpacity === 0 ? 'โปร่งใส 100%' : 'กึ่งโปร่ง'}</span>
-                    </label>
-                    <input
-                      type="range"
-                      min="0"
-                      max="100"
-                      step="1"
-                      value={cardOpacity}
-                      onChange={(e) => {
-                        const val = parseInt(e.target.value);
-                        setCardOpacity(val);
-                        if (val === 0) {
-                          updateField('alert_card_bg', 'transparent');
-                        } else if (val === 100) {
-                          updateField('alert_card_bg', '#ffffff');
-                        } else {
-                          updateField('alert_card_bg', `rgba(255, 255, 255, ${(val / 100).toFixed(2)})`);
+                  <div className="form-row">
+                    <div className="form-group">
+                      <label className="form-label">
+                        <span>ความกว้างการ์ด ({settings.alert_card_width || 580}px)</span>
+                      </label>
+                      <input
+                        type="range"
+                        min="400"
+                        max="750"
+                        step="10"
+                        value={settings.alert_card_width || 580}
+                        onChange={(e) => updateField('alert_card_width', parseInt(e.target.value))}
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label className="form-label">
+                        <span>ความมนขอบ ({settings.alert_border_radius ?? 24}px)</span>
+                      </label>
+                      <input
+                        type="range"
+                        min="0"
+                        max="40"
+                        step="2"
+                        value={settings.alert_border_radius ?? 24}
+                        onChange={(e) => updateField('alert_border_radius', parseInt(e.target.value))}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="form-row">
+                    <div className="form-group">
+                      <label className="form-label">
+                        <span>ความหนาเส้นขอบ ({settings.alert_border_width ?? 1.5}px)</span>
+                        <button
+                          type="button"
+                          className="btn-text-action"
+                          onClick={() => updateField('alert_border_width', 0)}
+                        >
+                          ปิดเส้นขอบ
+                        </button>
+                      </label>
+                      <input
+                        type="range"
+                        min="0"
+                        max="6"
+                        step="0.5"
+                        value={settings.alert_border_width ?? 1.5}
+                        onChange={(e) => updateField('alert_border_width', parseFloat(e.target.value))}
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label className="form-label">เงาการ์ดและแสงเรือง (Shadow &amp; Glow)</label>
+                      <select
+                        className="input-control"
+                        value={
+                          settings.alert_shadow_show === 'false'
+                            ? 'none'
+                            : settings.alert_glow === 'true'
+                              ? 'true'
+                              : 'false'
                         }
-                      }}
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label className="form-label">
-                      <span>กระจกฝ้าฉากหลัง ({settings.alert_card_blur || 0}px)</span>
-                      <span className="label-hint">ความเบลอ OBS</span>
-                    </label>
-                    <input
-                      type="range"
-                      min="0"
-                      max="30"
-                      step="1"
-                      value={settings.alert_card_blur || 0}
-                      onChange={(e) => updateField('alert_card_blur', parseInt(e.target.value))}
-                    />
-                  </div>
-                </div>
-
-                {/* Quick Opacity Presets */}
-                <div className="quick-opacity-row">
-                  <div className="quick-op-title">ความโปร่งใสด่วน:</div>
-                  <div className="quick-op-group">
-                    <button
-                      type="button"
-                      className={`btn-quick-op ${cardOpacity === 0 ? 'active' : ''}`}
-                      onClick={() => handleOpacityPreset(0, 0)}
-                    >
-                      <span>✨ โปร่งใส 100%</span>
-                    </button>
-                    <button
-                      type="button"
-                      className={`btn-quick-op ${cardOpacity === 40 ? 'active' : ''}`}
-                      onClick={() => handleOpacityPreset(40, 12)}
-                    >
-                      <span>🌫️ กึ่งโปร่ง 40%</span>
-                    </button>
-                    <button
-                      type="button"
-                      className={`btn-quick-op ${cardOpacity === 75 ? 'active' : ''}`}
-                      onClick={() => handleOpacityPreset(75, 16)}
-                    >
-                      <span>💎 กระจกฝ้า 75%</span>
-                    </button>
-                    <button
-                      type="button"
-                      className={`btn-quick-op ${cardOpacity === 100 ? 'active' : ''}`}
-                      onClick={() => handleOpacityPreset(100, 0)}
-                    >
-                      <span>⬛ ทึบแสง 100%</span>
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Section: Icon & Header */}
-            <div className="panel-section">
-              <div className="section-title">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <polyline points="20 12 20 22 4 22 4 12"></polyline>
-                  <rect x="2" y="7" width="20" height="5"></rect>
-                  <line x1="12" y1="22" x2="12" y2="7"></line>
-                  <path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"></path>
-                  <path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"></path>
-                </svg>
-                ไอคอน & แถบสีด้านบน (Accent & Icon)
-              </div>
-
-              <div className="form-row">
-                <div className="form-group">
-                  <label className="form-label">เลือกรูปไอคอน</label>
-                  <select
-                    className="input-control"
-                    value={settings.alert_icon || 'gift'}
-                    onChange={(e) => updateField('alert_icon', e.target.value)}
-                  >
-                    <option value="gift">🎁 กล่องของขวัญ (Gift Box)</option>
-                    <option value="heart">❤️ หัวใจแห่งความรัก (Heart)</option>
-                    <option value="coin">🪙 เหรียญทองคำ (Coin)</option>
-                    <option value="star">⭐ ดาวประกาย (Star)</option>
-                    <option value="fire">🔥 เปลวไฟลุก (Fire)</option>
-                    <option value="trophy">🏆 ถ้วยรางวัล (Trophy)</option>
-                  </select>
-                </div>
-                <div className="form-group">
-                  <div className="field-label-row">
-                    <label className="form-label" style={{ marginBottom: 0 }}>ข้อความบอกการกระทำ (Action Text)</label>
-                    <span className="label-hint">เช่น โดเนทให้, สนับสนุน</span>
-                  </div>
-                  <input
-                    type="text"
-                    className="input-control"
-                    value={settings.alert_action_text || 'โดเนทให้'}
-                    onChange={(e) => updateField('alert_action_text', e.target.value)}
-                    placeholder="เช่น โดเนทให้ / สนับสนุน / เลี้ยงกาแฟ"
-                  />
-                  <div className="action-text-chips" style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginTop: '6px' }}>
-                    {['โดเนทให้', 'สนับสนุน', 'เลี้ยงกาแฟ', 'ส่งกำลังใจ', 'เปย์ให้'].map((txt) => (
-                      <button
-                        key={txt}
-                        type="button"
-                        className="btn-action-chip"
-                        onClick={() => updateField('alert_action_text', txt)}
+                        onChange={(e) => {
+                          const v = e.target.value;
+                          if (v === 'none') {
+                            updateField('alert_shadow_show', 'false');
+                            updateField('alert_glow', 'false');
+                          } else if (v === 'true') {
+                            updateField('alert_shadow_show', 'true');
+                            updateField('alert_glow', 'true');
+                          } else {
+                            updateField('alert_shadow_show', 'true');
+                            updateField('alert_glow', 'false');
+                          }
+                        }}
                       >
-                        {txt}
-                      </button>
-                    ))}
+                        <option value="false">เงามาตรฐาน (Soft Shadow)</option>
+                        <option value="true">แสงเรืองนีออน (Neon Glow)</option>
+                        <option value="none">ไม่มีเงา (None)</option>
+                      </select>
+                    </div>
                   </div>
-                  <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '5px' }}>
-                    💡 รูปแบบบนจอ: <strong style={{ color: 'var(--text-main)' }}>[ชื่อ] [ข้อความ] [จำนวน] บาท</strong>
-                  </div>
-                </div>
-              </div>
 
-              <div className="form-row" style={{ marginBottom: '12px' }}>
-                <div className="form-group" style={{ width: '100%' }}>
-                  <label className="form-label">ลำแสงวิ่งบนตัวอักษร (เหมือนอันดับ)</label>
-                  <select
-                    className="input-control"
-                    value={String(settings.alert_shine_sweep !== 'false')}
-                    onChange={(e) => updateField('alert_shine_sweep', e.target.value)}
-                  >
-                    <option value="true">💎 เปิดลำแสงวิ่งผ่านตัวอักษร (ชื่อ + โดเนทให้ + ยอดเงิน)</option>
-                    <option value="false">🚫 ปิดลำแสงวิ่งผ่านตัวอักษร</option>
-                  </select>
-                </div>
-              </div>
-
-              {settings.alert_shine_sweep !== 'false' && (
-                <div className="form-row" style={{ marginBottom: '12px' }}>
-                  <div className="form-group" style={{ width: '100%' }}>
-                    <label className="form-label">โทนสีประกายแสงวิ่งตัวอักษร</label>
-                    <select
-                      className="input-control"
-                      value={settings.alert_shine_theme || 'crystal'}
-                      onChange={(e) => updateField('alert_shine_theme', e.target.value)}
-                    >
-                      <option value="crystal">💎 คริสตัลประกายเพชร (Crystal Diamond)</option>
-                      <option value="gold">🏆 ประกายทองพรีเมียม (Golden Glow)</option>
-                      <option value="cyan">⚡ นีออนไซแอน (Cyber Cyan)</option>
-                    </select>
-                  </div>
-                </div>
-              )}
-
-              <div className="form-row" style={{ marginBottom: '12px' }}>
-                <div className="form-group">
-                  <label className="form-label">แถบสีด้านบน (Shimmer Bar)</label>
-                  <select
-                    className="input-control"
-                    value={String(settings.alert_shimmer_show !== 'false')}
-                    onChange={(e) => updateField('alert_shimmer_show', e.target.value)}
-                  >
-                    <option value="true">🌈 แสดงแถบสีด้านบน</option>
-                    <option value="false">🚫 ไม่เอาแถบสีด้านบน (ซ่อนแถบสี)</option>
-                  </select>
-                </div>
-                <div className="form-group">
-                  <label className="form-label">
-                    <span>กล่องพื้นหลังไอคอน</span>
-                    <button
-                      type="button"
-                      className="btn-text-action"
-                      onClick={() => {
-                        updateField('alert_icon_bg', 'transparent');
-                        updateField('alert_icon_border', 'transparent');
-                      }}
-                    >
-                      🚫 ไม่เอากล่อง
-                    </button>
-                  </label>
-                  <select
-                    className="input-control"
-                    value={settings.alert_icon_bg === 'transparent' ? 'none' : 'box'}
-                    onChange={(e) => {
-                      if (e.target.value === 'none') {
-                        updateField('alert_icon_bg', 'transparent');
-                        updateField('alert_icon_border', 'transparent');
-                      } else {
-                        updateField('alert_icon_bg', '#f8fafc');
-                        updateField('alert_icon_border', '#e2e8f0');
-                      }
-                    }}
-                  >
-                    <option value="box">มีกล่องพื้นหลังไอคอน</option>
-                    <option value="none">🚫 ไม่เอาพื้นหลัง (ลอยเฉพาะรูปไอคอน)</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="color-picker-grid">
-                <div className="color-field">
-                  <label>สีไอคอน</label>
-                  <div className="color-input-wrap">
-                    <input
-                      type="color"
-                      value={settings.alert_icon_color?.startsWith('#') ? settings.alert_icon_color : '#0f172a'}
-                      onChange={(e) => updateField('alert_icon_color', e.target.value)}
-                    />
-                    <input
-                      type="text"
-                      className="hex-input"
-                      value={settings.alert_icon_color || '#0f172a'}
-                      onChange={(e) => updateField('alert_icon_color', e.target.value)}
-                    />
-                  </div>
-                </div>
-                <div className="color-field">
-                  <div className="field-label-row">
-                    <label>สีพื้นหลังกล่องไอคอน</label>
-                    <button
-                      type="button"
-                      className="btn-text-action"
-                      onClick={() => updateField('alert_icon_bg', 'transparent')}
-                    >
-                      🚫 ใส
-                    </button>
-                  </div>
-                  <div className="color-input-wrap">
-                    <input
-                      type="color"
-                      value={settings.alert_icon_bg?.startsWith('#') ? settings.alert_icon_bg : '#f8fafc'}
-                      onChange={(e) => updateField('alert_icon_bg', e.target.value)}
-                    />
-                    <input
-                      type="text"
-                      className="hex-input"
-                      value={settings.alert_icon_bg || '#f8fafc'}
-                      onChange={(e) => updateField('alert_icon_bg', e.target.value)}
-                    />
-                  </div>
-                </div>
-                <div className="color-field full-width">
-                  <label>แถบสีสตรีคด้านบน (Shimmer Bar Gradient / Color)</label>
-                  <input
-                    type="text"
-                    className="input-control"
-                    value={settings.alert_shimmer_color || 'linear-gradient(90deg, #0f172a 0%, #2563eb 50%, #059669 100%)'}
-                    onChange={(e) => updateField('alert_shimmer_color', e.target.value)}
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Section: Typography & Colors */}
-            <div className="panel-section">
-              <div className="section-title">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <polyline points="4 7 4 4 20 4 20 7"></polyline>
-                  <line x1="9" y1="20" x2="15" y2="20"></line>
-                  <line x1="12" y1="4" x2="12" y2="20"></line>
-                </svg>
-                ฟอนต์ & สีตัวอักษร (Typography)
-              </div>
-
-              <div className="form-group">
-                <label className="form-label">ฟอนต์ตัวอักษร (Font Family)</label>
-                <select
-                  className="input-control"
-                  value={settings.alert_font || 'LINESeedSansTH'}
-                  onChange={(e) => updateField('alert_font', e.target.value)}
-                >
-                  <option value="LINESeedSansTH">LINE Seed Sans TH (Regular ปกติ)</option>
-                  <option value="LINESeedSansTH-ExtraBold">LINE Seed Sans TH (ExtraBold หนาพิเศษ)</option>
-                </select>
-                <span style={{ fontSize: '12px', color: 'var(--text-dim)', marginTop: '6px', display: 'block' }}>
-                  * ฟอนต์และสีที่ตั้งค่าจะแสดงผลเฉพาะการ์ดแจ้งเตือน (Donate Alert UI) เท่านั้น เว็บแอปส่วนอื่นจะใช้ฟอนต์ Regular ปกติ
-                </span>
-              </div>
-
-              <div className="color-picker-grid">
-                <div className="color-field">
-                  <label>สีชื่อผู้สนับสนุน</label>
-                  <div className="color-input-wrap">
-                    <input
-                      type="color"
-                      value={settings.alert_name_color?.startsWith('#') ? settings.alert_name_color : '#0f172a'}
-                      onChange={(e) => updateField('alert_name_color', e.target.value)}
-                    />
-                    <input
-                      type="text"
-                      className="hex-input"
-                      value={settings.alert_name_color || '#0f172a'}
-                      onChange={(e) => updateField('alert_name_color', e.target.value)}
-                    />
-                  </div>
-                </div>
-                <div className="color-field">
-                  <label>สีข้อความต่อท้ายชื่อ</label>
-                  <div className="color-input-wrap">
-                    <input
-                      type="color"
-                      value={settings.alert_action_color?.startsWith('#') ? settings.alert_action_color : '#64748b'}
-                      onChange={(e) => updateField('alert_action_color', e.target.value)}
-                    />
-                    <input
-                      type="text"
-                      className="hex-input"
-                      value={settings.alert_action_color || '#64748b'}
-                      onChange={(e) => updateField('alert_action_color', e.target.value)}
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div className="form-group" style={{ marginTop: '14px' }}>
-                <label className="form-label">
-                  <span>ขนาดตัวอักษรชื่อ (Title Size)</span>
-                  <span className="label-val">{settings.alert_title_size || 26}px</span>
-                </label>
-                <input
-                  type="range"
-                  min="20"
-                  max="36"
-                  value={settings.alert_title_size || 26}
-                  onChange={(e) => updateField('alert_title_size', parseInt(e.target.value))}
-                />
-              </div>
-
-              {/* Stroke Text (เส้นขอบตัวอักษร) */}
-              <div style={{ marginTop: '20px', paddingTop: '16px', borderTop: '1px solid var(--border)' }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
-                  <label className="form-label" style={{ fontWeight: 700, fontSize: '13.5px', marginBottom: 0 }}>
-                    🖋️ เส้นขอบตัวอักษร (Stroke Text)
-                  </label>
-                  {settings.alert_text_stroke_enabled === 'true' && (
-                    <button
-                      type="button"
-                      className="btn-text-action"
-                      onClick={() => updateField('alert_text_stroke_enabled', 'false')}
-                    >
-                      🚫 ปิดเส้นขอบ
-                    </button>
-                  )}
-                </div>
-
-                <div className="form-group" style={{ marginBottom: '12px' }}>
-                  <label className="form-label">เปิดใช้งานเส้นขอบตัวอักษร (เอาหรือไม่เอา)</label>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-                    <button
-                      type="button"
-                      className={`nav-btn ${settings.alert_text_stroke_enabled !== 'true' ? 'active' : ''}`}
-                      style={{ padding: '8px 12px', justifyContent: 'center' }}
-                      onClick={() => updateField('alert_text_stroke_enabled', 'false')}
-                    >
-                      🚫 ไม่เอาเส้นขอบ
-                    </button>
-                    <button
-                      type="button"
-                      className={`nav-btn ${settings.alert_text_stroke_enabled === 'true' ? 'active' : ''}`}
-                      style={{ padding: '8px 12px', justifyContent: 'center' }}
-                      onClick={() => {
-                        updateField('alert_text_stroke_enabled', 'true');
-                        if (!settings.alert_text_stroke_color) updateField('alert_text_stroke_color', '#000000');
-                        if (!settings.alert_text_stroke_width) updateField('alert_text_stroke_width', 1.5);
-                      }}
-                    >
-                      ✨ ใส่เส้นขอบตัวอักษร
-                    </button>
-                  </div>
-                </div>
-
-                {settings.alert_text_stroke_enabled === 'true' && (
-                  <div style={{
-                    background: 'var(--bg-main, #f8fafc)',
-                    border: '1px solid var(--border)',
-                    borderRadius: 'var(--radius-md, 12px)',
-                    padding: '14px',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '12px'
-                  }}>
+                  <div className="color-picker-grid">
                     <div className="color-field">
                       <div className="field-label-row">
-                        <label>กำหนดสีเส้นขอบ (Stroke Color)</label>
-                        <div style={{ display: 'flex', gap: '4px' }}>
-                          <button
-                            type="button"
-                            className="btn-text-action"
-                            style={{ borderColor: '#000000', background: '#000000', color: '#ffffff' }}
-                            onClick={() => updateField('alert_text_stroke_color', '#000000')}
-                          >
-                            ดำ
-                          </button>
-                          <button
-                            type="button"
-                            className="btn-text-action"
-                            style={{ borderColor: '#cbd5e1', background: '#ffffff', color: '#000000' }}
-                            onClick={() => updateField('alert_text_stroke_color', '#ffffff')}
-                          >
-                            ขาว
-                          </button>
-                          <button
-                            type="button"
-                            className="btn-text-action"
-                            style={{ borderColor: '#2563eb', background: '#2563eb', color: '#ffffff' }}
-                            onClick={() => updateField('alert_text_stroke_color', '#1e3a8a')}
-                          >
-                            น้ำเงิน
-                          </button>
-                          <button
-                            type="button"
-                            className="btn-text-action"
-                            style={{ borderColor: '#dc2626', background: '#dc2626', color: '#ffffff' }}
-                            onClick={() => updateField('alert_text_stroke_color', '#991b1b')}
-                          >
-                            แดง
-                          </button>
-                        </div>
+                        <label>สีพื้นหลังการ์ด</label>
+                        <button
+                          type="button"
+                          className="btn-text-action"
+                          onClick={() => {
+                            updateField('alert_card_bg', 'transparent');
+                            setCardOpacity(0);
+                          }}
+                        >
+                          โปร่งใส
+                        </button>
                       </div>
                       <div className="color-input-wrap">
                         <input
                           type="color"
-                          value={settings.alert_text_stroke_color?.startsWith('#') ? settings.alert_text_stroke_color : '#000000'}
-                          onChange={(e) => updateField('alert_text_stroke_color', e.target.value)}
+                          value={settings.alert_card_bg?.startsWith('#') ? settings.alert_card_bg : '#ffffff'}
+                          onChange={(e) => updateField('alert_card_bg', e.target.value)}
                         />
                         <input
                           type="text"
                           className="hex-input"
-                          value={settings.alert_text_stroke_color || '#000000'}
-                          onChange={(e) => updateField('alert_text_stroke_color', e.target.value)}
+                          value={settings.alert_card_bg || '#ffffff'}
+                          onChange={(e) => updateField('alert_card_bg', e.target.value)}
                         />
                       </div>
                     </div>
-
-                    <div className="form-group">
-                      <label className="form-label">
-                        <span>ความหนาเส้นขอบ (Stroke Width)</span>
-                        <span className="label-val">{settings.alert_text_stroke_width || 1.5}px</span>
-                      </label>
-                      <input
-                        type="range"
-                        min="0.5"
-                        max="4"
-                        step="0.5"
-                        value={settings.alert_text_stroke_width || 1.5}
-                        onChange={(e) => updateField('alert_text_stroke_width', parseFloat(e.target.value))}
-                      />
-                      <div style={{ fontSize: '11px', color: 'var(--text-dim)', marginTop: '2px' }}>
-                        ช่วยให้อ่านตัวอักษรได้ชัดเจน คมชัด บนทุกฉากหลังเกมและสตรีม
+                    <div className="color-field">
+                      <div className="field-label-row">
+                        <label>สีเส้นขอบการ์ด</label>
+                        <button
+                          type="button"
+                          className="btn-text-action"
+                          onClick={() => updateField('alert_border_color', 'transparent')}
+                        >
+                          โปร่งใส
+                        </button>
                       </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Spacing Controls (บน ล่าง ซ้าย ขวา & ช่องไฟ) */}
-              <div style={{ marginTop: '20px', paddingTop: '16px', borderTop: '1px solid var(--border)' }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
-                  <label className="form-label" style={{ fontWeight: 700, fontSize: '13.5px', marginBottom: 0 }}>
-                    📐 ระยะห่างตัวอักษรและข้อความ (Text Spacing)
-                  </label>
-                  <button
-                    type="button"
-                    className="btn-text-action"
-                    onClick={() => {
-                      updateField('alert_icon_margin_bottom', 8);
-                      updateField('alert_msg_margin_top', 8);
-                      updateField('alert_text_margin_top', 0);
-                      updateField('alert_text_margin_bottom', 0);
-                      updateField('alert_text_margin_left', 0);
-                      updateField('alert_text_margin_right', 0);
-                      updateField('alert_letter_spacing', 0);
-                      updateField('alert_word_gap', 8);
-                    }}
-                  >
-                    รีเซ็ตระยะห่าง
-                  </button>
-                </div>
-
-                {/* Vertical Gaps (ไอคอน ↔ ชื่อ ↔ ข้อความ) */}
-                <div style={{
-                  background: 'rgba(37, 99, 235, 0.05)',
-                  border: '1.5px solid rgba(37, 99, 235, 0.25)',
-                  borderRadius: 'var(--radius-md, 12px)',
-                  padding: '14px',
-                  marginBottom: '14px'
-                }}>
-                  <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-main)', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <span>🎯</span>
-                    <span>ปรับระยะห่างบน-ล่าง (ไอคอน ↔ ชื่อโดเนท ↔ ข้อความ)</span>
-                  </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px' }}>
-                    <div className="form-group">
-                      <label className="form-label">
-                        <span>🎁 ไอคอน ↔ ชื่อโดเนท</span>
-                        <span className="label-val">{settings.alert_icon_margin_bottom ?? 8}px</span>
-                      </label>
-                      <input
-                        type="range"
-                        min="0"
-                        max="40"
-                        value={settings.alert_icon_margin_bottom ?? 8}
-                        onChange={(e) => updateField('alert_icon_margin_bottom', parseInt(e.target.value))}
-                      />
-                      <div style={{ fontSize: '11px', color: 'var(--text-dim)', marginTop: '2px' }}>
-                        ระยะห่างระหว่างไอคอนของขวัญกับชื่อ
-                      </div>
-                    </div>
-
-                    <div className="form-group">
-                      <label className="form-label">
-                        <span>💬 ชื่อโดเนท ↔ ข้อความ</span>
-                        <span className="label-val">{settings.alert_msg_margin_top ?? 8}px</span>
-                      </label>
-                      <input
-                        type="range"
-                        min="0"
-                        max="40"
-                        value={settings.alert_msg_margin_top ?? 8}
-                        onChange={(e) => updateField('alert_msg_margin_top', parseInt(e.target.value))}
-                      />
-                      <div style={{ fontSize: '11px', color: 'var(--text-dim)', marginTop: '2px' }}>
-                        ระยะห่างระหว่างบรรทัดชื่อกับกล่องข้อความ
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* 4-way Spacing Grid (บน, ล่าง, ซ้าย, ขวา) */}
-                <div style={{
-                  background: 'var(--bg-main, #f8fafc)',
-                  border: '1px solid var(--border)',
-                  borderRadius: 'var(--radius-md, 12px)',
-                  padding: '14px',
-                  marginBottom: '14px'
-                }}>
-                  <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '10px' }}>
-                    ปรับตำแหน่งกรอบตัวอักษรเพิ่มเติม (Fine-tune Margins)
-                  </div>
-
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px' }}>
-                    <div className="form-group">
-                      <label className="form-label">
-                        <span>⬆️ ดันลงล่าง (Top Margin)</span>
-                        <span className="label-val">{settings.alert_text_margin_top ?? 0}px</span>
-                      </label>
-                      <input
-                        type="range"
-                        min="0"
-                        max="60"
-                        value={settings.alert_text_margin_top ?? 0}
-                        onChange={(e) => updateField('alert_text_margin_top', parseInt(e.target.value))}
-                      />
-                    </div>
-
-                    <div className="form-group">
-                      <label className="form-label">
-                        <span>⬇️ ดันขึ้นบน (Bottom Margin)</span>
-                        <span className="label-val">{settings.alert_text_margin_bottom ?? 0}px</span>
-                      </label>
-                      <input
-                        type="range"
-                        min="0"
-                        max="60"
-                        value={settings.alert_text_margin_bottom ?? 0}
-                        onChange={(e) => updateField('alert_text_margin_bottom', parseInt(e.target.value))}
-                      />
-                    </div>
-
-                    <div className="form-group">
-                      <label className="form-label">
-                        <span>⬅️ ซ้าย (Left)</span>
-                        <span className="label-val">{settings.alert_text_margin_left ?? 0}px</span>
-                      </label>
-                      <input
-                        type="range"
-                        min="0"
-                        max="60"
-                        value={settings.alert_text_margin_left ?? 0}
-                        onChange={(e) => updateField('alert_text_margin_left', parseInt(e.target.value))}
-                      />
-                    </div>
-
-                    <div className="form-group">
-                      <label className="form-label">
-                        <span>➡️ ขวา (Right)</span>
-                        <span className="label-val">{settings.alert_text_margin_right ?? 0}px</span>
-                      </label>
-                      <input
-                        type="range"
-                        min="0"
-                        max="60"
-                        value={settings.alert_text_margin_right ?? 0}
-                        onChange={(e) => updateField('alert_text_margin_right', parseInt(e.target.value))}
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Letter Spacing & Word Gap */}
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px' }}>
-                  <div className="form-group">
-                    <label className="form-label">
-                      <span>ช่องไฟตัวอักษร (Letter Spacing)</span>
-                      <span className="label-val">{settings.alert_letter_spacing ?? 0}px</span>
-                    </label>
-                    <input
-                      type="range"
-                      min="-2"
-                      max="16"
-                      step="1"
-                      value={settings.alert_letter_spacing ?? 0}
-                      onChange={(e) => updateField('alert_letter_spacing', parseInt(e.target.value))}
-                    />
-                    <div style={{ fontSize: '11px', color: 'var(--text-dim)', marginTop: '2px' }}>
-                      ระยะห่างแนวนอนระหว่างตัวอักษรแต่ละตัว
-                    </div>
-                  </div>
-
-                  <div className="form-group">
-                    <label className="form-label">
-                      <span>ระยะห่างระหว่างคำ (Word Gap)</span>
-                      <span className="label-val">{settings.alert_word_gap ?? 8}px</span>
-                    </label>
-                    <input
-                      type="range"
-                      min="2"
-                      max="32"
-                      step="1"
-                      value={settings.alert_word_gap ?? 8}
-                      onChange={(e) => updateField('alert_word_gap', parseInt(e.target.value))}
-                    />
-                    <div style={{ fontSize: '11px', color: 'var(--text-dim)', marginTop: '2px' }}>
-                      ระยะห่างระหว่าง [ชื่อ] ↔ [ข้อความ] ↔ [ยอดเงิน]
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Section: Amount & Message Styling */}
-            <div className="panel-section">
-              <div className="section-title">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <line x1="12" y1="1" x2="12" y2="23"></line>
-                  <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
-                </svg>
-                ป้ายยอดเงิน & กล่องข้อความ (Amount & Message)
-              </div>
-
-              <div className="form-row" style={{ marginBottom: '12px' }}>
-                <div className="form-group">
-                  <label className="form-label">
-                    <span>ป้ายพื้นหลังยอดเงิน</span>
-                    <button
-                      type="button"
-                      className="btn-text-action"
-                      onClick={() => {
-                        updateField('alert_amount_bg', 'transparent');
-                        updateField('alert_amount_border', 'transparent');
-                      }}
-                    >
-                      🚫 ไม่เอาป้าย (ลอยเฉพาะตัวเลข)
-                    </button>
-                  </label>
-                  <select
-                    className="input-control"
-                    value={settings.alert_amount_bg === 'transparent' ? 'none' : 'pill'}
-                    onChange={(e) => {
-                      if (e.target.value === 'none') {
-                        updateField('alert_amount_bg', 'transparent');
-                        updateField('alert_amount_border', 'transparent');
-                      } else {
-                        updateField('alert_amount_bg', '#ecfdf5');
-                        updateField('alert_amount_border', '#a7f3d0');
-                      }
-                    }}
-                  >
-                    <option value="pill">มีป้ายพื้นหลังยอดเงิน (Pill Badge)</option>
-                    <option value="none">🚫 ไม่เอาพื้นหลังป้าย (ลอยเฉพาะตัวเลข)</option>
-                  </select>
-                </div>
-                <div className="form-group">
-                  <label className="form-label">
-                    <span>พื้นหลังกล่องข้อความ</span>
-                    <button
-                      type="button"
-                      className="btn-text-action"
-                      onClick={() => {
-                        updateField('alert_msg_bg', 'transparent');
-                        updateField('alert_msg_border', 'transparent');
-                      }}
-                    >
-                      🚫 ไม่เอากล่อง (ลอยเฉพาะข้อความ)
-                    </button>
-                  </label>
-                  <select
-                    className="input-control"
-                    value={settings.alert_msg_bg === 'transparent' ? 'none' : 'box'}
-                    onChange={(e) => {
-                      if (e.target.value === 'none') {
-                        updateField('alert_msg_bg', 'transparent');
-                        updateField('alert_msg_border', 'transparent');
-                      } else {
-                        updateField('alert_msg_bg', '#f8fafc');
-                        updateField('alert_msg_border', '#e2e8f0');
-                      }
-                    }}
-                  >
-                    <option value="box">มีกล่องพื้นหลังข้อความ</option>
-                    <option value="none">🚫 ไม่เอาพื้นหลังกล่อง (ลอยเฉพาะข้อความ)</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="color-picker-grid">
-                <div className="color-field">
-                  <div className="field-label-row">
-                    <label>สีพื้นหลังป้ายยอดเงิน</label>
-                    <button
-                      type="button"
-                      className="btn-text-action"
-                      onClick={() => updateField('alert_amount_bg', 'transparent')}
-                    >
-                      🚫 ใส
-                    </button>
-                  </div>
-                  <div className="color-input-wrap">
-                    <input
-                      type="color"
-                      value={settings.alert_amount_bg?.startsWith('#') ? settings.alert_amount_bg : '#ecfdf5'}
-                      onChange={(e) => updateField('alert_amount_bg', e.target.value)}
-                    />
-                    <input
-                      type="text"
-                      className="hex-input"
-                      value={settings.alert_amount_bg || '#ecfdf5'}
-                      onChange={(e) => updateField('alert_amount_bg', e.target.value)}
-                    />
-                  </div>
-                </div>
-                <div className="color-field">
-                  <label>สีตัวเลขยอดเงิน</label>
-                  <div className="color-input-wrap">
-                    <input
-                      type="color"
-                      value={settings.alert_amount_color?.startsWith('#') ? settings.alert_amount_color : '#059669'}
-                      onChange={(e) => updateField('alert_amount_color', e.target.value)}
-                    />
-                    <input
-                      type="text"
-                      className="hex-input"
-                      value={settings.alert_amount_color || '#059669'}
-                      onChange={(e) => updateField('alert_amount_color', e.target.value)}
-                    />
-                  </div>
-                </div>
-                <div className="color-field">
-                  <div className="field-label-row">
-                    <label>สีพื้นหลังกล่องข้อความ</label>
-                    <button
-                      type="button"
-                      className="btn-text-action"
-                      onClick={() => updateField('alert_msg_bg', 'transparent')}
-                    >
-                      🚫 ใส
-                    </button>
-                  </div>
-                  <div className="color-input-wrap">
-                    <input
-                      type="color"
-                      value={settings.alert_msg_bg?.startsWith('#') ? settings.alert_msg_bg : '#f8fafc'}
-                      onChange={(e) => updateField('alert_msg_bg', e.target.value)}
-                    />
-                    <input
-                      type="text"
-                      className="hex-input"
-                      value={settings.alert_msg_bg || '#f8fafc'}
-                      onChange={(e) => updateField('alert_msg_bg', e.target.value)}
-                    />
-                  </div>
-                </div>
-                <div className="color-field">
-                  <label>สีตัวหนังสือข้อความ</label>
-                  <div className="color-input-wrap">
-                    <input
-                      type="color"
-                      value={settings.alert_msg_color?.startsWith('#') ? settings.alert_msg_color : '#334155'}
-                      onChange={(e) => updateField('alert_msg_color', e.target.value)}
-                    />
-                    <input
-                      type="text"
-                      className="hex-input"
-                      value={settings.alert_msg_color || '#334155'}
-                      onChange={(e) => updateField('alert_msg_color', e.target.value)}
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div className="quick-msg-transparency" style={{ marginTop: '10px', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '8px', flexWrap: 'wrap' }}>
-                <span style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 600 }}>ปรับพื้นหลังข้อความด่วน:</span>
-                <button
-                  type="button"
-                  className="btn secondary"
-                  style={{ padding: '5px 10px', fontSize: '11px', cursor: 'pointer' }}
-                  onClick={() => {
-                    updateField('alert_msg_bg', 'rgba(255, 255, 255, 0.4)');
-                    updateField('alert_msg_border', 'rgba(255, 255, 255, 0.6)');
-                  }}
-                >
-                  💎 กระจกฝ้ากึ่งโปร่ง
-                </button>
-                <button
-                  type="button"
-                  className="btn secondary"
-                  style={{ padding: '5px 10px', fontSize: '11px', cursor: 'pointer' }}
-                  onClick={() => {
-                    updateField('alert_msg_bg', '#f8fafc');
-                    updateField('alert_msg_border', '#e2e8f0');
-                  }}
-                >
-                  ⬛ คืนค่าสีพื้นเดิม
-                </button>
-              </div>
-
-              <div className="form-row" style={{ marginTop: '14px' }}>
-                <div className="form-group">
-                  <label className="form-label">ขนาดยอดเงิน ({settings.alert_amount_size || 22}px)</label>
-                  <input
-                    type="range"
-                    min="18"
-                    max="32"
-                    value={settings.alert_amount_size || 22}
-                    onChange={(e) => updateField('alert_amount_size', parseInt(e.target.value))}
-                  />
-                </div>
-                <div className="form-group">
-                  <label className="form-label">ขนาดข้อความ ({settings.alert_msg_size || 18}px)</label>
-                  <input
-                    type="range"
-                    min="14"
-                    max="24"
-                    value={settings.alert_msg_size || 18}
-                    onChange={(e) => updateField('alert_msg_size', parseInt(e.target.value))}
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Section: Animation & Sound */}
-            <div className="panel-section">
-              <div className="section-title">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
-                </svg>
-                อนิเมชั่นและเวลาแสดงผล (Animation & Timing)
-              </div>
-
-              <div className="form-row">
-                <div className="form-group">
-                  <label className="form-label">รูปแบบอนิเมชั่นเข้า-ออก</label>
-                  <select
-                    className="input-control"
-                    value={settings.alert_animation || 'slide-down'}
-                    onChange={(e) => updateField('alert_animation', e.target.value)}
-                  >
-                    <option value="slide-down">Slide Down (เลื่อนลงมาจากด้านบน)</option>
-                    <option value="bounce">Bounce Pop (เด้งดึ๋ง สดใส มีพลัง)</option>
-                    <option value="zoom">Zoom Fade (ซูมขยาย คมชัด)</option>
-                    <option value="slide-left">Slide Left (เลื่อนจากซ้ายไปขวา)</option>
-                  </select>
-                </div>
-                <div className="form-group">
-                  <label className="form-label">
-                    <span>ระยะเวลาแสดงผล ({settings.alert_duration || 8} วินาที)</span>
-                  </label>
-                  <input
-                    type="range"
-                    min="3"
-                    max="25"
-                    value={settings.alert_duration || 8}
-                    onChange={(e) => updateField('alert_duration', parseInt(e.target.value))}
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* 7. TTS & Voice Selection Section */}
-            <div className="panel-section">
-              <div className="section-title">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
-                  <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
-                </svg>
-                ระบบเสียงและการเลือกเสียงอ่าน (Voice & Text-to-Speech)
-              </div>
-              <p className="section-desc">
-                เลือกเสียงอ่านข้อความโดเนทภาษาไทยด้วยระบบ <strong>Microsoft Neural AI</strong> (เสียงธรรมชาติเหมือนคนจริง ไม่ใช่ Google) พร้อมปรับสปีดและทดลองฟังเสียงสด
-              </p>
-
-              <div className="form-row">
-                <div className="form-group">
-                  <label className="form-label">สถานะระบบอ่านออกเสียง (TTS)</label>
-                  <select
-                    className="input-control"
-                    value={String(settings.tts_enabled ?? 'true')}
-                    onChange={(e) => updateField('tts_enabled', e.target.value)}
-                  >
-                    <option value="true">เปิดใช้งาน (อ่านชื่อ ยอดเงิน และข้อความ)</option>
-                    <option value="false">ปิดใช้งาน (ไม่ส่งเสียงอ่าน)</option>
-                  </select>
-                </div>
-                <div className="form-group">
-                  <label className="form-label">ยอดเงินขั้นต่ำที่จะให้อ่าน TTS (บาท)</label>
-                  <input
-                    type="number"
-                    className="input-control"
-                    min="1"
-                    value={settings.tts_min_amount ?? 20}
-                    onChange={(e) => updateField('tts_min_amount', parseInt(e.target.value) || 0)}
-                  />
-                </div>
-              </div>
-
-              {/* Google TTS Engine Info Banner */}
-              <div style={{
-                marginTop: '16px',
-                padding: '14px 16px',
-                background: 'var(--bg-main, #f8fafc)',
-                border: '1px solid var(--border)',
-                borderRadius: 'var(--radius-md, 12px)',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '12px'
-              }}>
-                <div style={{
-                  width: '40px',
-                  height: '40px',
-                  borderRadius: '10px',
-                  background: 'rgba(37, 99, 235, 0.1)',
-                  color: '#2563eb',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: '22px',
-                  flexShrink: 0
-                }}>
-                  🌐
-                </div>
-                <div>
-                  <div style={{ fontWeight: 700, fontSize: '13.5px', color: 'var(--text-main)' }}>
-                    ระบบอ่านออกเสียง: Google Translate Thai (100%)
-                  </div>
-                  <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '2px', lineHeight: 1.4 }}>
-                    ระบบใช้เสียงมาตรฐาน Google ภาษาไทย คมชัด เสถียรสูง รองรับข้อความยาวอัตโนมัติ ไม่ต้องตั้งค่าคีย์หรือเสียงเพิ่มเติม
-                  </div>
-                </div>
-              </div>
-
-              {/* Sound Selection (Feature 2.1) */}
-              <div className="form-row full-width" style={{ marginTop: '16px' }}>
-                <div className="form-group full-width">
-                  <div className="field-label-row" style={{ alignItems: 'center' }}>
-                    <label className="form-label" style={{ marginBottom: 0, fontWeight: 700 }}>
-                      🔔 เสียงกระดิ่งแจ้งเตือน (Alert Bell Sound)
-                    </label>
-                    <button
-                      type="button"
-                      className="btn-test-sound"
-                      onClick={handleTestAlertSound}
-                      disabled={isPlayingAlertSound}
-                    >
-                      {isPlayingAlertSound ? '⏳ กำลังเล่นเสียง...' : '▶️ ทดลองฟังเสียง'}
-                    </button>
-                  </div>
-
-                  {/* 2 Tabs: Segmented Control */}
-                  <div className="sound-segmented-tabs">
-                    <button
-                      type="button"
-                      className={`sound-tab-btn ${soundMode === 'preset' ? 'active' : ''}`}
-                      onClick={() => {
-                        setSoundMode('preset');
-                        const isCurrentPreset = ALERT_SOUND_PRESETS.some(p => p.id !== 'custom' && p.id === settings.alert_sound_url);
-                        if (!isCurrentPreset) {
-                          updateField('alert_sound_url', '/sounds/alert.mp3');
-                        }
-                      }}
-                    >
-                      🔔 เสียงมาตรฐาน (5 แบบ)
-                    </button>
-                    <button
-                      type="button"
-                      className={`sound-tab-btn ${soundMode === 'custom' ? 'active' : ''}`}
-                      onClick={() => setSoundMode('custom')}
-                    >
-                      📁 อัปโหลดไฟล์ / วางลิงก์เอง
-                    </button>
-                  </div>
-
-                  {soundMode === 'preset' ? (
-                    <div style={{ marginTop: '4px' }}>
-                      <select
-                        className="input-control"
-                        value={
-                          ALERT_SOUND_PRESETS.some(p => p.id !== 'custom' && p.id === settings.alert_sound_url)
-                            ? settings.alert_sound_url
-                            : '/sounds/alert.mp3'
-                        }
-                        onChange={(e) => updateField('alert_sound_url', e.target.value)}
-                      >
-                        {ALERT_SOUND_PRESETS.filter(p => p.id !== 'custom').map((p) => (
-                          <option key={p.id} value={p.id}>{p.label}</option>
-                        ))}
-                      </select>
-                    </div>
-                  ) : (
-                    <div className="sound-upload-card">
-                      <label className="sound-dropzone-clicker">
+                      <div className="color-input-wrap">
                         <input
-                          type="file"
-                          accept=".mp3,.wav,.ogg"
-                          style={{ display: 'none' }}
-                          onChange={(e) => {
-                            const file = e.target.files?.[0];
-                            if (file) handleSoundUpload(file);
-                          }}
+                          type="color"
+                          value={settings.alert_border_color?.startsWith('#') ? settings.alert_border_color : '#e2e8f0'}
+                          onChange={(e) => updateField('alert_border_color', e.target.value)}
                         />
-                        <div style={{ fontSize: '24px', lineHeight: 1 }}>{uploadingSound ? '⏳' : '🎵'}</div>
-                        <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-main)' }}>
-                          {uploadingSound ? 'กำลังอัปโหลด...' : 'คลิกเพื่อเลือกไฟล์เสียง (.mp3, .wav, .ogg)'}
-                        </div>
-                        <div style={{ fontSize: '11.5px', color: 'var(--text-muted)' }}>
-                          ระบบจะจัดเก็บไฟล์เสียงและสร้าง URL ให้อัตโนมัติ (สูงสุด 25MB)
-                        </div>
-                      </label>
-
-                      <div className="sound-upload-divider">
-                        <div className="field-label-row" style={{ marginBottom: '6px' }}>
-                          <label className="form-label" style={{ fontSize: '12px', marginBottom: 0, color: 'var(--text-muted)' }}>
-                            หรือระบุลิงก์ URL เสียงตรงนี้
-                          </label>
-                          <button
-                            type="button"
-                            className="sound-reset-link"
-                            onClick={() => {
-                              updateField('alert_sound_url', '/sounds/alert.mp3');
-                              setSoundMode('preset');
-                            }}
-                          >
-                            รีเซ็ตเป็นกระดิ่งเดิม
-                          </button>
-                        </div>
                         <input
                           type="text"
-                          className="input-control"
-                          placeholder="เช่น /sounds/alert.mp3 หรือ https://..."
-                          value={settings.alert_sound_url || ''}
-                          onChange={(e) => updateField('alert_sound_url', e.target.value)}
-                          style={{ fontSize: '12px' }}
+                          className="hex-input"
+                          value={settings.alert_border_color || '#e2e8f0'}
+                          onChange={(e) => updateField('alert_border_color', e.target.value)}
                         />
                       </div>
                     </div>
+                  </div>
+
+                  {/* Card Background Transparency & Blur Controls */}
+                  <div className="transparency-control-box">
+                    <div className="form-row" style={{ marginBottom: '8px' }}>
+                      <div className="form-group">
+                        <label className="form-label">
+                          <span>ความโปร่งใสพื้นหลัง ({cardOpacity}%)</span>
+                          <span className="label-hint">{cardOpacity === 100 ? 'ทึบแสง' : cardOpacity === 0 ? 'โปร่งใส 100%' : 'กึ่งโปร่ง'}</span>
+                        </label>
+                        <input
+                          type="range"
+                          min="0"
+                          max="100"
+                          step="1"
+                          value={cardOpacity}
+                          onChange={(e) => {
+                            const val = parseInt(e.target.value);
+                            setCardOpacity(val);
+                            if (val === 0) {
+                              updateField('alert_card_bg', 'transparent');
+                            } else if (val === 100) {
+                              updateField('alert_card_bg', '#ffffff');
+                            } else {
+                              updateField('alert_card_bg', `rgba(255, 255, 255, ${(val / 100).toFixed(2)})`);
+                            }
+                          }}
+                        />
+                      </div>
+                      <div className="form-group">
+                        <label className="form-label">
+                          <span>กระจกฝ้าฉากหลัง ({settings.alert_card_blur || 0}px)</span>
+                          <span className="label-hint">ความเบลอ OBS</span>
+                        </label>
+                        <input
+                          type="range"
+                          min="0"
+                          max="30"
+                          step="1"
+                          value={settings.alert_card_blur || 0}
+                          onChange={(e) => updateField('alert_card_blur', parseInt(e.target.value))}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Quick Opacity Presets */}
+                    <div className="quick-opacity-row">
+                      <div className="quick-op-title">ความโปร่งใสด่วน:</div>
+                      <div className="quick-op-group">
+                        <button
+                          type="button"
+                          className={`btn-quick-op ${cardOpacity === 0 ? 'active' : ''}`}
+                          onClick={() => handleOpacityPreset(0, 0)}
+                        >
+                          <span>โปร่งใส 100%</span>
+                        </button>
+                        <button
+                          type="button"
+                          className={`btn-quick-op ${cardOpacity === 40 ? 'active' : ''}`}
+                          onClick={() => handleOpacityPreset(40, 12)}
+                        >
+                          <span>กึ่งโปร่ง 40%</span>
+                        </button>
+                        <button
+                          type="button"
+                          className={`btn-quick-op ${cardOpacity === 75 ? 'active' : ''}`}
+                          onClick={() => handleOpacityPreset(75, 16)}
+                        >
+                          <span>กระจกฝ้า 75%</span>
+                        </button>
+                        <button
+                          type="button"
+                          className={`btn-quick-op ${cardOpacity === 100 ? 'active' : ''}`}
+                          onClick={() => handleOpacityPreset(100, 0)}
+                        >
+                          <span>ทึบแสง 100%</span>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Section: Icon & Header */}
+                <div className="panel-section">
+                  <div className="section-title">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="20 12 20 22 4 22 4 12"></polyline>
+                      <rect x="2" y="7" width="20" height="5"></rect>
+                      <line x1="12" y1="22" x2="12" y2="7"></line>
+                      <path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"></path>
+                      <path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"></path>
+                    </svg>
+                    ไอคอน & แถบสีด้านบน (Accent & Icon)
+                  </div>
+
+                  <div className="form-row">
+                    <div className="form-group">
+                      <label className="form-label">เลือกรูปไอคอน</label>
+                      <select
+                        className="input-control"
+                        value={settings.alert_icon || 'gift'}
+                        onChange={(e) => updateField('alert_icon', e.target.value)}
+                      >
+                        <option value="gift">กล่องของขวัญ (Gift Box)</option>
+                        <option value="heart">หัวใจ (Heart)</option>
+                        <option value="coin">เหรียญ (Coin)</option>
+                        <option value="star">ดาว (Star)</option>
+                        <option value="fire">เปลวไฟ (Fire)</option>
+                        <option value="trophy">ถ้วยรางวัล (Trophy)</option>
+                      </select>
+                    </div>
+                    <div className="form-group">
+                      <div className="field-label-row">
+                        <label className="form-label" style={{ marginBottom: 0 }}>ข้อความบอกการกระทำ (Action Text)</label>
+                        <span className="label-hint">เช่น โดเนทให้, สนับสนุน</span>
+                      </div>
+                      <input
+                        type="text"
+                        className="input-control"
+                        value={settings.alert_action_text || 'โดเนทให้'}
+                        onChange={(e) => updateField('alert_action_text', e.target.value)}
+                        placeholder="เช่น โดเนทให้ / สนับสนุน / เลี้ยงกาแฟ"
+                      />
+                      <div className="action-text-chips" style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginTop: '6px' }}>
+                        {['โดเนทให้', 'สนับสนุน', 'เลี้ยงกาแฟ', 'ส่งกำลังใจ', 'เปย์ให้'].map((txt) => (
+                          <button
+                            key={txt}
+                            type="button"
+                            className="btn-action-chip"
+                            onClick={() => updateField('alert_action_text', txt)}
+                          >
+                            {txt}
+                          </button>
+                        ))}
+                      </div>
+                      <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '5px' }}>
+                        รูปแบบบนจอ: <strong style={{ color: 'var(--text-main)' }}>[ชื่อ] [ข้อความ] [จำนวน] บาท</strong>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="form-row" style={{ marginBottom: '12px' }}>
+                    <div className="form-group" style={{ width: '100%' }}>
+                      <label className="form-label">ลำแสงวิ่งบนตัวอักษร (Shimmer Sweep)</label>
+                      <select
+                        className="input-control"
+                        value={String(settings.alert_shine_sweep !== 'false')}
+                        onChange={(e) => updateField('alert_shine_sweep', e.target.value)}
+                      >
+                        <option value="true">เปิดเอฟเฟกต์แสงวิ่งผ่านตัวอักษร</option>
+                        <option value="false">ปิดเอฟเฟกต์แสงวิ่ง</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  {settings.alert_shine_sweep !== 'false' && (
+                    <div className="form-row" style={{ marginBottom: '12px' }}>
+                      <div className="form-group" style={{ width: '100%' }}>
+                        <label className="form-label">โทนสีประกายแสงวิ่งตัวอักษร</label>
+                        <select
+                          className="input-control"
+                          value={settings.alert_shine_theme || 'crystal'}
+                          onChange={(e) => updateField('alert_shine_theme', e.target.value)}
+                        >
+                          <option value="crystal">คริสตัล (Crystal Diamond)</option>
+                          <option value="gold">ประกายทอง (Golden Glow)</option>
+                          <option value="cyan">นีออนไซแอน (Cyber Cyan)</option>
+                        </select>
+                      </div>
+                    </div>
                   )}
-                </div>
-              </div>
 
-              {/* Sound & Volume */}
-              <div className="form-row full-width" style={{ marginTop: '12px' }}>
-                <div className="form-group full-width">
-                  <label className="form-label">
-                    <span>ระดับความดังเสียงแจ้งเตือน & TTS ({settings.alert_volume || 80}%)</span>
-                  </label>
-                  <input
-                    type="range"
-                    min="0"
-                    max="100"
-                    value={settings.alert_volume || 80}
-                    onChange={(e) => updateField('alert_volume', parseInt(e.target.value) || 0)}
-                  />
-                </div>
-              </div>
+                  <div className="form-row" style={{ marginBottom: '12px' }}>
+                    <div className="form-group">
+                      <label className="form-label">แถบสีด้านบน (Shimmer Bar)</label>
+                      <select
+                        className="input-control"
+                        value={String(settings.alert_shimmer_show !== 'false')}
+                        onChange={(e) => updateField('alert_shimmer_show', e.target.value)}
+                      >
+                        <option value="true">แสดงแถบสีด้านบน</option>
+                        <option value="false">ซ่อนแถบสีด้านบน</option>
+                      </select>
+                    </div>
+                    <div className="form-group">
+                      <label className="form-label">
+                        <span>กล่องพื้นหลังไอคอน</span>
+                        <button
+                          type="button"
+                          className="btn-text-action"
+                          onClick={() => {
+                            updateField('alert_icon_bg', 'transparent');
+                            updateField('alert_icon_border', 'transparent');
+                          }}
+                        >
+                          โปร่งใส
+                        </button>
+                      </label>
+                      <select
+                        className="input-control"
+                        value={settings.alert_icon_bg === 'transparent' ? 'none' : 'box'}
+                        onChange={(e) => {
+                          if (e.target.value === 'none') {
+                            updateField('alert_icon_bg', 'transparent');
+                            updateField('alert_icon_border', 'transparent');
+                          } else {
+                            updateField('alert_icon_bg', '#f8fafc');
+                            updateField('alert_icon_border', '#e2e8f0');
+                          }
+                        }}
+                      >
+                        <option value="box">มีกล่องพื้นหลังไอคอน</option>
+                        <option value="none">โปร่งใส (ลอยเฉพาะไอคอน)</option>
+                      </select>
+                    </div>
+                  </div>
 
-              {/* Audio Listen Test Box */}
-              <div className="tts-test-box">
-                <div className="tts-test-input-wrap">
-                  <span className="tts-test-label">ข้อความจำลองที่จะทดสอบอ่าน:</span>
-                  <div className="tts-test-sample-text">
-                    "{testName || 'สมชาย ใจดี'} โดเนทให้ {testAmount || 50} บาท {testMessage || 'เป็นกำลังใจให้นะครับ สตรีมสนุกมาก!'}"
+                  <div className="color-picker-grid">
+                    <div className="color-field">
+                      <label>สีไอคอน</label>
+                      <div className="color-input-wrap">
+                        <input
+                          type="color"
+                          value={settings.alert_icon_color?.startsWith('#') ? settings.alert_icon_color : '#0f172a'}
+                          onChange={(e) => updateField('alert_icon_color', e.target.value)}
+                        />
+                        <input
+                          type="text"
+                          className="hex-input"
+                          value={settings.alert_icon_color || '#0f172a'}
+                          onChange={(e) => updateField('alert_icon_color', e.target.value)}
+                        />
+                      </div>
+                    </div>
+                    <div className="color-field">
+                      <div className="field-label-row">
+                        <label>สีพื้นหลังกล่องไอคอน</label>
+                        <button
+                          type="button"
+                          className="btn-text-action"
+                          onClick={() => updateField('alert_icon_bg', 'transparent')}
+                        >
+                          โปร่งใส
+                        </button>
+                      </div>
+                      <div className="color-input-wrap">
+                        <input
+                          type="color"
+                          value={settings.alert_icon_bg?.startsWith('#') ? settings.alert_icon_bg : '#f8fafc'}
+                          onChange={(e) => updateField('alert_icon_bg', e.target.value)}
+                        />
+                        <input
+                          type="text"
+                          className="hex-input"
+                          value={settings.alert_icon_bg || '#f8fafc'}
+                          onChange={(e) => updateField('alert_icon_bg', e.target.value)}
+                        />
+                      </div>
+                    </div>
+                    <div className="color-field full-width">
+                      <label>แถบสีสตรีคด้านบน (Shimmer Bar Gradient / Color)</label>
+                      <input
+                        type="text"
+                        className="input-control"
+                        value={settings.alert_shimmer_color || 'linear-gradient(90deg, #0f172a 0%, #2563eb 50%, #059669 100%)'}
+                        onChange={(e) => updateField('alert_shimmer_color', e.target.value)}
+                      />
+                    </div>
                   </div>
                 </div>
-                <button
-                  type="button"
-                  className={`btn-tts-listen ${isPlayingTts ? 'playing' : ''}`}
-                  onClick={handleTestTtsVoice}
-                  disabled={isPlayingTts}
-                >
-                  {isPlayingTts ? (
-                    <>
-                      <span className="pulse-dot active"></span>
-                      <span>กำลังเล่นเสียงตัวอย่าง...</span>
-                    </>
-                  ) : (
-                    <>
-                      <span>🎧</span>
-                      <span>ทดลองฟังเสียงที่เลือกทันที</span>
-                    </>
-                  )}
-                </button>
-              </div>
-            </div>
+              </>
+            )}
 
-            {/* Section: Tiered Alert Text Colors */}
-            <div className="panel-section">
-              <div className="section-title">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M12 20h9"></path>
-                  <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
-                </svg>
-                ระบบเปลี่ยนสีตัวอักษรตามระดับยอดเงิน (Tiered Text Colors)
-              </div>
-              <p className="section-desc">
-                เปลี่ยนสีชื่อผู้โดเนทและยอดเงินตามระดับจำนวนเงินอัตโนมัติ (Common: สีตามธีมหลัก | Rare | Epic | Legendary)
-              </p>
+            {/* TAB 2: TYPOGRAPHY, COLORS & GRADIENT */}
+            {activeCategoryTab === 'typography' && (
+              <>
+                {/* Section: Typography & Colors */}
+                <div className="panel-section">
+                  <div className="section-title">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="4 7 4 4 20 4 20 7"></polyline>
+                      <line x1="9" y1="20" x2="15" y2="20"></line>
+                      <line x1="12" y1="4" x2="12" y2="20"></line>
+                    </svg>
+                    ฟอนต์ & สีตัวอักษร (Typography)
+                  </div>
 
-              <div className="form-row" style={{ marginBottom: '12px' }}>
-                <div className="form-group" style={{ width: '100%' }}>
-                  <label className="form-label">สถานะเปิดใช้งาน Tiered Text Colors</label>
-                  <select
-                    className="input-control"
-                    value={String(settings.alert_tiered_enabled !== 'false' && settings.alert_tiered_enabled !== false)}
-                    onChange={(e) => updateField('alert_tiered_enabled', e.target.value)}
-                  >
-                    <option value="true">เปิดใช้งาน (เปลี่ยนสีตัวอักษรชื่อและยอดเงินตามระดับ)</option>
-                    <option value="false">ปิดใช้งาน (ใช้สีตัวอักษรปกติเท่ากันทุกยอด)</option>
-                  </select>
-                </div>
-              </div>
+                  <div className="form-group">
+                    <label className="form-label">ฟอนต์ตัวอักษร (Font Family)</label>
+                    <select
+                      className="input-control"
+                      value={settings.alert_font || 'LINESeedSansTH'}
+                      onChange={(e) => updateField('alert_font', e.target.value)}
+                    >
+                      <option value="LINESeedSansTH">LINE Seed Sans TH (Regular ปกติ)</option>
+                      <option value="LINESeedSansTH-ExtraBold">LINE Seed Sans TH (ExtraBold หนาพิเศษ)</option>
+                    </select>
+                    <span style={{ fontSize: '12px', color: 'var(--text-dim)', marginTop: '6px', display: 'block' }}>
+                      * ฟอนต์และสีที่ตั้งค่าจะแสดงผลเฉพาะการ์ดแจ้งเตือน (Donate Alert UI) เท่านั้น เว็บแอปส่วนอื่นจะใช้ฟอนต์ Regular ปกติ
+                    </span>
+                  </div>
 
-              {/* Rare Tier Controls */}
-              <div className="form-row" style={{ marginBottom: '12px' }}>
-                <div className="form-group">
-                  <label className="form-label">ยอดขั้นต่ำ Rare (บาท)</label>
-                  <input
-                    type="number"
-                    className="input-control"
-                    min="1"
-                    value={settings.alert_tiered_rare_min ?? 50}
-                    onChange={(e) => updateField('alert_tiered_rare_min', parseInt(e.target.value) || 0)}
-                  />
-                </div>
-                <div className="form-group">
-                  <label className="form-label">สีตัวอักษร Rare</label>
-                  <div className="color-input-wrap">
+                  <div className="color-picker-grid">
+                    <div className="color-field">
+                      <label>สีชื่อผู้สนับสนุน</label>
+                      <div className="color-input-wrap">
+                        <input
+                          type="color"
+                          value={settings.alert_name_color?.startsWith('#') ? settings.alert_name_color : '#0f172a'}
+                          onChange={(e) => updateField('alert_name_color', e.target.value)}
+                        />
+                        <input
+                          type="text"
+                          className="hex-input"
+                          value={settings.alert_name_color || '#0f172a'}
+                          onChange={(e) => updateField('alert_name_color', e.target.value)}
+                        />
+                      </div>
+                    </div>
+                    <div className="color-field">
+                      <label>สีข้อความต่อท้ายชื่อ</label>
+                      <div className="color-input-wrap">
+                        <input
+                          type="color"
+                          value={settings.alert_action_color?.startsWith('#') ? settings.alert_action_color : '#64748b'}
+                          onChange={(e) => updateField('alert_action_color', e.target.value)}
+                        />
+                        <input
+                          type="text"
+                          className="hex-input"
+                          value={settings.alert_action_color || '#64748b'}
+                          onChange={(e) => updateField('alert_action_color', e.target.value)}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="form-group" style={{ marginTop: '14px' }}>
+                    <label className="form-label">
+                      <span>ขนาดตัวอักษรชื่อ (Title Size)</span>
+                      <span className="label-val">{settings.alert_title_size || 26}px</span>
+                    </label>
                     <input
-                      type="color"
-                      value={settings.alert_tiered_rare_color?.startsWith('#') ? settings.alert_tiered_rare_color : '#0284c7'}
-                      onChange={(e) => updateField('alert_tiered_rare_color', e.target.value)}
-                    />
-                    <input
-                      type="text"
-                      className="hex-input"
-                      value={settings.alert_tiered_rare_color || '#0284c7'}
-                      onChange={(e) => updateField('alert_tiered_rare_color', e.target.value)}
+                      type="range"
+                      min="20"
+                      max="36"
+                      value={settings.alert_title_size || 26}
+                      onChange={(e) => updateField('alert_title_size', parseInt(e.target.value))}
                     />
                   </div>
-                </div>
-              </div>
 
-              {/* Epic Tier Controls */}
-              <div className="form-row" style={{ marginBottom: '12px' }}>
-                <div className="form-group">
-                  <label className="form-label">ยอดขั้นต่ำ Epic (บาท)</label>
-                  <input
-                    type="number"
-                    className="input-control"
-                    min="1"
-                    value={settings.alert_tiered_epic_min ?? 200}
-                    onChange={(e) => updateField('alert_tiered_epic_min', parseInt(e.target.value) || 0)}
-                  />
-                </div>
-                <div className="form-group">
-                  <label className="form-label">สีตัวอักษร Epic</label>
-                  <div className="color-input-wrap">
-                    <input
-                      type="color"
-                      value={settings.alert_tiered_epic_color?.startsWith('#') ? settings.alert_tiered_epic_color : '#9333ea'}
-                      onChange={(e) => updateField('alert_tiered_epic_color', e.target.value)}
-                    />
-                    <input
-                      type="text"
-                      className="hex-input"
-                      value={settings.alert_tiered_epic_color || '#9333ea'}
-                      onChange={(e) => updateField('alert_tiered_epic_color', e.target.value)}
-                    />
+                  {/* Stroke Text (เส้นขอบตัวอักษร) */}
+                  <div style={{ marginTop: '20px', paddingTop: '16px', borderTop: '1px solid var(--border)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
+                      <label className="form-label" style={{ fontWeight: 700, fontSize: '13.5px', marginBottom: 0 }}>
+                        เส้นขอบตัวอักษร (Stroke Text)
+                      </label>
+                      {settings.alert_text_stroke_enabled === 'true' && (
+                        <button
+                          type="button"
+                          className="btn-text-action"
+                          onClick={() => updateField('alert_text_stroke_enabled', 'false')}
+                        >
+                          ปิด
+                        </button>
+                      )}
+                    </div>
+
+                    <div className="form-group" style={{ marginBottom: '12px' }}>
+                      <label className="form-label">เปิดใช้งานเส้นขอบตัวอักษร</label>
+                      <div className="segmented-control">
+                        <button
+                          type="button"
+                          className={`segmented-btn ${settings.alert_text_stroke_enabled !== 'true' ? 'active' : ''}`}
+                          onClick={() => updateField('alert_text_stroke_enabled', 'false')}
+                        >
+                          ปิดเส้นขอบ
+                        </button>
+                        <button
+                          type="button"
+                          className={`segmented-btn ${settings.alert_text_stroke_enabled === 'true' ? 'active' : ''}`}
+                          onClick={() => {
+                            updateField('alert_text_stroke_enabled', 'true');
+                            if (!settings.alert_text_stroke_color) updateField('alert_text_stroke_color', '#000000');
+                            if (!settings.alert_text_stroke_width) updateField('alert_text_stroke_width', 1.5);
+                          }}
+                        >
+                          เปิดเส้นขอบ
+                        </button>
+                      </div>
+                    </div>
+
+                    {settings.alert_text_stroke_enabled === 'true' && (
+                      <div className="customizer-subbox" style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '12px'
+                      }}>
+                        <div className="color-field">
+                          <div className="field-label-row">
+                            <label>กำหนดสีเส้นขอบ (Stroke Color)</label>
+                            <div style={{ display: 'flex', gap: '4px' }}>
+                              <button
+                                type="button"
+                                className="btn-text-action"
+                                style={{ borderColor: '#000000', background: '#000000', color: '#ffffff' }}
+                                onClick={() => updateField('alert_text_stroke_color', '#000000')}
+                              >
+                                ดำ
+                              </button>
+                              <button
+                                type="button"
+                                className="btn-text-action"
+                                style={{ borderColor: '#cbd5e1', background: '#ffffff', color: '#000000' }}
+                                onClick={() => updateField('alert_text_stroke_color', '#ffffff')}
+                              >
+                                ขาว
+                              </button>
+                              <button
+                                type="button"
+                                className="btn-text-action"
+                                style={{ borderColor: '#2563eb', background: '#2563eb', color: '#ffffff' }}
+                                onClick={() => updateField('alert_text_stroke_color', '#1e3a8a')}
+                              >
+                                น้ำเงิน
+                              </button>
+                              <button
+                                type="button"
+                                className="btn-text-action"
+                                style={{ borderColor: '#dc2626', background: '#dc2626', color: '#ffffff' }}
+                                onClick={() => updateField('alert_text_stroke_color', '#991b1b')}
+                              >
+                                แดง
+                              </button>
+                            </div>
+                          </div>
+                          <div className="color-input-wrap">
+                            <input
+                              type="color"
+                              value={settings.alert_text_stroke_color?.startsWith('#') ? settings.alert_text_stroke_color : '#000000'}
+                              onChange={(e) => updateField('alert_text_stroke_color', e.target.value)}
+                            />
+                            <input
+                              type="text"
+                              className="hex-input"
+                              value={settings.alert_text_stroke_color || '#000000'}
+                              onChange={(e) => updateField('alert_text_stroke_color', e.target.value)}
+                            />
+                          </div>
+                        </div>
+
+                        <div className="form-group">
+                          <label className="form-label">
+                            <span>ความหนาเส้นขอบ (Stroke Width)</span>
+                            <span className="label-val">{settings.alert_text_stroke_width || 1.5}px</span>
+                          </label>
+                          <input
+                            type="range"
+                            min="0.5"
+                            max="4"
+                            step="0.5"
+                            value={settings.alert_text_stroke_width || 1.5}
+                            onChange={(e) => updateField('alert_text_stroke_width', parseFloat(e.target.value))}
+                          />
+                          <div style={{ fontSize: '11px', color: 'var(--text-dim)', marginTop: '2px' }}>
+                            ช่วยให้อ่านตัวอักษรได้ชัดเจน คมชัด บนทุกฉากหลังเกมและสตรีม
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Text Gradient (ไล่สีตัวอักษร) */}
+                  <div style={{ marginTop: '20px', paddingTop: '16px', borderTop: '1px solid var(--border)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
+                      <label className="form-label" style={{ fontWeight: 700, fontSize: '13.5px', marginBottom: 0 }}>
+                        ไล่สีตัวอักษร (Text Gradient)
+                      </label>
+                      {settings.alert_text_gradient_enabled === 'true' && (
+                        <button
+                          type="button"
+                          className="btn-text-action"
+                          onClick={() => updateField('alert_text_gradient_enabled', 'false')}
+                        >
+                          ปิด
+                        </button>
+                      )}
+                    </div>
+
+                    <div className="form-group" style={{ marginBottom: '12px' }}>
+                      <label className="form-label">เปิดใช้งานไล่สีตัวอักษร (ชื่อผู้โดเนท &amp; ยอดเงิน)</label>
+                      <div className="segmented-control">
+                        <button
+                          type="button"
+                          className={`segmented-btn ${settings.alert_text_gradient_enabled !== 'true' ? 'active' : ''}`}
+                          onClick={() => updateField('alert_text_gradient_enabled', 'false')}
+                        >
+                          สีเดี่ยว (Solid)
+                        </button>
+                        <button
+                          type="button"
+                          className={`segmented-btn ${settings.alert_text_gradient_enabled === 'true' ? 'active' : ''}`}
+                          onClick={() => {
+                            updateField('alert_text_gradient_enabled', 'true');
+                            if (!settings.alert_text_gradient_from) updateField('alert_text_gradient_from', '#ff512f');
+                            if (!settings.alert_text_gradient_to) updateField('alert_text_gradient_to', '#dd2476');
+                            if (!settings.alert_text_gradient_angle) updateField('alert_text_gradient_angle', 135);
+                          }}
+                        >
+                          ไล่ระดับสี (Gradient)
+                        </button>
+                      </div>
+                    </div>
+
+                    {settings.alert_text_gradient_enabled === 'true' && (
+                      <div className="customizer-subbox" style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '14px'
+                      }}>
+                        {/* Live Preview Bar */}
+                        <div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', marginBottom: '6px', color: 'var(--text-muted)' }}>
+                            <span>ตัวอย่างแถบไล่สี:</span>
+                            <span style={{ fontFamily: 'monospace', fontWeight: 600, color: 'var(--text-main)' }}>
+                              {settings.alert_text_gradient_from || '#ff512f'} ➔ {settings.alert_text_gradient_to || '#dd2476'} ({settings.alert_text_gradient_angle || 135}°)
+                            </span>
+                          </div>
+                          <div style={{
+                            height: '24px',
+                            borderRadius: '8px',
+                            border: '1px solid rgba(0,0,0,0.1)',
+                            boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.06)',
+                            background: `linear-gradient(${settings.alert_text_gradient_angle || 135}deg, ${settings.alert_text_gradient_from || '#ff512f'} 0%, ${settings.alert_text_gradient_to || '#dd2476'} 100%)`
+                          }} />
+                        </div>
+
+                        {/* Presets Grid */}
+                        <div>
+                          <label className="form-label" style={{ fontSize: '12.5px', marginBottom: '8px' }}>
+                            ชุดสีสำเร็จรูปยอดนิยม (Color Presets)
+                          </label>
+                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '6px' }}>
+                            {TEXT_GRADIENT_PRESETS.map((p) => {
+                              const isSelected = settings.alert_text_gradient_from === p.from && settings.alert_text_gradient_to === p.to;
+                              return (
+                                <button
+                                  key={p.id}
+                                  type="button"
+                                  className={`gradient-preset-btn ${isSelected ? 'active' : ''}`}
+                                  onClick={() => {
+                                    updateField('alert_text_gradient_preset', p.id);
+                                    updateField('alert_text_gradient_from', p.from);
+                                    updateField('alert_text_gradient_to', p.to);
+                                    updateField('alert_text_gradient_angle', p.angle);
+                                  }}
+                                >
+                                  <span style={{
+                                    width: '16px',
+                                    height: '16px',
+                                    borderRadius: '50%',
+                                    flexShrink: 0,
+                                    border: '1px solid rgba(0,0,0,0.15)',
+                                    background: `linear-gradient(135deg, ${p.from}, ${p.to})`
+                                  }} />
+                                  <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                    {p.name}
+                                  </span>
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+
+                        {/* Custom 2-Color Pickers */}
+                        <div className="color-picker-grid" style={{ marginBottom: 0 }}>
+                          <div className="color-field">
+                            <label>สีเริ่มต้น (From Color)</label>
+                            <div className="color-input-wrap">
+                              <input
+                                type="color"
+                                value={settings.alert_text_gradient_from?.startsWith('#') ? settings.alert_text_gradient_from : '#ff512f'}
+                                onChange={(e) => {
+                                  updateField('alert_text_gradient_preset', 'custom');
+                                  updateField('alert_text_gradient_from', e.target.value);
+                                }}
+                              />
+                              <input
+                                type="text"
+                                className="hex-input"
+                                value={settings.alert_text_gradient_from || '#ff512f'}
+                                onChange={(e) => {
+                                  updateField('alert_text_gradient_preset', 'custom');
+                                  updateField('alert_text_gradient_from', e.target.value);
+                                }}
+                              />
+                            </div>
+                          </div>
+
+                          <div className="color-field">
+                            <label>สีปลายทาง (To Color)</label>
+                            <div className="color-input-wrap">
+                              <input
+                                type="color"
+                                value={settings.alert_text_gradient_to?.startsWith('#') ? settings.alert_text_gradient_to : '#dd2476'}
+                                onChange={(e) => {
+                                  updateField('alert_text_gradient_preset', 'custom');
+                                  updateField('alert_text_gradient_to', e.target.value);
+                                }}
+                              />
+                              <input
+                                type="text"
+                                className="hex-input"
+                                value={settings.alert_text_gradient_to || '#dd2476'}
+                                onChange={(e) => {
+                                  updateField('alert_text_gradient_preset', 'custom');
+                                  updateField('alert_text_gradient_to', e.target.value);
+                                }}
+                              />
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Gradient Angle Slider */}
+                        <div className="form-group" style={{ marginBottom: 0 }}>
+                          <label className="form-label">
+                            <span>องศาการไล่สี (Gradient Angle)</span>
+                            <span className="label-val">{settings.alert_text_gradient_angle ?? 135}°</span>
+                          </label>
+                          <input
+                            type="range"
+                            min="0"
+                            max="360"
+                            step="15"
+                            value={settings.alert_text_gradient_angle ?? 135}
+                            onChange={(e) => {
+                              updateField('alert_text_gradient_preset', 'custom');
+                              updateField('alert_text_gradient_angle', parseInt(e.target.value));
+                            }}
+                          />
+                          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: 'var(--text-dim)', marginTop: '4px' }}>
+                            <span>แนวนอน (90°)</span>
+                            <span>แนวทแยง (135°)</span>
+                            <span>แนวตั้ง (180°)</span>
+                          </div>
+                        </div>
+
+                        <div style={{ fontSize: '11px', color: 'var(--text-dim)', lineHeight: 1.45, background: 'rgba(37,99,235,0.04)', padding: '8px 10px', borderRadius: '8px', border: '1px solid rgba(37,99,235,0.15)' }}>
+                          <strong>รองรับเอฟเฟกต์แสง:</strong> หากเปิดใช้งาน <em>ลำแสงวิ่งบนตัวอักษร (Shine Sweep)</em> แสงจะวิ่งพาดผ่านสีไล่ระดับ Gradient ได้อย่างกลมกลืน
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Spacing Controls (บน ล่าง ซ้าย ขวา & ช่องไฟ) */}
+                  <div style={{ marginTop: '20px', paddingTop: '16px', borderTop: '1px solid var(--border)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+                      <label className="form-label" style={{ fontWeight: 700, fontSize: '13.5px', marginBottom: 0 }}>
+                        ระยะห่างตัวอักษรและข้อความ (Text Spacing)
+                      </label>
+                      <button
+                        type="button"
+                        className="btn-text-action"
+                        onClick={() => {
+                          updateField('alert_icon_margin_bottom', 8);
+                          updateField('alert_msg_margin_top', 8);
+                          updateField('alert_text_margin_top', 0);
+                          updateField('alert_text_margin_bottom', 0);
+                          updateField('alert_text_margin_left', 0);
+                          updateField('alert_text_margin_right', 0);
+                          updateField('alert_letter_spacing', 0);
+                          updateField('alert_word_gap', 8);
+                        }}
+                      >
+                        รีเซ็ตระยะห่าง
+                      </button>
+                    </div>
+
+                    {/* Vertical Gaps (ไอคอน ↔ ชื่อ ↔ ข้อความ) */}
+                    <div style={{
+                      background: 'rgba(37, 99, 235, 0.05)',
+                      border: '1.5px solid rgba(37, 99, 235, 0.25)',
+                      borderRadius: 'var(--radius-md, 12px)',
+                      padding: '14px',
+                      marginBottom: '14px'
+                    }}>
+                      <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-main)', marginBottom: '10px' }}>
+                        ระยะห่างแนวตั้ง (ไอคอน ↔ ชื่อโดเนท ↔ ข้อความ)
+                      </div>
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px' }}>
+                        <div className="form-group">
+                          <label className="form-label">
+                            <span>ระยะห่างไอคอน ↔ ชื่อโดเนท</span>
+                            <span className="label-val">{settings.alert_icon_margin_bottom ?? 8}px</span>
+                          </label>
+                          <input
+                            type="range"
+                            min="0"
+                            max="40"
+                            value={settings.alert_icon_margin_bottom ?? 8}
+                            onChange={(e) => updateField('alert_icon_margin_bottom', parseInt(e.target.value))}
+                          />
+                          <div style={{ fontSize: '11px', color: 'var(--text-dim)', marginTop: '2px' }}>
+                            ระยะห่างระหว่างไอคอนกับชื่อ
+                          </div>
+                        </div>
+
+                        <div className="form-group">
+                          <label className="form-label">
+                            <span>ระยะห่างชื่อโดเนท ↔ ข้อความ</span>
+                            <span className="label-val">{settings.alert_msg_margin_top ?? 8}px</span>
+                          </label>
+                          <input
+                            type="range"
+                            min="0"
+                            max="40"
+                            value={settings.alert_msg_margin_top ?? 8}
+                            onChange={(e) => updateField('alert_msg_margin_top', parseInt(e.target.value))}
+                          />
+                          <div style={{ fontSize: '11px', color: 'var(--text-dim)', marginTop: '2px' }}>
+                            ระยะห่างระหว่างบรรทัดชื่อกับกล่องข้อความ
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* 4-way Spacing Grid (บน, ล่าง, ซ้าย, ขวา) */}
+                    <div className="customizer-subbox" style={{ marginBottom: '14px' }}>
+                      <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '10px' }}>
+                        ปรับตำแหน่งกรอบตัวอักษรเพิ่มเติม (Fine-tune Margins)
+                      </div>
+
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px' }}>
+                        <div className="form-group">
+                          <label className="form-label">
+                            <span>ระยะขอบบน (Top Margin)</span>
+                            <span className="label-val">{settings.alert_text_margin_top ?? 0}px</span>
+                          </label>
+                          <input
+                            type="range"
+                            min="0"
+                            max="60"
+                            value={settings.alert_text_margin_top ?? 0}
+                            onChange={(e) => updateField('alert_text_margin_top', parseInt(e.target.value))}
+                          />
+                        </div>
+
+                        <div className="form-group">
+                          <label className="form-label">
+                            <span>ระยะขอบล่าง (Bottom Margin)</span>
+                            <span className="label-val">{settings.alert_text_margin_bottom ?? 0}px</span>
+                          </label>
+                          <input
+                            type="range"
+                            min="0"
+                            max="60"
+                            value={settings.alert_text_margin_bottom ?? 0}
+                            onChange={(e) => updateField('alert_text_margin_bottom', parseInt(e.target.value))}
+                          />
+                        </div>
+
+                        <div className="form-group">
+                          <label className="form-label">
+                            <span>ระยะขอบซ้าย (Left Margin)</span>
+                            <span className="label-val">{settings.alert_text_margin_left ?? 0}px</span>
+                          </label>
+                          <input
+                            type="range"
+                            min="0"
+                            max="60"
+                            value={settings.alert_text_margin_left ?? 0}
+                            onChange={(e) => updateField('alert_text_margin_left', parseInt(e.target.value))}
+                          />
+                        </div>
+
+                        <div className="form-group">
+                          <label className="form-label">
+                            <span>ระยะขอบขวา (Right Margin)</span>
+                            <span className="label-val">{settings.alert_text_margin_right ?? 0}px</span>
+                          </label>
+                          <input
+                            type="range"
+                            min="0"
+                            max="60"
+                            value={settings.alert_text_margin_right ?? 0}
+                            onChange={(e) => updateField('alert_text_margin_right', parseInt(e.target.value))}
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Letter Spacing & Word Gap */}
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px' }}>
+                      <div className="form-group">
+                        <label className="form-label">
+                          <span>ช่องไฟตัวอักษร (Letter Spacing)</span>
+                          <span className="label-val">{settings.alert_letter_spacing ?? 0}px</span>
+                        </label>
+                        <input
+                          type="range"
+                          min="-2"
+                          max="16"
+                          step="1"
+                          value={settings.alert_letter_spacing ?? 0}
+                          onChange={(e) => updateField('alert_letter_spacing', parseInt(e.target.value))}
+                        />
+                        <div style={{ fontSize: '11px', color: 'var(--text-dim)', marginTop: '2px' }}>
+                          ระยะห่างแนวนอนระหว่างตัวอักษรแต่ละตัว
+                        </div>
+                      </div>
+
+                      <div className="form-group">
+                        <label className="form-label">
+                          <span>ระยะห่างระหว่างคำ (Word Gap)</span>
+                          <span className="label-val">{settings.alert_word_gap ?? 8}px</span>
+                        </label>
+                        <input
+                          type="range"
+                          min="2"
+                          max="32"
+                          step="1"
+                          value={settings.alert_word_gap ?? 8}
+                          onChange={(e) => updateField('alert_word_gap', parseInt(e.target.value))}
+                        />
+                        <div style={{ fontSize: '11px', color: 'var(--text-dim)', marginTop: '2px' }}>
+                          ระยะห่างระหว่าง [ชื่อ] ↔ [ข้อความ] ↔ [ยอดเงิน]
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              {/* Legendary Tier Controls */}
-              <div className="form-row">
-                <div className="form-group">
-                  <label className="form-label">ยอดขั้นต่ำ Legendary (บาท)</label>
-                  <input
-                    type="number"
-                    className="input-control"
-                    min="1"
-                    value={settings.alert_tiered_legendary_min ?? 500}
-                    onChange={(e) => updateField('alert_tiered_legendary_min', parseInt(e.target.value) || 0)}
-                  />
-                </div>
-                <div className="form-group">
-                  <label className="form-label">สีตัวอักษร Legendary</label>
-                  <div className="color-input-wrap">
-                    <input
-                      type="color"
-                      value={settings.alert_tiered_legendary_color?.startsWith('#') ? settings.alert_tiered_legendary_color : '#ea580c'}
-                      onChange={(e) => updateField('alert_tiered_legendary_color', e.target.value)}
-                    />
-                    <input
-                      type="text"
-                      className="hex-input"
-                      value={settings.alert_tiered_legendary_color || '#ea580c'}
-                      onChange={(e) => updateField('alert_tiered_legendary_color', e.target.value)}
-                    />
+                {/* Section: Amount & Message Styling */}
+                <div className="panel-section">
+                  <div className="section-title">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <line x1="12" y1="1" x2="12" y2="23"></line>
+                      <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                    </svg>
+                    ป้ายยอดเงิน & กล่องข้อความ (Amount & Message)
+                  </div>
+
+                  <div className="form-row" style={{ marginBottom: '12px' }}>
+                    <div className="form-group">
+                      <label className="form-label">
+                        <span>ป้ายพื้นหลังยอดเงิน</span>
+                        <button
+                          type="button"
+                          className="btn-text-action"
+                          onClick={() => {
+                            updateField('alert_amount_bg', 'transparent');
+                            updateField('alert_amount_border', 'transparent');
+                          }}
+                        >
+                          ลอยเฉพาะตัวเลข
+                        </button>
+                      </label>
+                      <select
+                        className="input-control"
+                        value={settings.alert_amount_bg === 'transparent' ? 'none' : 'pill'}
+                        onChange={(e) => {
+                          if (e.target.value === 'none') {
+                            updateField('alert_amount_bg', 'transparent');
+                            updateField('alert_amount_border', 'transparent');
+                          } else {
+                            updateField('alert_amount_bg', '#ecfdf5');
+                            updateField('alert_amount_border', '#a7f3d0');
+                          }
+                        }}
+                      >
+                        <option value="pill">มีป้ายพื้นหลังยอดเงิน (Pill Badge)</option>
+                        <option value="none">ไม่มีพื้นหลัง (ลอยเฉพาะตัวเลข)</option>
+                      </select>
+                    </div>
+                    <div className="form-group">
+                      <label className="form-label">
+                        <span>พื้นหลังกล่องข้อความ</span>
+                        <button
+                          type="button"
+                          className="btn-text-action"
+                          onClick={() => {
+                            updateField('alert_msg_bg', 'transparent');
+                            updateField('alert_msg_border', 'transparent');
+                          }}
+                        >
+                          ลอยเฉพาะข้อความ
+                        </button>
+                      </label>
+                      <select
+                        className="input-control"
+                        value={settings.alert_msg_bg === 'transparent' ? 'none' : 'box'}
+                        onChange={(e) => {
+                          if (e.target.value === 'none') {
+                            updateField('alert_msg_bg', 'transparent');
+                            updateField('alert_msg_border', 'transparent');
+                          } else {
+                            updateField('alert_msg_bg', '#f8fafc');
+                            updateField('alert_msg_border', '#e2e8f0');
+                          }
+                        }}
+                      >
+                        <option value="box">มีกล่องพื้นหลังข้อความ</option>
+                        <option value="none">ไม่มีพื้นหลัง (ลอยเฉพาะข้อความ)</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="color-picker-grid">
+                    <div className="color-field">
+                      <div className="field-label-row">
+                        <label>สีพื้นหลังป้ายยอดเงิน</label>
+                        <button
+                          type="button"
+                          className="btn-text-action"
+                          onClick={() => updateField('alert_amount_bg', 'transparent')}
+                        >
+                          โปร่งใส
+                        </button>
+                      </div>
+                      <div className="color-input-wrap">
+                        <input
+                          type="color"
+                          value={settings.alert_amount_bg?.startsWith('#') ? settings.alert_amount_bg : '#ecfdf5'}
+                          onChange={(e) => updateField('alert_amount_bg', e.target.value)}
+                        />
+                        <input
+                          type="text"
+                          className="hex-input"
+                          value={settings.alert_amount_bg || '#ecfdf5'}
+                          onChange={(e) => updateField('alert_amount_bg', e.target.value)}
+                        />
+                      </div>
+                    </div>
+                    <div className="color-field">
+                      <label>สีตัวเลขยอดเงิน</label>
+                      <div className="color-input-wrap">
+                        <input
+                          type="color"
+                          value={settings.alert_amount_color?.startsWith('#') ? settings.alert_amount_color : '#059669'}
+                          onChange={(e) => updateField('alert_amount_color', e.target.value)}
+                        />
+                        <input
+                          type="text"
+                          className="hex-input"
+                          value={settings.alert_amount_color || '#059669'}
+                          onChange={(e) => updateField('alert_amount_color', e.target.value)}
+                        />
+                      </div>
+                    </div>
+                    <div className="color-field">
+                      <div className="field-label-row">
+                        <label>สีพื้นหลังกล่องข้อความ</label>
+                        <button
+                          type="button"
+                          className="btn-text-action"
+                          onClick={() => updateField('alert_msg_bg', 'transparent')}
+                        >
+                          โปร่งใส
+                        </button>
+                      </div>
+                      <div className="color-input-wrap">
+                        <input
+                          type="color"
+                          value={settings.alert_msg_bg?.startsWith('#') ? settings.alert_msg_bg : '#f8fafc'}
+                          onChange={(e) => updateField('alert_msg_bg', e.target.value)}
+                        />
+                        <input
+                          type="text"
+                          className="hex-input"
+                          value={settings.alert_msg_bg || '#f8fafc'}
+                          onChange={(e) => updateField('alert_msg_bg', e.target.value)}
+                        />
+                      </div>
+                    </div>
+                    <div className="color-field">
+                      <label>สีตัวหนังสือข้อความ</label>
+                      <div className="color-input-wrap">
+                        <input
+                          type="color"
+                          value={settings.alert_msg_color?.startsWith('#') ? settings.alert_msg_color : '#334155'}
+                          onChange={(e) => updateField('alert_msg_color', e.target.value)}
+                        />
+                        <input
+                          type="text"
+                          className="hex-input"
+                          value={settings.alert_msg_color || '#334155'}
+                          onChange={(e) => updateField('alert_msg_color', e.target.value)}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="quick-msg-transparency" style={{ marginTop: '10px', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '8px', flexWrap: 'wrap' }}>
+                    <span style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 600 }}>ปรับพื้นหลังข้อความด่วน:</span>
+                    <button
+                      type="button"
+                      className="btn secondary"
+                      style={{ padding: '5px 10px', fontSize: '11px', cursor: 'pointer' }}
+                      onClick={() => {
+                        updateField('alert_msg_bg', 'rgba(255, 255, 255, 0.4)');
+                        updateField('alert_msg_border', 'rgba(255, 255, 255, 0.6)');
+                      }}
+                    >
+                      กระจกฝ้ากึ่งโปร่ง
+                    </button>
+                    <button
+                      type="button"
+                      className="btn secondary"
+                      style={{ padding: '5px 10px', fontSize: '11px', cursor: 'pointer' }}
+                      onClick={() => {
+                        updateField('alert_msg_bg', '#f8fafc');
+                        updateField('alert_msg_border', '#e2e8f0');
+                      }}
+                    >
+                      คืนค่าสีพื้นเดิม
+                    </button>
+                  </div>
+
+                  <div className="form-row" style={{ marginTop: '14px' }}>
+                    <div className="form-group">
+                      <label className="form-label">ขนาดยอดเงิน ({settings.alert_amount_size || 22}px)</label>
+                      <input
+                        type="range"
+                        min="18"
+                        max="32"
+                        value={settings.alert_amount_size || 22}
+                        onChange={(e) => updateField('alert_amount_size', parseInt(e.target.value))}
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label className="form-label">ขนาดข้อความ ({settings.alert_msg_size || 18}px)</label>
+                      <input
+                        type="range"
+                        min="14"
+                        max="24"
+                        value={settings.alert_msg_size || 18}
+                        onChange={(e) => updateField('alert_msg_size', parseInt(e.target.value))}
+                      />
+                    </div>
                   </div>
                 </div>
-              </div>
-            </div>
+              </>
+            )}
+
+            {/* TAB 4: ANIMATION & MEDIA SOUND */}
+            {activeCategoryTab === 'media' && (
+              <>
+                {/* Section: Animation & Sound */}
+                <div className="panel-section">
+                  <div className="section-title">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+                    </svg>
+                    อนิเมชั่นและเวลาแสดงผล (Animation & Timing)
+                  </div>
+
+                  <div className="form-row">
+                    <div className="form-group">
+                      <label className="form-label">รูปแบบอนิเมชั่นเข้า-ออก</label>
+                      <select
+                        className="input-control"
+                        value={settings.alert_animation || 'slide-down'}
+                        onChange={(e) => updateField('alert_animation', e.target.value)}
+                      >
+                        <option value="slide-down">Slide Down (เลื่อนลงมาจากด้านบน)</option>
+                        <option value="bounce">Bounce Pop (เด้งดึ๋ง สดใส มีพลัง)</option>
+                        <option value="zoom">Zoom Fade (ซูมขยาย คมชัด)</option>
+                        <option value="slide-left">Slide Left (เลื่อนจากซ้ายไปขวา)</option>
+                      </select>
+                    </div>
+                    <div className="form-group">
+                      <label className="form-label">
+                        <span>ระยะเวลาแสดงผล ({settings.alert_duration || 8} วินาที)</span>
+                      </label>
+                      <input
+                        type="range"
+                        min="3"
+                        max="25"
+                        value={settings.alert_duration || 8}
+                        onChange={(e) => updateField('alert_duration', parseInt(e.target.value))}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Section: Special Alert Effects (Neon Border Beam & Confetti Burst) */}
+                <div className="panel-section">
+                  <div className="section-title">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                    </svg>
+                    เอฟเฟกต์พิเศษ (Special Alert Effects)
+                  </div>
+                  <p className="section-desc">
+                    เพิ่มความพรีเมียมให้การ์ดแจ้งเตือนด้วยลำแสงเลเซอร์ 360° และพลุละอองดาวเมื่อมีคนโดเนท
+                  </p>
+
+                  {/* 1. Neon Border Beam */}
+                  <div className="customizer-subbox" style={{ marginBottom: '16px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                      <div>
+                        <div style={{ fontWeight: 600, fontSize: '14px', color: 'var(--text-main, #0f172a)' }}>
+                          ลำแสงนีออนวิ่งวนรอบขอบการ์ด (Neon Border Beam)
+                        </div>
+                        <div style={{ fontSize: '12.5px', color: 'var(--text-muted, #64748b)', marginTop: '2px' }}>
+                          เส้นแสงเลเซอร์เรืองแสงหมุนวนรอบกรอบ 360 องศา สไตล์ Modern Streamer
+                        </div>
+                      </div>
+                      <div className="segmented-control">
+                        <button
+                          type="button"
+                          className={`segmented-btn ${(settings.alert_card_beam === 'true' || settings.alert_card_beam === true) ? 'active' : ''}`}
+                          onClick={() => updateField('alert_card_beam', 'true')}
+                        >
+                          เปิด
+                        </button>
+                        <button
+                          type="button"
+                          className={`segmented-btn ${(settings.alert_card_beam === 'false' || settings.alert_card_beam === false) ? 'active' : ''}`}
+                          onClick={() => updateField('alert_card_beam', 'false')}
+                        >
+                          ปิด
+                        </button>
+                      </div>
+                    </div>
+
+                    {(settings.alert_card_beam === 'true' || settings.alert_card_beam === true) && (
+                      <div className="form-row" style={{ marginTop: '12px', borderTop: '1px solid var(--border, #e2e8f0)', paddingTop: '12px' }}>
+                        <div className="form-group">
+                          <label className="form-label">โหมดสีลำแสง (Beam Color Mode)</label>
+                          <select
+                            className="input-control"
+                            value={settings.alert_card_beam_color && settings.alert_card_beam_color.startsWith('#') ? 'custom' : 'auto'}
+                            onChange={(e) => {
+                              if (e.target.value === 'auto') {
+                                updateField('alert_card_beam_color', 'auto');
+                              } else {
+                                updateField('alert_card_beam_color', '#38bdf8');
+                              }
+                            }}
+                          >
+                            <option value="auto">อิงตามระดับยอดเงิน (Auto Tier: ฟ้า/ม่วง/ส้มทอง)</option>
+                            <option value="custom">กำหนดสีเอง (Custom Color)</option>
+                          </select>
+                        </div>
+
+                        {settings.alert_card_beam_color && settings.alert_card_beam_color.startsWith('#') && (
+                          <div className="form-group">
+                            <label className="form-label">เลือกสีลำแสง</label>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                              <input
+                                type="color"
+                                value={settings.alert_card_beam_color || '#38bdf8'}
+                                onChange={(e) => updateField('alert_card_beam_color', e.target.value)}
+                                style={{ width: '42px', height: '38px', borderRadius: '8px', cursor: 'pointer', border: '1px solid var(--border)' }}
+                              />
+                              <input
+                                type="text"
+                                className="input-control"
+                                value={settings.alert_card_beam_color || '#38bdf8'}
+                                onChange={(e) => updateField('alert_card_beam_color', e.target.value)}
+                                style={{ flex: 1 }}
+                              />
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* 2. Particle Styles Grid */}
+                  <div className="customizer-subbox">
+                    <div>
+                      <div style={{ fontWeight: 600, fontSize: '14px', color: 'var(--text-main, #0f172a)' }}>
+                        สไตล์ละอองแสง &amp; พลุระเบิด (Particle Effect Style)
+                      </div>
+                      <div style={{ fontSize: '12.5px', color: 'var(--text-muted, #64748b)', marginTop: '2px' }}>
+                        เลือกสไตล์เอฟเฟกต์ละอองที่จะพุ่งกระจายรอบการ์ดเมื่อมีคนโดเนท
+                      </div>
+                    </div>
+
+                    <div className="particle-style-grid">
+                      {[
+                        {
+                          id: 'confetti',
+                          title: 'Confetti พลุริบบิ้น',
+                          desc: 'ริบบิ้นหลากสีสันสดใส มีพลัง',
+                          icon: (
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M5.8 11.3 2 22l10.7-3.79" />
+                              <path d="M4 3h.01" />
+                              <path d="M22 8h.01" />
+                              <path d="M15 2h.01" />
+                              <path d="M22 20h.01" />
+                              <path d="m22 2-2.24.75a2.9 2.9 0 0 0-1.96 3.12v0c.1.86-.57 1.63-1.45 1.63h-.38e-1a1.99 1.99 0 0 1-1.89-1.34l-.3-.9A2 2 0 0 0 12.18 4H12" />
+                            </svg>
+                          )
+                        },
+                        {
+                          id: 'gold_sparkle',
+                          title: 'Gold Sparkles',
+                          desc: 'ละอองดาวทองคำระยิบระยับ',
+                          icon: (
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                            </svg>
+                          )
+                        },
+                        {
+                          id: 'hearts',
+                          title: 'Floating Hearts',
+                          desc: 'หัวใจสีชมพูหวานฟรุ้งฟริ้ง',
+                          icon: (
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+                            </svg>
+                          )
+                        },
+                        {
+                          id: 'fire_sparks',
+                          title: 'Fire Sparks',
+                          desc: 'สะเก็ดไฟลุกโชนดุดัน',
+                          icon: (
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z" />
+                            </svg>
+                          )
+                        },
+                        {
+                          id: 'none',
+                          title: 'ปิดเอฟเฟกต์ละออง',
+                          desc: 'ไม่แสดงละอองใดๆ',
+                          icon: (
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <circle cx="12" cy="12" r="10" />
+                              <line x1="4.93" y1="4.93" x2="19.07" y2="19.07" />
+                            </svg>
+                          )
+                        }
+                      ].map((item) => {
+                        const currentStyle = (settings.alert_confetti_enabled === 'false' || settings.alert_confetti_enabled === false)
+                          ? 'none'
+                          : (settings.alert_particle_style || 'confetti');
+                        const isSelected = currentStyle === item.id;
+                        return (
+                          <button
+                            key={item.id}
+                            type="button"
+                            className={`particle-style-card ${isSelected ? 'active' : ''}`}
+                            onClick={() => {
+                              updateField('alert_particle_style', item.id);
+                              updateField('alert_confetti_enabled', item.id !== 'none' ? 'true' : 'false');
+                              setIsAnimating(true);
+                              setTimeout(() => setIsAnimating(false), 50);
+                            }}
+                          >
+                            <div className="particle-style-icon">
+                              {item.icon}
+                            </div>
+                            <div className="particle-style-title">{item.title}</div>
+                            <div className="particle-style-desc">{item.desc}</div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+
+                {/* 7. TTS & Voice Selection Section */}
+                <div className="panel-section">
+                  <div className="section-title">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                      <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+                    </svg>
+                    ระบบเสียงอ่านข้อความ (Text-to-Speech)
+                  </div>
+                  <p className="section-desc">
+                    ตั้งค่าระบบอ่านออกเสียงชื่อ ยอดเงิน และข้อความโดเนทภาษาไทย
+                  </p>
+
+                  <div className="form-row">
+                    <div className="form-group">
+                      <label className="form-label">สถานะระบบอ่านออกเสียง (TTS)</label>
+                      <select
+                        className="input-control"
+                        value={String(settings.tts_enabled ?? 'true')}
+                        onChange={(e) => updateField('tts_enabled', e.target.value)}
+                      >
+                        <option value="true">เปิดใช้งาน (อ่านชื่อ ยอดเงิน และข้อความ)</option>
+                        <option value="false">ปิดใช้งาน (ไม่ส่งเสียงอ่าน)</option>
+                      </select>
+                    </div>
+                    <div className="form-group">
+                      <label className="form-label">ยอดเงินขั้นต่ำที่จะให้อ่าน TTS (บาท)</label>
+                      <input
+                        type="number"
+                        className="input-control"
+                        min="1"
+                        value={settings.tts_min_amount ?? 20}
+                        onChange={(e) => updateField('tts_min_amount', parseInt(e.target.value) || 0)}
+                      />
+                    </div>
+                  </div>
+
+                  {/* TTS Engine Info Banner */}
+                  <div className="customizer-subbox" style={{
+                    marginTop: '16px',
+                    padding: '12px 16px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '12px'
+                  }}>
+                    <div style={{
+                      width: '36px',
+                      height: '36px',
+                      borderRadius: '8px',
+                      background: 'rgba(37, 99, 235, 0.1)',
+                      color: 'var(--accent, #2563eb)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      flexShrink: 0
+                    }}>
+                      <Volume2 size={18} />
+                    </div>
+                    <div>
+                      <div style={{ fontWeight: 600, fontSize: '13px', color: 'var(--text-main)' }}>
+                        เครื่องมือเสียงอ่านภาษาไทย (Google TTS)
+                      </div>
+                      <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '2px', lineHeight: 1.4 }}>
+                        ระบบอ่านออกเสียงชื่อผู้โดเนท ยอดเงิน และข้อความโดเนทภาษาไทยอัตโนมัติ
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Sound Selection (Feature 2.1) */}
+                  <div className="form-row full-width" style={{ marginTop: '16px' }}>
+                    <div className="form-group full-width">
+                      <div className="field-label-row" style={{ alignItems: 'center' }}>
+                        <label className="form-label" style={{ marginBottom: 0, fontWeight: 700 }}>
+                          เสียงแจ้งเตือน (Alert Sound)
+                        </label>
+                        <button
+                          type="button"
+                          className="btn-test-sound"
+                          onClick={handleTestAlertSound}
+                          disabled={isPlayingAlertSound}
+                        >
+                          {isPlayingAlertSound ? 'กำลังเล่น...' : 'ทดลองฟังเสียง'}
+                        </button>
+                      </div>
+
+                      {/* 2 Tabs: Segmented Control */}
+                      <div className="sound-segmented-tabs">
+                        <button
+                          type="button"
+                          className={`sound-tab-btn ${soundMode === 'preset' ? 'active' : ''}`}
+                          onClick={() => {
+                            setSoundMode('preset');
+                            const isCurrentPreset = ALERT_SOUND_PRESETS.some(p => p.id !== 'custom' && p.id === settings.alert_sound_url);
+                            if (!isCurrentPreset) {
+                              updateField('alert_sound_url', '/sounds/alert.mp3');
+                            }
+                          }}
+                        >
+                          เสียงมาตรฐาน (5 แบบ)
+                        </button>
+                        <button
+                          type="button"
+                          className={`sound-tab-btn ${soundMode === 'custom' ? 'active' : ''}`}
+                          onClick={() => setSoundMode('custom')}
+                        >
+                          อัปโหลดไฟล์ / วางลิงก์เอง
+                        </button>
+                      </div>
+
+                      {soundMode === 'preset' ? (
+                        <div style={{ marginTop: '4px' }}>
+                          <select
+                            className="input-control"
+                            value={
+                              ALERT_SOUND_PRESETS.some(p => p.id !== 'custom' && p.id === settings.alert_sound_url)
+                                ? settings.alert_sound_url
+                                : '/sounds/alert.mp3'
+                            }
+                            onChange={(e) => updateField('alert_sound_url', e.target.value)}
+                          >
+                            {ALERT_SOUND_PRESETS.filter(p => p.id !== 'custom').map((p) => (
+                              <option key={p.id} value={p.id}>{p.label}</option>
+                            ))}
+                          </select>
+                        </div>
+                      ) : (
+                        <div className="sound-upload-card">
+                          <label className="sound-dropzone-clicker">
+                            <input
+                              type="file"
+                              accept=".mp3,.wav,.ogg"
+                              style={{ display: 'none' }}
+                              onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (file) handleSoundUpload(file);
+                              }}
+                            />
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '36px', color: 'var(--text-muted)' }}>
+                              <Upload size={24} />
+                            </div>
+                            <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-main)' }}>
+                              {uploadingSound ? 'กำลังอัปโหลด...' : 'คลิกเพื่อเลือกไฟล์เสียง (.mp3, .wav, .ogg)'}
+                            </div>
+                            <div style={{ fontSize: '11.5px', color: 'var(--text-muted)' }}>
+                              ระบบจะจัดเก็บไฟล์เสียงและสร้าง URL ให้อัตโนมัติ (สูงสุด 25MB)
+                            </div>
+                          </label>
+
+                          <div className="sound-upload-divider">
+                            <div className="field-label-row" style={{ marginBottom: '6px' }}>
+                              <label className="form-label" style={{ fontSize: '12px', marginBottom: 0, color: 'var(--text-muted)' }}>
+                                หรือระบุลิงก์ URL เสียงตรงนี้
+                              </label>
+                              <button
+                                type="button"
+                                className="sound-reset-link"
+                                onClick={() => {
+                                  updateField('alert_sound_url', '/sounds/alert.mp3');
+                                  setSoundMode('preset');
+                                }}
+                              >
+                                รีเซ็ตเป็นกระดิ่งเดิม
+                              </button>
+                            </div>
+                            <input
+                              type="text"
+                              className="input-control"
+                              placeholder="เช่น /sounds/alert.mp3 หรือ https://..."
+                              value={settings.alert_sound_url || ''}
+                              onChange={(e) => updateField('alert_sound_url', e.target.value)}
+                              style={{ fontSize: '12px' }}
+                            />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Sound & Volume */}
+                  <div className="form-row full-width" style={{ marginTop: '12px' }}>
+                    <div className="form-group full-width">
+                      <label className="form-label">
+                        <span>ระดับความดังเสียงแจ้งเตือน & TTS ({settings.alert_volume || 80}%)</span>
+                      </label>
+                      <input
+                        type="range"
+                        min="0"
+                        max="100"
+                        value={settings.alert_volume || 80}
+                        onChange={(e) => updateField('alert_volume', parseInt(e.target.value) || 0)}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Audio Listen Test Box */}
+                  <div className="tts-test-box">
+                    <div className="tts-test-input-wrap">
+                      <span className="tts-test-label">ข้อความจำลองที่จะทดสอบอ่าน:</span>
+                      <div className="tts-test-sample-text">
+                        "{testName || 'สมชาย ใจดี'} โดเนทให้ {testAmount || 50} บาท {testMessage || 'เป็นกำลังใจให้นะครับ สตรีมสนุกมาก!'}"
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      className={`btn-tts-listen ${isPlayingTts ? 'playing' : ''}`}
+                      onClick={handleTestTtsVoice}
+                      disabled={isPlayingTts}
+                    >
+                      {isPlayingTts ? (
+                        <>
+                          <span className="pulse-dot active"></span>
+                          <span>กำลังเล่นเสียงตัวอย่าง...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Volume2 size={16} />
+                          <span>ทดลองฟังเสียงอ่าน</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              </>
+            )}
+
+            {/* TAB 3: TIERED ALERTS */}
+            {activeCategoryTab === 'tiered' && (
+              <>
+                {/* Section: Tiered Alert Text Colors */}
+                <div className="panel-section">
+                  <div className="section-title">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M12 20h9"></path>
+                      <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+                    </svg>
+                    ระบบสีตามระดับยอดเงิน (Tiered Styling)
+                  </div>
+                  <p className="section-desc">
+                    กำหนดสีตัวอักษรและเอฟเฟกต์แยกตามระดับยอดเงินบริจาค (Common, Rare, Epic, Legendary)
+                  </p>
+
+                  <div className="form-row" style={{ marginBottom: '12px' }}>
+                    <div className="form-group" style={{ width: '100%' }}>
+                      <label className="form-label">เปิดใช้งานสีตามระดับยอดเงิน (Tiered Styling)</label>
+                      <select
+                        className="input-control"
+                        value={String(settings.alert_tiered_enabled !== 'false' && settings.alert_tiered_enabled !== false)}
+                        onChange={(e) => updateField('alert_tiered_enabled', e.target.value)}
+                      >
+                        <option value="true">เปิดใช้งาน (เปลี่ยนสีตามระดับยอดเงิน)</option>
+                        <option value="false">ปิดใช้งาน (ใช้สีปกติเท่ากันทุกยอด)</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* Rare Tier Controls */}
+                  <div className="form-row" style={{ marginBottom: '14px' }}>
+                    <div className="form-group">
+                      <label className="form-label">ยอดขั้นต่ำ Rare (บาท)</label>
+                      <input
+                        type="number"
+                        className="input-control"
+                        min="1"
+                        value={settings.alert_tiered_rare_min ?? 50}
+                        onChange={(e) => updateField('alert_tiered_rare_min', parseInt(e.target.value) || 0)}
+                      />
+                    </div>
+                    <div className="form-group">
+                      {settings.alert_text_gradient_enabled === 'true' ? (
+                        <>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                            <label className="form-label" style={{ marginBottom: 0 }}>สีไล่ระดับ Rare (Start ➔ End)</label>
+                            <span style={{
+                              display: 'inline-block',
+                              width: '32px',
+                              height: '14px',
+                              borderRadius: '4px',
+                              border: '1px solid rgba(0,0,0,0.1)',
+                              background: `linear-gradient(135deg, ${settings.alert_tiered_rare_from || '#00c6ff'}, ${settings.alert_tiered_rare_to || '#0072ff'})`
+                            }} />
+                          </div>
+                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px' }}>
+                            <div className="color-input-wrap">
+                              <input
+                                type="color"
+                                value={settings.alert_tiered_rare_from?.startsWith('#') ? settings.alert_tiered_rare_from : '#00c6ff'}
+                                onChange={(e) => {
+                                  updateField('alert_tiered_rare_from', e.target.value);
+                                  updateField('alert_tiered_rare_color', e.target.value);
+                                }}
+                                title="สีเริ่มต้น"
+                              />
+                              <input
+                                type="text"
+                                className="hex-input"
+                                value={settings.alert_tiered_rare_from || '#00c6ff'}
+                                onChange={(e) => {
+                                  updateField('alert_tiered_rare_from', e.target.value);
+                                  updateField('alert_tiered_rare_color', e.target.value);
+                                }}
+                              />
+                            </div>
+                            <div className="color-input-wrap">
+                              <input
+                                type="color"
+                                value={settings.alert_tiered_rare_to?.startsWith('#') ? settings.alert_tiered_rare_to : '#0072ff'}
+                                onChange={(e) => updateField('alert_tiered_rare_to', e.target.value)}
+                                title="สีปลายทาง"
+                              />
+                              <input
+                                type="text"
+                                className="hex-input"
+                                value={settings.alert_tiered_rare_to || '#0072ff'}
+                                onChange={(e) => updateField('alert_tiered_rare_to', e.target.value)}
+                              />
+                            </div>
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          <label className="form-label">สีตัวอักษร Rare</label>
+                          <div className="color-input-wrap">
+                            <input
+                              type="color"
+                              value={settings.alert_tiered_rare_color?.startsWith('#') ? settings.alert_tiered_rare_color : '#0284c7'}
+                              onChange={(e) => updateField('alert_tiered_rare_color', e.target.value)}
+                            />
+                            <input
+                              type="text"
+                              className="hex-input"
+                              value={settings.alert_tiered_rare_color || '#0284c7'}
+                              onChange={(e) => updateField('alert_tiered_rare_color', e.target.value)}
+                            />
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Epic Tier Controls */}
+                  <div className="form-row" style={{ marginBottom: '14px' }}>
+                    <div className="form-group">
+                      <label className="form-label">ยอดขั้นต่ำ Epic (บาท)</label>
+                      <input
+                        type="number"
+                        className="input-control"
+                        min="1"
+                        value={settings.alert_tiered_epic_min ?? 200}
+                        onChange={(e) => updateField('alert_tiered_epic_min', parseInt(e.target.value) || 0)}
+                      />
+                    </div>
+                    <div className="form-group">
+                      {settings.alert_text_gradient_enabled === 'true' ? (
+                        <>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                            <label className="form-label" style={{ marginBottom: 0 }}>สีไล่ระดับ Epic (Start ➔ End)</label>
+                            <span style={{
+                              display: 'inline-block',
+                              width: '32px',
+                              height: '14px',
+                              borderRadius: '4px',
+                              border: '1px solid rgba(0,0,0,0.1)',
+                              background: `linear-gradient(135deg, ${settings.alert_tiered_epic_from || '#da22ff'}, ${settings.alert_tiered_epic_to || '#9733ee'})`
+                            }} />
+                          </div>
+                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px' }}>
+                            <div className="color-input-wrap">
+                              <input
+                                type="color"
+                                value={settings.alert_tiered_epic_from?.startsWith('#') ? settings.alert_tiered_epic_from : '#da22ff'}
+                                onChange={(e) => {
+                                  updateField('alert_tiered_epic_from', e.target.value);
+                                  updateField('alert_tiered_epic_color', e.target.value);
+                                }}
+                                title="สีเริ่มต้น"
+                              />
+                              <input
+                                type="text"
+                                className="hex-input"
+                                value={settings.alert_tiered_epic_from || '#da22ff'}
+                                onChange={(e) => {
+                                  updateField('alert_tiered_epic_from', e.target.value);
+                                  updateField('alert_tiered_epic_color', e.target.value);
+                                }}
+                              />
+                            </div>
+                            <div className="color-input-wrap">
+                              <input
+                                type="color"
+                                value={settings.alert_tiered_epic_to?.startsWith('#') ? settings.alert_tiered_epic_to : '#9733ee'}
+                                onChange={(e) => updateField('alert_tiered_epic_to', e.target.value)}
+                                title="สีปลายทาง"
+                              />
+                              <input
+                                type="text"
+                                className="hex-input"
+                                value={settings.alert_tiered_epic_to || '#9733ee'}
+                                onChange={(e) => updateField('alert_tiered_epic_to', e.target.value)}
+                              />
+                            </div>
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          <label className="form-label">สีตัวอักษร Epic</label>
+                          <div className="color-input-wrap">
+                            <input
+                              type="color"
+                              value={settings.alert_tiered_epic_color?.startsWith('#') ? settings.alert_tiered_epic_color : '#9333ea'}
+                              onChange={(e) => updateField('alert_tiered_epic_color', e.target.value)}
+                            />
+                            <input
+                              type="text"
+                              className="hex-input"
+                              value={settings.alert_tiered_epic_color || '#9333ea'}
+                              onChange={(e) => updateField('alert_tiered_epic_color', e.target.value)}
+                            />
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Legendary Tier Controls */}
+                  <div className="form-row">
+                    <div className="form-group">
+                      <label className="form-label">ยอดขั้นต่ำ Legendary (บาท)</label>
+                      <input
+                        type="number"
+                        className="input-control"
+                        min="1"
+                        value={settings.alert_tiered_legendary_min ?? 500}
+                        onChange={(e) => updateField('alert_tiered_legendary_min', parseInt(e.target.value) || 0)}
+                      />
+                    </div>
+                    <div className="form-group">
+                      {settings.alert_text_gradient_enabled === 'true' ? (
+                        <>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                            <label className="form-label" style={{ marginBottom: 0 }}>สีไล่ระดับ Legendary (Start ➔ End)</label>
+                            <span style={{
+                              display: 'inline-block',
+                              width: '32px',
+                              height: '14px',
+                              borderRadius: '4px',
+                              border: '1px solid rgba(0,0,0,0.1)',
+                              background: `linear-gradient(135deg, ${settings.alert_tiered_legendary_from || '#f12711'}, ${settings.alert_tiered_legendary_to || '#f5af19'})`
+                            }} />
+                          </div>
+                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px' }}>
+                            <div className="color-input-wrap">
+                              <input
+                                type="color"
+                                value={settings.alert_tiered_legendary_from?.startsWith('#') ? settings.alert_tiered_legendary_from : '#f12711'}
+                                onChange={(e) => {
+                                  updateField('alert_tiered_legendary_from', e.target.value);
+                                  updateField('alert_tiered_legendary_color', e.target.value);
+                                }}
+                                title="สีเริ่มต้น"
+                              />
+                              <input
+                                type="text"
+                                className="hex-input"
+                                value={settings.alert_tiered_legendary_from || '#f12711'}
+                                onChange={(e) => {
+                                  updateField('alert_tiered_legendary_from', e.target.value);
+                                  updateField('alert_tiered_legendary_color', e.target.value);
+                                }}
+                              />
+                            </div>
+                            <div className="color-input-wrap">
+                              <input
+                                type="color"
+                                value={settings.alert_tiered_legendary_to?.startsWith('#') ? settings.alert_tiered_legendary_to : '#f5af19'}
+                                onChange={(e) => updateField('alert_tiered_legendary_to', e.target.value)}
+                                title="สีปลายทาง"
+                              />
+                              <input
+                                type="text"
+                                className="hex-input"
+                                value={settings.alert_tiered_legendary_to || '#f5af19'}
+                                onChange={(e) => updateField('alert_tiered_legendary_to', e.target.value)}
+                              />
+                            </div>
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          <label className="form-label">สีตัวอักษร Legendary</label>
+                          <div className="color-input-wrap">
+                            <input
+                              type="color"
+                              value={settings.alert_tiered_legendary_color?.startsWith('#') ? settings.alert_tiered_legendary_color : '#ea580c'}
+                              onChange={(e) => updateField('alert_tiered_legendary_color', e.target.value)}
+                            />
+                            <input
+                              type="text"
+                              className="hex-input"
+                              value={settings.alert_tiered_legendary_color || '#ea580c'}
+                              onChange={(e) => updateField('alert_tiered_legendary_color', e.target.value)}
+                            />
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </>
+            )}
 
             {/* Action Buttons Bar */}
             <div className="action-bar-bottom">
@@ -2465,49 +2950,53 @@ export default function CustomizerPage() {
                       setTimeout(() => setIsAnimating(false), 50);
                     }}
                   >
-                    🟢 Common (20฿)
+                    <span className="tier-dot" style={{ background: '#22c55e' }} />
+                    <span>Common (20฿)</span>
                   </button>
                   <button
                     type="button"
                     className="test-preset-btn"
-                    style={{ borderColor: settings.alert_tiered_rare_color || '#0284c7', color: 'var(--text-main)' }}
+                    style={{ borderColor: settings.alert_tiered_rare_color || '#0284c7' }}
                     onClick={() => {
                       setTestName('ฟ้าใส สดชื่น');
                       setTestAmount(100);
-                      setTestMessage('ชอบคอนเทนต์และเสียงพูดมากครับ สู้ๆ ✨');
+                      setTestMessage('ชอบคอนเทนต์และเสียงพูดมากครับ สู้ๆ');
                       setIsAnimating(true);
                       setTimeout(() => setIsAnimating(false), 50);
                     }}
                   >
-                    🔵 Rare (100฿)
+                    <span className="tier-dot" style={{ background: settings.alert_tiered_rare_color || '#0284c7' }} />
+                    <span>Rare (100฿)</span>
                   </button>
                   <button
                     type="button"
                     className="test-preset-btn"
-                    style={{ borderColor: settings.alert_tiered_epic_color || '#9333ea', color: 'var(--text-main)' }}
+                    style={{ borderColor: settings.alert_tiered_epic_color || '#9333ea' }}
                     onClick={() => {
                       setTestName('เสี่ยท็อป สายเปย์');
                       setTestAmount(300);
-                      setTestMessage('สุดยอดมากครับ เป็นกำลังใจให้พัฒนาต่อไปเรื่อยๆ 💎');
+                      setTestMessage('สุดยอดมากครับ เป็นกำลังใจให้พัฒนาต่อไปเรื่อยๆ');
                       setIsAnimating(true);
                       setTimeout(() => setIsAnimating(false), 50);
                     }}
                   >
-                    🟣 Epic (300฿)
+                    <span className="tier-dot" style={{ background: settings.alert_tiered_epic_color || '#9333ea' }} />
+                    <span>Epic (300฿)</span>
                   </button>
                   <button
                     type="button"
                     className="test-preset-btn"
-                    style={{ borderColor: settings.alert_tiered_legendary_color || '#ea580c', color: 'var(--text-main)' }}
+                    style={{ borderColor: settings.alert_tiered_legendary_color || '#ea580c' }}
                     onClick={() => {
                       setTestName('สุลต่าน ใจป๋า');
                       setTestAmount(1000);
-                      setTestMessage('เติมพลังให้สตรีมเมอร์ สู้ๆ นะครับ! 👑');
+                      setTestMessage('เติมพลังให้สตรีมเมอร์ สู้ๆ นะครับ!');
                       setIsAnimating(true);
                       setTimeout(() => setIsAnimating(false), 50);
                     }}
                   >
-                    🟠 Legendary (1,000฿)
+                    <span className="tier-dot" style={{ background: settings.alert_tiered_legendary_color || '#ea580c' }} />
+                    <span>Legendary (1,000฿)</span>
                   </button>
                 </div>
               </div>
@@ -2560,10 +3049,8 @@ export default function CustomizerPage() {
                 className="btn-action-preview"
                 onClick={handleTriggerAnimation}
               >
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <polygon points="5 3 19 12 5 21 5 3"></polygon>
-                </svg>
-                ทดสอบเล่นอนิเมชั่นพรีวิว
+                <Play size={16} />
+                <span>ทดสอบเล่นอนิเมชั่น</span>
               </button>
 
               <button
@@ -2571,26 +3058,25 @@ export default function CustomizerPage() {
                 className="btn-action-obs"
                 onClick={handleTestRealObs}
               >
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <line x1="22" y1="2" x2="11" y2="13"></line>
-                  <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
-                </svg>
-                ทดสอบแจ้งเตือน Overlay
+                <Send size={16} />
+                <span>ทดสอบแจ้งเตือน Overlay</span>
               </button>
             </div>
 
             <div className="obs-url-card">
-              <div style={{ fontSize: '13px', fontWeight: 700, color: '#0f172a', marginBottom: '4px' }}>
-                🔗 ลิงก์ Browser Source สำหรับใส่ใน OBS Studio:
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', fontWeight: 700, color: 'var(--text-main)', marginBottom: '8px' }}>
+                <Link2 size={15} />
+                <span>OBS Browser Source URL</span>
               </div>
               <div className="url-copy-box">
                 <code>{obsUrl}</code>
-                <button type="button" className="btn secondary sm" onClick={handleCopyObsUrl}>
-                  คัดลอก
+                <button type="button" className="btn secondary sm" onClick={handleCopyObsUrl} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                  <Copy size={13} />
+                  <span>คัดลอก</span>
                 </button>
               </div>
-              <p style={{ fontSize: '11px', color: 'var(--text-dim)', marginTop: '6px' }}>
-                * เมื่อกดบันทึก หน้าจอ OBS Studio จะเปลี่ยนตามสไตล์ที่คุณตั้งค่าทันทีแบบ Real-time โดยไม่ต้องกด Refresh Browser ใน OBS!
+              <p style={{ fontSize: '11.5px', color: 'var(--text-muted)', marginTop: '8px', lineHeight: 1.4, margin: '8px 0 0 0' }}>
+                ซิงค์ค่าไปยัง OBS Studio อัตโนมัติแบบเรียลไทม์เมื่อกดบันทึก
               </p>
             </div>
           </div>

@@ -59,7 +59,7 @@ export default function SimulatorPage() {
   // Simulation Alert State
   const [alertSettings, setAlertSettings] = useState<AlertSettings>(defaultAlertSettings);
   const [alertSimKey, setAlertSimKey] = useState(0);
-  const [isAlertShowing, setIsAlertShowing] = useState(false);
+  const [alertAnimState, setAlertAnimState] = useState<'idle' | 'show' | 'hide'>('idle');
   const [alertSample, setAlertSample] = useState({
     name: 'คุณสมศักดิ์ นาวา',
     amount: 500,
@@ -223,13 +223,13 @@ export default function SimulatorPage() {
   const triggerTestAlert = (customAmt?: number, customName?: string, customMsg?: string) => {
     if (alertTimerRef.current) {
       clearTimeout(alertTimerRef.current);
+      alertTimerRef.current = null;
     }
     if (simTtsTimeoutRef.current) {
       clearTimeout(simTtsTimeoutRef.current);
+      simTtsTimeoutRef.current = null;
     }
-    setAlertSimKey(k => k + 1);
-    setIsAlertShowing(true);
-    
+
     const amountVal = customAmt !== undefined ? customAmt : (Number(alertSample.amount) || 500);
     const nameVal = customName || alertSample.name || 'คุณสมศักดิ์ นาวา';
     const msgVal = customMsg !== undefined ? customMsg : (alertSample.message || 'ยินดีด้วยกับการสตรีมครับ!');
@@ -239,6 +239,9 @@ export default function SimulatorPage() {
       amount: amountVal,
       message: msgVal
     });
+
+    setAlertSimKey(k => k + 1);
+    setAlertAnimState('show');
 
     const vol = Math.min(Math.max((Number(alertSettings.alert_volume ?? 80)) / 100, 0), 1);
     if (alertAudioRef.current) {
@@ -272,6 +275,17 @@ export default function SimulatorPage() {
 
     const duration = Math.max(3, Number(alertSettings.alert_duration) || 6);
 
+    const scheduleDismiss = (delayMs: number) => {
+      if (alertTimerRef.current) clearTimeout(alertTimerRef.current);
+      alertTimerRef.current = setTimeout(() => {
+        setAlertAnimState('hide');
+        alertTimerRef.current = setTimeout(() => {
+          setAlertAnimState('idle');
+          alertTimerRef.current = null;
+        }, 380);
+      }, Math.max(delayMs, 0));
+    };
+
     // TTS speech preview in simulator
     const ttsEnabled = alertSettings.tts_enabled === 'true' || alertSettings.tts_enabled === true;
     const minAmt = Number(alertSettings.tts_min_amount || 0);
@@ -294,20 +308,20 @@ export default function SimulatorPage() {
       }, 1200);
 
       // Safety guard timeout
-      alertTimerRef.current = setTimeout(() => {
-        setIsAlertShowing(false);
-      }, 35000);
+      scheduleDismiss(35000);
     } else {
-      alertTimerRef.current = setTimeout(() => {
-        setIsAlertShowing(false);
-      }, duration * 1000);
+      scheduleDismiss(duration * 1000);
     }
   };
 
   const handleSimTtsEnded = () => {
     if (alertTimerRef.current) clearTimeout(alertTimerRef.current);
     alertTimerRef.current = setTimeout(() => {
-      setIsAlertShowing(false);
+      setAlertAnimState('hide');
+      alertTimerRef.current = setTimeout(() => {
+        setAlertAnimState('idle');
+        alertTimerRef.current = null;
+      }, 380);
     }, 1500);
   };
 
@@ -661,6 +675,7 @@ export default function SimulatorPage() {
                   top: `${layout.alert.y}%`,
                   transform: `translate(-50%, -50%) scale(${layout.alert.scale || 1})`,
                   transformOrigin: 'center center',
+                  display: alertAnimState !== 'idle' || selectedWidget === 'alert' ? 'block' : 'none',
                 }}
                 onPointerDown={e => handlePointerDown('alert', e)}
                 onClick={() => setSelectedWidget('alert')}
@@ -683,16 +698,20 @@ export default function SimulatorPage() {
                 </div>
 
                 <div style={{ pointerEvents: 'none' }}>
-                  <AlertCard
-                    key={`alert-sim-${alertSimKey}`}
-                    settings={alertSettings}
-                    alert={alertSample}
-                    animState={isAlertShowing ? 'show' : ''}
-                    style={{
-                      opacity: isAlertShowing ? 1 : (selectedWidget === 'alert' ? 0.9 : 0.4),
-                      transition: 'opacity 0.2s ease'
-                    }}
-                  />
+                  {alertAnimState !== 'idle' ? (
+                    <AlertCard
+                      key={`alert-sim-${alertSimKey}`}
+                      settings={alertSettings}
+                      alert={alertSample}
+                      animState={alertAnimState}
+                    />
+                  ) : (
+                    <div className="sim-alert-placeholder">
+                      <div className="sim-alert-placeholder-text">
+                        📢 พื้นที่แสดง Alert Box (คลิก &quot;ทดสอบยิง Alert&quot; เพื่อดูเอฟเฟกต์)
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             )}

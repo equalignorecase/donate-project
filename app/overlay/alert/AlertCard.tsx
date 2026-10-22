@@ -88,20 +88,54 @@ export const defaultAlertSettings: AlertSettings = {
   alert_text_stroke_enabled: 'false',
   alert_text_stroke_color: '#000000',
   alert_text_stroke_width: 1.5,
-  alert_card_beam: 'false',
+  alert_card_beam: 'true',
+  alert_card_beam_color: 'auto',
+  alert_confetti_enabled: 'true',
+  alert_particle_style: 'confetti',
   alert_tiered_enabled: 'true',
   alert_tiered_rare_min: 50,
   alert_tiered_epic_min: 200,
   alert_tiered_legendary_min: 500,
   alert_tiered_rare_color: '#0284c7',
+  alert_tiered_rare_from: '#00c6ff',
+  alert_tiered_rare_to: '#0072ff',
   alert_tiered_epic_color: '#9333ea',
+  alert_tiered_epic_from: '#da22ff',
+  alert_tiered_epic_to: '#9733ee',
   alert_tiered_legendary_color: '#ea580c',
+  alert_tiered_legendary_from: '#f12711',
+  alert_tiered_legendary_to: '#f5af19',
   alert_text_shadow: 'soft',
+  alert_text_gradient_enabled: 'false',
+  alert_text_gradient_preset: 'sunset',
+  alert_text_gradient_from: '#ff512f',
+  alert_text_gradient_to: '#dd2476',
+  alert_text_gradient_angle: 135,
   alert_shine_sweep: 'false',
   alert_shine_theme: 'crystal',
   alert_animation: 'slide-down',
   alert_duration: 8
 };
+
+export interface TextGradientPreset {
+  id: string;
+  name: string;
+  nameTh: string;
+  from: string;
+  to: string;
+  angle: number;
+}
+
+export const TEXT_GRADIENT_PRESETS: TextGradientPreset[] = [
+  { id: 'sunset', name: 'Sunset Glow', nameTh: 'อาทิตย์อัสดง (Sunset)', from: '#ff512f', to: '#dd2476', angle: 135 },
+  { id: 'cyberpunk', name: 'Cyberpunk Neon', nameTh: 'ไซเบอร์พังก์ (Cyan/Blue)', from: '#00f2fe', to: '#4facfe', angle: 135 },
+  { id: 'golden', name: 'Golden Hour', nameTh: 'ทองคำอร่าม (Golden)', from: '#f6d365', to: '#fda085', angle: 135 },
+  { id: 'neon_pink', name: 'Neon Rose', nameTh: 'กุหลาบนีออน (Rose Pink)', from: '#f857a6', to: '#ff5858', angle: 135 },
+  { id: 'emerald', name: 'Emerald Aura', nameTh: 'มรกตประกาย (Emerald)', from: '#0ba360', to: '#3cba92', angle: 135 },
+  { id: 'cosmic', name: 'Cosmic Violet', nameTh: 'คอสมิกม่วง (Cosmic)', from: '#7f00ff', to: '#e100ff', angle: 135 },
+  { id: 'flame', name: 'Fire Flame', nameTh: 'เพลิงสุริยัน (Fire Flame)', from: '#f83600', to: '#fe8c00', angle: 135 },
+  { id: 'ocean', name: 'Deep Ocean', nameTh: 'มหาสมุทรสีคราม (Ocean)', from: '#2e86de', to: '#54a0ff', angle: 135 }
+];
 
 export type AlertTier = 'common' | 'rare' | 'epic' | 'legendary';
 
@@ -126,6 +160,122 @@ export function getTierTextColor(tier: AlertTier, settings?: AlertSettings): str
   if (tier === 'epic') return settings.alert_tiered_epic_color || '#9333ea';
   if (tier === 'legendary') return settings.alert_tiered_legendary_color || '#ea580c';
   return null;
+}
+
+const CONFETTI_PARTICLES = Array.from({ length: 30 }, (_, i) => {
+  const angle = (i / 30) * Math.PI * 2 + (Math.sin(i * 13) * 0.25);
+  const dist = 140 + (i % 5) * 38;
+  const popX = Math.round(Math.cos(angle) * dist);
+  const popY = Math.round(Math.sin(angle) * (dist * 0.65) - 30);
+  const rotMid = Math.round((i * 45) % 360 - 180);
+  const rotEnd = Math.round(rotMid + (i % 2 === 0 ? 360 : -360));
+  const delay = ((i % 6) * 0.04).toFixed(2);
+  const type: 'ribbon' | 'dot' | 'star' = i % 4 === 0 ? 'star' : i % 2 === 0 ? 'ribbon' : 'dot';
+  return { id: i, popX, popY, rotMid, rotEnd, delay, type };
+});
+
+function getParticleColor(index: number, tier: AlertTier, style: string): string {
+  if (style === 'gold_sparkle') {
+    const colors = ['#f59e0b', '#fbbf24', '#d97706', '#ffffff', '#fef08a', '#eab308'];
+    return colors[index % colors.length];
+  }
+  if (style === 'hearts') {
+    const colors = ['#f43f5e', '#ec4899', '#fb7185', '#fda4af', '#ffffff', '#e11d48'];
+    return colors[index % colors.length];
+  }
+  if (style === 'fire_sparks') {
+    const colors = ['#ef4444', '#f97316', '#ea580c', '#f59e0b', '#dc2626', '#ffedd5'];
+    return colors[index % colors.length];
+  }
+  // Default 'confetti'
+  if (tier === 'legendary') {
+    const colors = ['#f59e0b', '#ef4444', '#f97316', '#fbbf24', '#ffffff', '#e11d48'];
+    return colors[index % colors.length];
+  }
+  if (tier === 'epic') {
+    const colors = ['#a855f7', '#ec4899', '#c084fc', '#38bdf8', '#ffffff', '#8b5cf6'];
+    return colors[index % colors.length];
+  }
+  if (tier === 'rare') {
+    const colors = ['#0ea5e9', '#38bdf8', '#06b6d4', '#10b981', '#ffffff', '#3b82f6'];
+    return colors[index % colors.length];
+  }
+  const colors = ['#38bdf8', '#10b981', '#f59e0b', '#ec4899', '#8b5cf6', '#06b6d4'];
+  return colors[index % colors.length];
+}
+
+function getParticleType(index: number, style: string): 'ribbon' | 'dot' | 'star' | 'heart' | 'fire' {
+  if (style === 'hearts') {
+    return index % 3 === 0 ? 'heart' : index % 2 === 0 ? 'star' : 'dot';
+  }
+  if (style === 'fire_sparks') {
+    return index % 3 === 0 ? 'fire' : index % 2 === 0 ? 'star' : 'dot';
+  }
+  if (style === 'gold_sparkle') {
+    return index % 2 === 0 ? 'star' : 'dot';
+  }
+  return index % 4 === 0 ? 'star' : index % 2 === 0 ? 'ribbon' : 'dot';
+}
+
+export function AlertConfetti({
+  active,
+  tier = 'common',
+  style = 'confetti'
+}: {
+  active: boolean;
+  tier?: AlertTier;
+  style?: string;
+}) {
+  const [burstKey, setBurstKey] = React.useState(0);
+
+  React.useEffect(() => {
+    if (active) {
+      setBurstKey(k => k + 1);
+    }
+  }, [active]);
+
+  if (style === 'none' || (!active && burstKey === 0)) return null;
+
+  return (
+    <div key={burstKey} className="alert-confetti-container" aria-hidden="true">
+      {CONFETTI_PARTICLES.map((p) => {
+        const type = getParticleType(p.id, style);
+        const color = getParticleColor(p.id, tier, style);
+        const popY = (style === 'hearts' || style === 'fire_sparks') ? p.popY - 50 : p.popY;
+        return (
+          <div
+            key={p.id}
+            className={`alert-confetti-item alert-confetti-${type}`}
+            style={{
+              ['--pop-x' as any]: `${p.popX}px`,
+              ['--pop-y' as any]: `${popY}px`,
+              ['--rot-mid' as any]: `${p.rotMid}deg`,
+              ['--rot-end' as any]: `${p.rotEnd}deg`,
+              animationDelay: `${p.delay}s`,
+              backgroundColor: (type === 'ribbon' || type === 'dot') ? color : undefined,
+              color: color
+            }}
+          >
+            {type === 'star' && (
+              <svg width="14" height="14" viewBox="0 0 24 24" fill={color}>
+                <path d="M12 0L14.5 9.5L24 12L14.5 14.5L12 24L9.5 14.5L0 12L9.5 9.5L12 0Z" />
+              </svg>
+            )}
+            {type === 'heart' && (
+              <svg width="15" height="15" viewBox="0 0 24 24" fill={color}>
+                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+              </svg>
+            )}
+            {type === 'fire' && (
+              <svg width="15" height="15" viewBox="0 0 24 24" fill={color}>
+                <path d="M12 2c-.5 2.5-2 4.9-4 6.5-2 1.6-3 3.5-3 5.5a7 7 0 1 0 14 0c0-2-1-3.9-3-5.5-2-1.6-3.5-4-4-6.5z" />
+              </svg>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
 }
 
 export interface AlertCardProps {
@@ -177,6 +327,9 @@ export default function AlertCard({
   const isTextShineEnabled = s.alert_shine_sweep !== 'false' && s.alert_shine_sweep !== false;
   const shineTheme = s.alert_shine_theme || 'crystal';
 
+  const isBeamEnabled = s.alert_card_beam === 'true' || s.alert_card_beam === true;
+  const isConfettiEnabled = s.alert_confetti_enabled === 'true' || s.alert_confetti_enabled === true;
+
   const cardShadow = (s.alert_shadow_show === 'false' || s.alert_shadow_show === false)
     ? 'none'
     : (s.alert_glow === 'true' || s.alert_glow === true)
@@ -205,24 +358,83 @@ export default function AlertCard({
   const donorNameColor = tierColor || s.alert_name_color || '#0f172a';
   const amountColor = tierColor || s.alert_amount_color || '#059669';
 
-  // Tiered Icon and Amount Box styling (harmonious palette with soft tint)
-  const iconColor = tierColor || s.alert_icon_color || '#0f172a';
+  // Text Gradient logic
+  const isGradientEnabled = s.alert_text_gradient_enabled === 'true' || s.alert_text_gradient_enabled === true;
+  let gradientFrom = s.alert_text_gradient_from || '#ff512f';
+  let gradientTo = s.alert_text_gradient_to || '#dd2476';
+
+  if (isTiered && tier !== 'common') {
+    if (tier === 'rare') {
+      gradientFrom = s.alert_tiered_rare_from || s.alert_tiered_rare_color || '#00c6ff';
+      gradientTo = s.alert_tiered_rare_to || '#0072ff';
+    } else if (tier === 'epic') {
+      gradientFrom = s.alert_tiered_epic_from || s.alert_tiered_epic_color || '#da22ff';
+      gradientTo = s.alert_tiered_epic_to || '#9733ee';
+    } else if (tier === 'legendary') {
+      gradientFrom = s.alert_tiered_legendary_from || s.alert_tiered_legendary_color || '#f12711';
+      gradientTo = s.alert_tiered_legendary_to || '#f5af19';
+    }
+  }
+
+  // Active Accent Color: Gradient Start Color (when gradient enabled) > Tier Color > User Icon Color
+  const activeAccent = isGradientEnabled
+    ? gradientFrom
+    : (tierColor || s.alert_icon_color || '#0f172a');
+
+  // Beam Color logic
+  const beamColorMode = s.alert_card_beam_color || 'auto';
+  let resolvedBeamColor = '#38bdf8';
+  if (beamColorMode !== 'auto' && beamColorMode.startsWith('#')) {
+    resolvedBeamColor = beamColorMode;
+  } else if (activeAccent && activeAccent !== '#0f172a') {
+    resolvedBeamColor = activeAccent;
+  } else if (s.alert_border_color && s.alert_border_color !== 'transparent') {
+    resolvedBeamColor = s.alert_border_color;
+  }
+
+  // Tiered / Gradient Icon and Amount Box styling
+  const iconColor = activeAccent;
   const iconBg = isIconTransparent
     ? 'transparent'
-    : (tierColor ? `${tierColor}14` : (s.alert_icon_bg || '#f8fafc'));
+    : (activeAccent && activeAccent !== '#0f172a'
+        ? `${activeAccent}14`
+        : (s.alert_icon_bg || '#f8fafc'));
   const iconBorder = isIconTransparent
     ? 'none'
-    : (tierColor ? `1.5px solid ${tierColor}3d` : `1.5px solid ${s.alert_icon_border || '#e2e8f0'}`);
+    : (activeAccent && activeAccent !== '#0f172a'
+        ? `1.5px solid ${activeAccent}3d`
+        : `1.5px solid ${s.alert_icon_border || '#e2e8f0'}`);
   const iconShadow = isIconTransparent
     ? 'none'
-    : (tierColor ? `0 4px 14px ${tierColor}20` : '0 4px 12px rgba(15, 23, 42, 0.05)');
+    : (activeAccent && activeAccent !== '#0f172a'
+        ? `0 4px 14px ${activeAccent}20`
+        : '0 4px 12px rgba(15, 23, 42, 0.05)');
 
   const amountBg = isAmountTransparent
     ? 'transparent'
-    : (tierColor ? `${tierColor}14` : (s.alert_amount_bg || '#ecfdf5'));
+    : (activeAccent && activeAccent !== '#0f172a'
+        ? `${activeAccent}14`
+        : (s.alert_amount_bg || '#ecfdf5'));
   const amountBorder = isAmountTransparent
     ? 'none'
-    : (tierColor ? `1.5px solid ${tierColor}3d` : `1.5px solid ${s.alert_amount_border || '#a7f3d0'}`);
+    : (activeAccent && activeAccent !== '#0f172a'
+        ? `1.5px solid ${activeAccent}3d`
+        : `1.5px solid ${s.alert_amount_border || '#a7f3d0'}`);
+
+  const gradientAngle = Number(s.alert_text_gradient_angle) || 135;
+  const staticGradient = `linear-gradient(${gradientAngle}deg, ${gradientFrom} 0%, ${gradientTo} 100%)`;
+
+  let shineHighlight = '#ffffff';
+  let shineGlow = 'rgba(255, 255, 255, 0.85)';
+  if (shineTheme === 'gold') {
+    shineHighlight = '#fde68a';
+    shineGlow = 'rgba(245, 158, 11, 0.85)';
+  } else if (shineTheme === 'cyan') {
+    shineHighlight = '#67e8f9';
+    shineGlow = 'rgba(6, 182, 212, 0.85)';
+  }
+
+  const shimmerGradient = `linear-gradient(115deg, ${gradientFrom} 0%, ${gradientTo} 32%, ${shineHighlight} 50%, ${gradientFrom} 68%, ${gradientTo} 100%)`;
 
   return (
     <div
@@ -234,6 +446,16 @@ export default function AlertCard({
         ...style
       }}
     >
+      {/* Confetti & Particle Burst outside card */}
+      {isConfettiEnabled && s.alert_particle_style !== 'none' && (
+        <AlertConfetti
+          active={stateClass === 'show'}
+          tier={tier}
+          style={s.alert_particle_style || 'confetti'}
+        />
+      )}
+
+      {/* Main Alert Card */}
       <div
         className={`alert-card ${isTextShineEnabled ? `supporter-shine-theme-${shineTheme}` : ''}`}
         style={{
@@ -245,6 +467,23 @@ export default function AlertCard({
           boxShadow: isCardTransparent ? 'none' : cardShadow
         }}
       >
+        {/* 360° Neon Border Beam */}
+        {isBeamEnabled && !isCardTransparent && (
+          <div
+            className="alert-card-beam-wrap"
+            aria-hidden="true"
+            style={{
+              borderRadius: `${s.alert_border_radius ?? 24}px`,
+              ['--beam-width' as any]: `${Math.max(Number(s.alert_border_width) || 0, 2.5)}px`
+            }}
+          >
+            <div
+              className="alert-card-beam-spinner"
+              style={{ ['--beam-color' as any]: resolvedBeamColor }}
+            />
+          </div>
+        )}
+
         {s.alert_shimmer_show !== 'false' && s.alert_shimmer_show !== false && (
           <div
             className="alert-shimmer"
@@ -287,15 +526,27 @@ export default function AlertCard({
           <span
             className="donator-name"
             style={{
-              color: donorNameColor,
+              color: isGradientEnabled ? undefined : donorNameColor,
               letterSpacing: `${s.alert_letter_spacing ?? 0}px`,
-              ...strokeStyle
+              ...strokeStyle,
+              ...(isGradientEnabled && !isTextShineEnabled ? {
+                backgroundImage: staticGradient,
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                backgroundClip: 'text',
+                display: 'inline-block'
+              } : {})
             }}
           >
             <span
               className={isTextShineEnabled ? 'supporter-shimmer-text' : undefined}
               style={isTextShineEnabled ? {
-                ['--text-color' as any]: donorNameColor,
+                ...(isGradientEnabled ? {
+                  backgroundImage: shimmerGradient,
+                  ['--shine-glow' as any]: shineGlow,
+                } : {
+                  ['--text-color' as any]: donorNameColor,
+                }),
                 ['--text-shine-delay' as any]: '0s',
                 ...strokeStyle
               } : undefined}
@@ -319,7 +570,7 @@ export default function AlertCard({
             className="alert-amount-wrap"
             style={{
               background: amountBg,
-              color: amountColor,
+              color: isGradientEnabled ? undefined : amountColor,
               border: amountBorder,
               fontSize: `${s.alert_amount_size || 22}px`,
               boxShadow: 'none',
@@ -328,24 +579,33 @@ export default function AlertCard({
             }}
           >
             <span
-              className="alert-amount-val"
+              className={isTextShineEnabled ? 'supporter-shimmer-text' : undefined}
               style={{
-                color: amountColor,
-                ...strokeStyle
-              }}
-            >
-              <span
-                className={isTextShineEnabled ? 'supporter-shimmer-text' : undefined}
-                style={isTextShineEnabled ? {
-                  ['--text-color' as any]: amountColor,
+                color: isGradientEnabled ? undefined : amountColor,
+                display: 'inline-block',
+                ...strokeStyle,
+                ...(isGradientEnabled && !isTextShineEnabled ? {
+                  backgroundImage: staticGradient,
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  backgroundClip: 'text',
+                } : {}),
+                ...(isTextShineEnabled ? {
+                  ...(isGradientEnabled ? {
+                    backgroundImage: shimmerGradient,
+                    ['--shine-glow' as any]: shineGlow,
+                  } : {
+                    ['--text-color' as any]: amountColor,
+                  }),
                   ['--text-shine-delay' as any]: '0.2s',
                   ...strokeStyle
-                } : undefined}
-              >
-                {formattedAmount}
-              </span>
+                } : {})
+              }}
+            >
+              <span className="alert-amount-val" style={{ color: 'inherit' }}>{formattedAmount}</span>
+              {' '}
+              <span className="alert-currency" style={{ color: 'inherit', opacity: 1 }}>บาท</span>
             </span>
-            <span className="alert-currency" style={{ color: amountColor, ...strokeStyle }}>บาท</span>
           </span>
         </div>
 

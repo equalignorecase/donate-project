@@ -435,3 +435,111 @@
     filter: drop-shadow(0 0 0px transparent);
   }
 }
+
+/* ==========================================================
+   Widget Card Specular Beam Sweep (ลำแสงหรูหราพาดผ่านการ์ด Timer)
+   ========================================================== */
+
+.widget-card-beam-sweep {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  overflow: hidden;
+  z-index: 2;
+}
+
+.widget-card-beam {
+  position: absolute;
+  top: -70%;
+  left: -50%;
+  width: clamp(54px, 18%, 110px);
+  height: 250%;
+  pointer-events: none;
+  background: linear-gradient(
+    115deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.03) 22%,
+    rgba(255, 255, 255, 0.24) 42%,
+    rgba(255, 255, 255, 0.92) 50%,
+    rgba(255, 255, 255, 0.24) 58%,
+    rgba(255, 255, 255, 0.03) 78%,
+    transparent 100%
+  );
+  transform: rotate(25deg);
+  box-shadow: 0 0 32px 10px rgba(255, 255, 255, 0.55), 0 0 60px 18px rgba(255, 255, 255, 0.25);
+  filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.75));
+  animation: widget-card-beam-sweep 3.6s cubic-bezier(0.22, 1, 0.36, 1) infinite;
+}
+
+.widget-card-sparkle {
+  position: absolute;
+  top: 50%;
+  left: -50%;
+  width: 16px;
+  height: 16px;
+  margin-top: -8px;
+  margin-left: 20px;
+  pointer-events: none;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    #ffffff 15%,
+    rgba(255, 255, 255, 0.9) 45%,
+    rgba(255, 255, 255, 0.2) 70%,
+    transparent 85%
+  );
+  box-shadow:
+    0 0 14px 3px rgba(255, 255, 255, 0.95),
+    0 0 28px 7px rgba(255, 255, 255, 0.6),
+    0 0 45px 12px rgba(103, 232, 249, 0.5);
+  animation: widget-card-sparkle-sweep 3.6s cubic-bezier(0.22, 1, 0.36, 1) infinite;
+}
+
+.widget-card-sparkle::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 32px;
+  height: 2px;
+  transform: translate(-50%, -50%);
+  background: linear-gradient(90deg, transparent, #ffffff, transparent);
+  filter: drop-shadow(0 0 4px #ffffff);
+}
+
+@keyframes widget-card-beam-sweep {
+  0% {
+    left: -50%;
+    opacity: 0;
+  }
+  12% {
+    opacity: 1;
+  }
+  44% {
+    left: 140%;
+    opacity: 1;
+  }
+  45%, 100% {
+    left: 140%;
+    opacity: 0;
+  }
+}
+
+@keyframes widget-card-sparkle-sweep {
+  0% {
+    left: -50%;
+    opacity: 0;
+  }
+  12% {
+    opacity: 1;
+  }
+  44% {
+    left: 140%;
+    opacity: 1;
+  }
+  45%, 100% {
+    left: 140%;
+    opacity: 0;
+  }
+}

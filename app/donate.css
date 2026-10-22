@@ -95,10 +95,12 @@
   --danger: #dc2626;
   --danger-light: #fef2f2;
 
-  --radius-xl: 24px;
-  --radius-lg: 18px;
-  --radius-md: 12px;
-  --radius-sm: 8px;
+  --radius-2xl: 28px;
+  --radius-xl: 26px;
+  --radius-lg: 20px;
+  --radius-md: 14px;
+  --radius-sm: 10px;
+  --radius-pill: 9999px;
 
   --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.04);
   --shadow-card: 0 20px 45px -12px rgba(15, 23, 42, 0.08), 0 0 1px 1px rgba(15, 23, 42, 0.04);
@@ -177,20 +179,20 @@ body {
 
 .container {
   width: 100%;
-  max-width: 500px;
+  max-width: 860px;
   z-index: 1;
   position: relative;
   transition: max-width 0.35s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .container.step-2-active {
-  max-width: 820px;
+  max-width: 860px;
 }
 
 /* Header & Profile */
 .header-card {
   text-align: center;
-  margin-bottom: 28px;
+  margin-bottom: 20px;
 }
 
 .avatar-wrapper {
@@ -273,17 +275,37 @@ body {
   background: var(--bg-card);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-xl);
-  padding: 32px 28px;
+  padding: 30px 32px;
   box-shadow: var(--shadow-card);
   transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   margin-bottom: 20px;
   display: flex;
   flex-direction: column;
-  min-height: 700px;
 }
 
 .card .btn-primary {
-  margin-top: auto;
+  width: 100%;
+}
+
+/* 2-Column Desktop Layout */
+.donate-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 32px;
+  margin-bottom: 20px;
+  align-items: start;
+}
+
+.donate-col-left,
+.donate-col-right {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.donate-col-left > .form-group:last-child,
+.donate-col-right > .form-group:last-child {
+  margin-bottom: 0;
 }
 
 .form-group {
@@ -829,7 +851,7 @@ textarea.input-control {
   background: var(--primary);
   color: #ffffff;
   border: none;
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-pill);
   padding: 15px;
   font-size: 15px;
   font-weight: 600;
@@ -1124,10 +1146,10 @@ textarea.input-control {
   align-items: center;
   justify-content: center;
   gap: 6px;
-  padding: 10px 8px;
+  padding: 10px 16px;
   background: var(--bg-subtle);
   border: 1.5px solid var(--border-subtle);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-pill);
   color: var(--text-main);
   font-size: 12.5px;
   font-weight: 600;
@@ -1505,8 +1527,8 @@ textarea.input-control {
   align-items: center;
   justify-content: center;
   gap: 6px;
-  padding: 8px;
-  border-radius: var(--radius-sm);
+  padding: 10px 16px;
+  border-radius: var(--radius-pill);
   transition: var(--transition);
 }
 
@@ -1753,8 +1775,8 @@ textarea.input-control {
 
 .modal-alert-btn {
   width: 100%;
-  padding: 12px 20px;
-  border-radius: var(--radius-md);
+  padding: 13px 20px;
+  border-radius: var(--radius-pill);
   font-size: 14px;
   font-weight: 600;
   font-family: inherit;
@@ -1884,8 +1906,8 @@ textarea.input-control {
 
 .btn-secondary-modal {
   width: 100%;
-  padding: 12px;
-  border-radius: var(--radius-md);
+  padding: 12px 20px;
+  border-radius: var(--radius-pill);
   font-size: 14px;
   font-weight: 600;
   font-family: inherit;
@@ -1912,10 +1934,24 @@ textarea.input-control {
     padding: 16px 12px 32px;
   }
 
+  .container {
+    max-width: 500px;
+  }
+
   .card {
     min-height: auto;
     padding: 22px 18px;
     border-radius: var(--radius-lg);
+  }
+
+  .donate-form-grid {
+    grid-template-columns: 1fr;
+    gap: 0;
+    margin-bottom: 0;
+  }
+
+  .donate-col-left > .form-group:last-child {
+    margin-bottom: 22px;
   }
 
   /* QR Modal Bottom-Sheet on Mobile */

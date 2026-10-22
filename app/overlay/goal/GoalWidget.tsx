@@ -46,6 +46,11 @@ export default function GoalWidget({
 
   const cardOpacity = Number(appearance.goal_opacity ?? 0);
   const isCardTransparent = cardOpacity <= 0;
+  const barStart = appearance.goal_bar_color || '#0038ff';
+  const barEnd = appearance.goal_bar_end_color || barStart;
+  const barBackground = appearance.goal_gradient === 'true'
+    ? `linear-gradient(90deg, ${barStart}, ${barEnd})`
+    : barStart;
   const isTextInside = appearance.goal_text_inside !== 'false';
   const isShowDuration = appearance.goal_show_duration === 'true';
   const durationText = isShowDuration ? formatGoalDuration(appearance.goal_end_date, appearance.goal_duration_text) : '';
@@ -196,9 +201,7 @@ export default function GoalWidget({
             borderRadius: '9999px',
             border: percent > 0 ? '1px solid rgba(255, 255, 255, 0.3)' : 'none',
             boxShadow: percent > 0 ? '3px 0 10px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.4)' : 'none',
-            background: appearance.goal_gradient === 'true' 
-              ? `linear-gradient(90deg, ${appearance.goal_bar_color}, ${appearance.goal_bar_end_color})` 
-              : appearance.goal_bar_color 
+            background: barBackground 
           }}
         >
           {effectivePattern !== 'none' && (

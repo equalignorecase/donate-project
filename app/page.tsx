@@ -373,267 +373,275 @@ export default function DonatePage() {
 
         {/* Step 1: Donation Form (Always Visible) */}
         <div className="card">
-          <div className="form-group">
-            <label className="form-label" htmlFor="nameInput">
-              <span>ชื่อผู้สนับสนุน</span>
-              <span className="label-hint">ไม่ระบุ = ผู้สนับสนุนใจดี</span>
-            </label>
-            <input
-              type="text"
-              id="nameInput"
-              className="input-control"
-              placeholder="ใส่ชื่อหรือฉายาของคุณ"
-              maxLength={50}
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-            />
-          </div>
-
-          {/* Amount Section - only shown when PromptPay is selected */}
-          {paymentMethod === 'promptpay' ? (
-            <div className="form-group">
-              <label className="form-label">
-                <span>จำนวนเงินสนับสนุน (บาท)</span>
-                <span className="label-hint">ขั้นต่ำ {systemSettings?.min_donate || 1} บาท</span>
-              </label>
-              <div className="amount-grid">
-                {PRESET_AMOUNTS.map((val) => (
-                  <button
-                    key={val}
-                    type="button"
-                    className={`amount-btn ${parseFloat(amount) === val ? 'active' : ''}`}
-                    onClick={() => handleSelectPreset(val)}
-                  >
-                    {val} <span className="currency-badge">฿</span>
-                  </button>
-                ))}
+          <div className="donate-form-grid">
+            {/* Left Column: Supporter Name & Amount Selection */}
+            <div className="donate-col-left">
+              <div className="form-group">
+                <label className="form-label" htmlFor="nameInput">
+                  <span>ชื่อผู้สนับสนุน</span>
+                  <span className="label-hint">ไม่ระบุ = ผู้สนับสนุนใจดี</span>
+                </label>
+                <input
+                  type="text"
+                  id="nameInput"
+                  className="input-control"
+                  placeholder="ใส่ชื่อหรือฉายาของคุณ"
+                  maxLength={50}
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                />
               </div>
-              <input
-                type="number"
-                id="amountInput"
-                className={`input-control ${fieldErrors.amount ? 'has-error' : ''}`}
-                value={amount}
-                min={systemSettings?.min_donate || 1}
-                step="any"
-                placeholder={`หรือระบุจำนวนเงินเอง (ขั้นต่ำ ${systemSettings?.min_donate || 1} บาท)`}
-                onChange={(e) => {
-                  setAmount(e.target.value);
-                  if (fieldErrors.amount) {
-                    setFieldErrors((prev) => ({ ...prev, amount: undefined }));
-                  }
-                }}
-              />
-              {fieldErrors.amount && (
-                <div className="inline-error" role="alert">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                    <circle cx="12" cy="12" r="10"></circle>
-                    <line x1="12" y1="8" x2="12" y2="12"></line>
-                    <line x1="12" y1="16" x2="12.01" y2="16"></line>
-                  </svg>
-                  <span>{fieldErrors.amount}</span>
+
+              {/* Amount Section - only shown when PromptPay is selected */}
+              {paymentMethod === 'promptpay' ? (
+                <div className="form-group">
+                  <label className="form-label">
+                    <span>จำนวนเงินสนับสนุน (บาท)</span>
+                    <span className="label-hint">ขั้นต่ำ {systemSettings?.min_donate || 1} บาท</span>
+                  </label>
+                  <div className="amount-grid">
+                    {PRESET_AMOUNTS.map((val) => (
+                      <button
+                        key={val}
+                        type="button"
+                        className={`amount-btn ${parseFloat(amount) === val ? 'active' : ''}`}
+                        onClick={() => handleSelectPreset(val)}
+                      >
+                        {val} <span className="currency-badge">฿</span>
+                      </button>
+                    ))}
+                  </div>
+                  <input
+                    type="number"
+                    id="amountInput"
+                    className={`input-control ${fieldErrors.amount ? 'has-error' : ''}`}
+                    value={amount}
+                    min={systemSettings?.min_donate || 1}
+                    step="any"
+                    placeholder={`หรือระบุจำนวนเงินเอง (ขั้นต่ำ ${systemSettings?.min_donate || 1} บาท)`}
+                    onChange={(e) => {
+                      setAmount(e.target.value);
+                      if (fieldErrors.amount) {
+                        setFieldErrors((prev) => ({ ...prev, amount: undefined }));
+                      }
+                    }}
+                  />
+                  {fieldErrors.amount && (
+                    <div className="inline-error" role="alert">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="12" y1="8" x2="12" y2="12"></line>
+                        <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                      </svg>
+                      <span>{fieldErrors.amount}</span>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="form-group tm-amount-notice-group">
+                  <div className="tm-amount-banner">
+                    <div className="tm-amount-icon">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                        <rect x="2" y="7" width="20" height="14" rx="2" ry="2" />
+                        <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
+                      </svg>
+                    </div>
+                    <div className="tm-amount-text">
+                      <strong>ไม่ต้องระบุจำนวนเงินล่วงหน้า</strong>
+                      <span>ระบบจะคำนวณและแสดงยอดเงินบริจาคตามมูลค่าจริงในซองของขวัญอัตโนมัติ</span>
+                    </div>
+                  </div>
                 </div>
               )}
             </div>
-          ) : (
-            <div className="form-group tm-amount-notice-group">
-              <div className="tm-amount-banner">
-                <div className="tm-amount-icon">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                    <rect x="2" y="7" width="20" height="14" rx="2" ry="2" />
-                    <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
-                  </svg>
-                </div>
-                <div className="tm-amount-text">
-                  <strong>ไม่ต้องระบุจำนวนเงินล่วงหน้า</strong>
-                  <span>ระบบจะคำนวณและแสดงยอดเงินบริจาคตามมูลค่าจริงในซองของขวัญอัตโนมัติ</span>
-                </div>
-              </div>
-            </div>
-          )}
 
-          <div className="form-group">
-            <label className="form-label" htmlFor="messageInput">
-              <span>ข้อความขึ้นจอ</span>
-              <span className="label-hint">{message.length}/200</span>
-            </label>
-            <textarea
-              id="messageInput"
-              className="input-control"
-              placeholder="พิมพ์ข้อความที่ต้องการให้แสดงบนหน้าจอสตีม..."
-              maxLength={200}
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-            />
-            <div className="chips-row">
-              {QUICK_MESSAGES.map((msg) => (
-                <button
-                  key={msg}
-                  type="button"
-                  className="chip-btn"
-                  onClick={() => setMessage(msg)}
-                >
-                  {msg}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Payment Method Selector */}
-          <div className="form-group">
-            <label className="form-label" id="payment-method-label">
-              <span>ช่องทางชำระเงิน</span>
-            </label>
-            <div
-              className="payment-method-grid"
-              role="radiogroup"
-              aria-labelledby="payment-method-label"
-            >
-              {/* PromptPay */}
-              <div
-                className={`payment-method-card ${paymentMethod === 'promptpay' ? 'active' : ''}`}
-                onClick={() => handleSelectMethod('promptpay')}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    handleSelectMethod('promptpay');
-                  }
-                }}
-                role="radio"
-                aria-checked={paymentMethod === 'promptpay'}
-                tabIndex={0}
-                title="พร้อมเพย์: สแกน QR ได้ทุกแอปธนาคาร ฟรีค่าธรรมเนียม"
-              >
-                <div className="pm-icon-wrap pp">
-                  <img
-                    src="https://www.bot.or.th/content/dam/bot/icons/icon-thaiqr.png"
-                    alt="PromptPay / Thai QR"
-                    className="pm-logo"
-                  />
-                </div>
-                <div className="pm-info">
-                  <span className="pm-title">พร้อมเพย์</span>
-                  <span className="pm-status-badge active">
-                    <span className="badge-dot"></span>
-                    พร้อมใช้งาน
-                  </span>
-                </div>
-                <div className="pm-radio" aria-hidden="true">
-                  <span className="pm-radio-inner"></span>
-                </div>
-              </div>
-
-              {/* TrueMoney Wallet */}
-              <div
-                className={`payment-method-card ${paymentMethod === 'truemoney' ? 'active' : ''}`}
-                onClick={() => handleSelectMethod('truemoney')}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    handleSelectMethod('truemoney');
-                  }
-                }}
-                role="radio"
-                aria-checked={paymentMethod === 'truemoney'}
-                tabIndex={0}
-                title="TrueMoney Wallet: ส่งซองของขวัญ / อั่งเปา"
-              >
-                <div className="pm-icon-wrap tm">
-                  <img
-                    src="https://filebroker-cdn.lazada.co.th/kf/Sf786cb9cf71246e4957fb9eeeac7f787o.jpg"
-                    alt="TrueMoney Wallet"
-                    className="pm-logo"
-                  />
-                </div>
-                <div className="pm-info">
-                  <span className="pm-title">TrueMoney</span>
-                  <span className="pm-status-badge active">
-                    <span className="badge-dot"></span>
-                    พร้อมใช้งาน
-                  </span>
-                </div>
-                <div className="pm-radio" aria-hidden="true">
-                  <span className="pm-radio-inner"></span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* PromptPay Info Hint (Shown when PromptPay is selected to balance card height with TrueMoney) */}
-          {paymentMethod === 'promptpay' && (
-            <div className="form-group pp-hint-group">
-              <div className="pp-hint-box">
-                <span className="pp-hint-icon">⚡</span>
-                <span>
-                  <strong>ระบบอัตโนมัติ:</strong> สแกน QR ได้ทุกธนาคาร ฟรีค่าธรรมเนียม ยืนยันสลิปขึ้นจอ OBS ทันที
-                </span>
-              </div>
-            </div>
-          )}
-
-          {/* TrueMoney Voucher Link Field (Shown when TrueMoney is selected) */}
-          {paymentMethod === 'truemoney' && (
-            <div className="form-group tm-voucher-group">
-              <label className="form-label" htmlFor="voucherInput">
-                <span>ลิงก์ซองของขวัญ TrueMoney (อั่งเปา)</span>
-                <span className="label-required">*จำเป็น</span>
-              </label>
-              <div className="tm-voucher-input-wrap">
-                <input
-                  type="url"
-                  id="voucherInput"
-                  className={`input-control ${fieldErrors.truemoneyVoucher ? 'has-error' : ''}`}
-                  placeholder="https://gift.truemoney.com/campaign/?v=..."
-                  value={truemoneyVoucher}
-                  onChange={(e) => {
-                    setTruemoneyVoucher(e.target.value);
-                    if (fieldErrors.truemoneyVoucher) {
-                      setFieldErrors((prev) => ({ ...prev, truemoneyVoucher: undefined }));
-                    }
-                  }}
+            {/* Right Column: Message & Payment Methods */}
+            <div className="donate-col-right">
+              <div className="form-group">
+                <label className="form-label" htmlFor="messageInput">
+                  <span>ข้อความขึ้นจอ</span>
+                  <span className="label-hint">{message.length}/200</span>
+                </label>
+                <textarea
+                  id="messageInput"
+                  className="input-control"
+                  placeholder="พิมพ์ข้อความที่ต้องการให้แสดงบนหน้าจอสตีม..."
+                  maxLength={200}
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value)}
                 />
-                <button
-                  type="button"
-                  className="tm-paste-btn"
-                  onClick={async () => {
-                    try {
-                      const text = await navigator.clipboard.readText();
-                      if (text) {
-                        setTruemoneyVoucher(text.trim());
+                <div className="chips-row">
+                  {QUICK_MESSAGES.map((msg) => (
+                    <button
+                      key={msg}
+                      type="button"
+                      className="chip-btn"
+                      onClick={() => setMessage(msg)}
+                    >
+                      {msg}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Payment Method Selector */}
+              <div className="form-group">
+                <label className="form-label" id="payment-method-label">
+                  <span>ช่องทางชำระเงิน</span>
+                </label>
+                <div
+                  className="payment-method-grid"
+                  role="radiogroup"
+                  aria-labelledby="payment-method-label"
+                >
+                  {/* PromptPay */}
+                  <div
+                    className={`payment-method-card ${paymentMethod === 'promptpay' ? 'active' : ''}`}
+                    onClick={() => handleSelectMethod('promptpay')}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        handleSelectMethod('promptpay');
+                      }
+                    }}
+                    role="radio"
+                    aria-checked={paymentMethod === 'promptpay'}
+                    tabIndex={0}
+                    title="พร้อมเพย์: สแกน QR ได้ทุกแอปธนาคาร ฟรีค่าธรรมเนียม"
+                  >
+                    <div className="pm-icon-wrap pp">
+                      <img
+                        src="https://www.bot.or.th/content/dam/bot/icons/icon-thaiqr.png"
+                        alt="PromptPay / Thai QR"
+                        className="pm-logo"
+                      />
+                    </div>
+                    <div className="pm-info">
+                      <span className="pm-title">พร้อมเพย์</span>
+                      <span className="pm-status-badge active">
+                        <span className="badge-dot"></span>
+                        พร้อมใช้งาน
+                      </span>
+                    </div>
+                    <div className="pm-radio" aria-hidden="true">
+                      <span className="pm-radio-inner"></span>
+                    </div>
+                  </div>
+
+                  {/* TrueMoney Wallet */}
+                  <div
+                    className={`payment-method-card ${paymentMethod === 'truemoney' ? 'active' : ''}`}
+                    onClick={() => handleSelectMethod('truemoney')}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        handleSelectMethod('truemoney');
+                      }
+                    }}
+                    role="radio"
+                    aria-checked={paymentMethod === 'truemoney'}
+                    tabIndex={0}
+                    title="TrueMoney Wallet: ส่งซองของขวัญ / อั่งเปา"
+                  >
+                    <div className="pm-icon-wrap tm">
+                      <img
+                        src="https://filebroker-cdn.lazada.co.th/kf/Sf786cb9cf71246e4957fb9eeeac7f787o.jpg"
+                        alt="TrueMoney Wallet"
+                        className="pm-logo"
+                      />
+                    </div>
+                    <div className="pm-info">
+                      <span className="pm-title">TrueMoney</span>
+                      <span className="pm-status-badge active">
+                        <span className="badge-dot"></span>
+                        พร้อมใช้งาน
+                      </span>
+                    </div>
+                    <div className="pm-radio" aria-hidden="true">
+                      <span className="pm-radio-inner"></span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* PromptPay Info Hint (Shown when PromptPay is selected) */}
+              {paymentMethod === 'promptpay' && (
+                <div className="form-group pp-hint-group">
+                  <div className="pp-hint-box">
+                    <span className="pp-hint-icon">⚡</span>
+                    <span>
+                      <strong>ระบบอัตโนมัติ:</strong> สแกน QR ได้ทุกธนาคาร ฟรีค่าธรรมเนียม ยืนยันสลิปขึ้นจอ OBS ทันที
+                    </span>
+                  </div>
+                </div>
+              )}
+
+              {/* TrueMoney Voucher Link Field (Shown when TrueMoney is selected) */}
+              {paymentMethod === 'truemoney' && (
+                <div className="form-group tm-voucher-group">
+                  <label className="form-label" htmlFor="voucherInput">
+                    <span>ลิงก์ซองของขวัญ TrueMoney (อั่งเปา)</span>
+                    <span className="label-required">*จำเป็น</span>
+                  </label>
+                  <div className="tm-voucher-input-wrap">
+                    <input
+                      type="url"
+                      id="voucherInput"
+                      className={`input-control ${fieldErrors.truemoneyVoucher ? 'has-error' : ''}`}
+                      placeholder="https://gift.truemoney.com/campaign/?v=..."
+                      value={truemoneyVoucher}
+                      onChange={(e) => {
+                        setTruemoneyVoucher(e.target.value);
                         if (fieldErrors.truemoneyVoucher) {
                           setFieldErrors((prev) => ({ ...prev, truemoneyVoucher: undefined }));
                         }
-                      }
-                    } catch {
-                      showAlert('ไม่สามารถอ่านจาก Clipboard อัตโนมัติได้ กรุณากด Paste ด้วยตนเอง', 'วางลิงก์', 'info');
-                    }
-                  }}
-                  title="วางลิงก์จากคลิปบอร์ด"
-                >
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
-                    <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
-                  </svg>
-                  <span>วาง</span>
-                </button>
-              </div>
-              {fieldErrors.truemoneyVoucher && (
-                <div className="inline-error" role="alert">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                    <circle cx="12" cy="12" r="10"></circle>
-                    <line x1="12" y1="8" x2="12" y2="12"></line>
-                    <line x1="12" y1="16" x2="12.01" y2="16"></line>
-                  </svg>
-                  <span>{fieldErrors.truemoneyVoucher}</span>
+                      }}
+                    />
+                    <button
+                      type="button"
+                      className="tm-paste-btn"
+                      onClick={async () => {
+                        try {
+                          const text = await navigator.clipboard.readText();
+                          if (text) {
+                            setTruemoneyVoucher(text.trim());
+                            if (fieldErrors.truemoneyVoucher) {
+                              setFieldErrors((prev) => ({ ...prev, truemoneyVoucher: undefined }));
+                            }
+                          }
+                        } catch {
+                          showAlert('ไม่สามารถอ่านจาก Clipboard อัตโนมัติได้ กรุณากด Paste ด้วยตนเอง', 'วางลิงก์', 'info');
+                        }
+                      }}
+                      title="วางลิงก์จากคลิปบอร์ด"
+                    >
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
+                        <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
+                      </svg>
+                      <span>วาง</span>
+                    </button>
+                  </div>
+                  {fieldErrors.truemoneyVoucher && (
+                    <div className="inline-error" role="alert">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="12" y1="8" x2="12" y2="12"></line>
+                        <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                      </svg>
+                      <span>{fieldErrors.truemoneyVoucher}</span>
+                    </div>
+                  )}
+                  <div className="tm-hint-box">
+                    <span className="tm-hint-icon">💡</span>
+                    <span>
+                      <strong>วิธีสร้างซอง:</strong> เข้าแอป TrueMoney &gt; โอนเงิน &gt; <strong>ส่งซองของขวัญ</strong> &gt; สุ่ม/แบ่งเท่ากัน &gt; คัดลอกลิงก์มาวาง
+                    </span>
+                  </div>
                 </div>
               )}
-              <div className="tm-hint-box">
-                <span className="tm-hint-icon">💡</span>
-                <span>
-                  <strong>วิธีสร้างซอง:</strong> เข้าแอป TrueMoney &gt; โอนเงิน &gt; <strong>ส่งซองของขวัญ</strong> &gt; สุ่ม/แบ่งเท่ากัน &gt; คัดลอกลิงก์มาวาง
-                </span>
-              </div>
             </div>
-          )}
+          </div>
 
           <button
             type="button"

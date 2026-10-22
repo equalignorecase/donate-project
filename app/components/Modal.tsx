@@ -60,7 +60,7 @@ export default function Modal({
       <div
         style={{
           backgroundColor: '#ffffff',
-          borderRadius: '16px',
+          borderRadius: '24px',
           maxWidth,
           width: '100%',
           padding: '28px',
@@ -86,7 +86,7 @@ export default function Modal({
                   color: 'var(--text-dim)',
                   cursor: 'pointer',
                   padding: '4px 8px',
-                  borderRadius: '6px'
+                  borderRadius: '9999px'
                 }}
                 aria-label="ปิด"
               >

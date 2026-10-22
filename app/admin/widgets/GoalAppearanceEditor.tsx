@@ -12,11 +12,10 @@ import {
   Sliders,
   Type,
   Check,
-  Eye,
-  Gamepad2,
   Grid,
   Clock,
-  Calendar
+  Calendar,
+  ArrowRight
 } from 'lucide-react';
 import {
   GoalAppearance,
@@ -25,7 +24,6 @@ import {
   goalFontOptions,
   formatGoalDuration
 } from '@/lib/goalAppearance';
-import GoalWidget from '@/app/overlay/goal/GoalWidget';
 import './goal-editor-premium.css';
 
 interface GoalAppearanceEditorProps {
@@ -36,14 +34,25 @@ interface GoalAppearanceEditorProps {
   target: number;
 }
 
-const colors: { key: keyof GoalAppearance; label: string; group: string }[] = [
-  { key: 'goal_bar_color', label: 'หลอดเริ่มต้น', group: 'bar' },
-  { key: 'goal_bar_end_color', label: 'หลอดปลายทาง (Gradient)', group: 'bar' },
-  { key: 'goal_track_color', label: 'พื้นหลังรางหลอด', group: 'bar' },
-  { key: 'goal_bg_color', label: 'พื้นหลังการ์ด', group: 'card' },
-  { key: 'goal_border_color', label: 'ขอบการ์ด', group: 'card' },
-  { key: 'goal_text_color', label: 'ข้อความและยอดเงิน', group: 'text' },
-  { key: 'goal_accent_color', label: 'ตัวเลขเปอร์เซ็นต์', group: 'text' },
+const gradientPresets = [
+  { name: 'Cyber Neon', label: 'ไซเบอร์ นีออน', from: '#00f2fe', to: '#4facfe' },
+  { name: 'Sunset Glow', label: 'ซันเซ็ท โกลว์', from: '#ff5858', to: '#f09819' },
+  { name: 'Neon Violet', label: 'นีออน ไวโอเล็ต', from: '#f72585', to: '#7209b7' },
+  { name: 'Emerald Aurora', label: 'เอเมอรัลด์ ออโรรา', from: '#10b981', to: '#06b6d4' },
+  { name: 'Golden Flame', label: 'เฟลม โกลเด้น', from: '#f59e0b', to: '#ef4444' },
+  { name: 'Deep Blue', label: 'ดีพบลู โอเชียน', from: '#2563eb', to: '#38bdf8' },
+  { name: 'Luxury Gold', label: 'ลักชัวรี โกลด์', from: '#d97706', to: '#fbbf24' },
+  { name: 'Sweet Peach', label: 'สวีท พีช', from: '#f43f5e', to: '#fb7185' },
+  { name: 'Purple Matrix', label: 'เพอร์เพิล ไฮป์', from: '#8b5cf6', to: '#ec4899' },
+  { name: 'Midnight Electric', label: 'อิเล็กทริก บลู', from: '#3b82f6', to: '#8b5cf6' },
+];
+
+const otherColors: { key: keyof GoalAppearance; label: string; group: string }[] = [
+  { key: 'goal_track_color', label: 'พื้นหลังรางหลอด (Track Background)', group: 'bar' },
+  { key: 'goal_bg_color', label: 'พื้นหลังการ์ด (Card Background)', group: 'card' },
+  { key: 'goal_border_color', label: 'สีกรอบการ์ด (Card Border)', group: 'card' },
+  { key: 'goal_text_color', label: 'ข้อความและยอดเงิน (Text & Numbers)', group: 'text' },
+  { key: 'goal_accent_color', label: 'ตัวเลขเปอร์เซ็นต์ (Percent Accent)', group: 'text' },
 ];
 
 const sizes: { key: keyof GoalAppearance; label: string; unit: string }[] = [
@@ -66,6 +75,8 @@ const styleOptions = [
   { style: 'minimal', label: 'เรียบหรู (Clean Minimal)', desc: 'เรียบเนียน สะอาดตา ทันสมัย', icon: Layers },
 ] as const;
 
+type GoalSubTab = 'style' | 'colors' | 'sizes' | 'typography';
+
 export default function GoalAppearanceEditor({
   value,
   onChange,
@@ -73,7 +84,7 @@ export default function GoalAppearanceEditor({
   title,
   target,
 }: GoalAppearanceEditorProps) {
-  const [previewBackdrop, setPreviewBackdrop] = useState<'gaming' | 'neon' | 'checker' | 'dark'>('gaming');
+  const [activeTab, setActiveTab] = useState<GoalSubTab>('style');
 
   const update = (key: keyof GoalAppearance, next: string) => {
     onChange({ ...value, [key]: next });
@@ -93,7 +104,7 @@ export default function GoalAppearanceEditor({
             <span>GOAL APPEARANCE STUDIO</span>
           </div>
           <h2>ปรับแต่งดีไซน์หลอดเป้าหมาย</h2>
-          <p>ปรับหน้าตา สไตล์ ผิวสัมผัส ความโค้งมน และแสงวาว — พรีวิวอัปเดตสดทันที</p>
+          <p>ปรับหน้าตา สไตล์ ผิวสัมผัส ความโค้งมน และแสงวาว — พรีวิวสดบน OBS ฝั่งขวา</p>
         </div>
         <button
           type="button"
@@ -107,8 +118,44 @@ export default function GoalAppearanceEditor({
         </button>
       </div>
 
+      {/* Segmented Sub-Tabs */}
+      <div className="editor-subtabs">
+        <button
+          type="button"
+          className={`editor-subtab-btn ${activeTab === 'style' ? 'active' : ''}`}
+          onClick={() => setActiveTab('style')}
+        >
+          <Sparkles size={15} />
+          <span>สไตล์ &amp; แสงวาว</span>
+        </button>
+        <button
+          type="button"
+          className={`editor-subtab-btn ${activeTab === 'colors' ? 'active' : ''}`}
+          onClick={() => setActiveTab('colors')}
+        >
+          <Palette size={15} />
+          <span>ชุดสี</span>
+        </button>
+        <button
+          type="button"
+          className={`editor-subtab-btn ${activeTab === 'sizes' ? 'active' : ''}`}
+          onClick={() => setActiveTab('sizes')}
+        >
+          <Sliders size={15} />
+          <span>ขนาด &amp; สัดส่วน</span>
+        </button>
+        <button
+          type="button"
+          className={`editor-subtab-btn ${activeTab === 'typography' ? 'active' : ''}`}
+          onClick={() => setActiveTab('typography')}
+        >
+          <Type size={15} />
+          <span>ฟอนต์ &amp; ระยะเวลา</span>
+        </button>
+      </div>
 
       {/* Section 1: รูปแบบหลอด & เอฟเฟกต์แสงวาว */}
+      {activeTab === 'style' && (
       <section className="goal-section-card">
         <div className="goal-section-header">
           <div className="goal-section-icon icon-blue">
@@ -206,8 +253,10 @@ export default function GoalAppearanceEditor({
           </div>
         </div>
       </section>
+      )}
 
       {/* Section 2: ชุดสีและแสง */}
+      {activeTab === 'colors' && (
       <section className="goal-section-card">
         <div className="goal-section-header">
           <div className="goal-section-icon icon-purple">
@@ -215,12 +264,175 @@ export default function GoalAppearanceEditor({
           </div>
           <div>
             <h3>ชุดสีและแสง (Color Palette)</h3>
-            <p>กำหนดเฉดสีตัวหลอด พื้นหลัง และตัวหนังสือ ให้เข้ากับธีมสตรีมของคุณ</p>
+            <p>กำหนดเฉดสีตัวหลอด การไล่สี Gradient พื้นหลัง และตัวหนังสือ ให้เข้ากับธีมสตรีมของคุณ</p>
           </div>
         </div>
 
+        {/* Dedicated Goal Bar Gradient Control Card */}
+        <div className="goal-gradient-feature-card">
+          <div className="goal-gradient-header">
+            <div>
+              <div className="goal-gradient-title">
+                <Sparkles size={16} color="#2563eb" />
+                <span>การไล่เฉดสีหลอด (Bar Gradient)</span>
+                {value.goal_gradient === 'true' && (
+                  <span className="goal-gradient-badge-active">ACTIVE</span>
+                )}
+              </div>
+              <p className="goal-gradient-desc">
+                เปิดเพื่อไล่ระดับสีสองเฉดแนวนอน (90° ซ้ายไปขวา) หรือเลือกพรีเซ็ตยอดนิยมทันที
+              </p>
+            </div>
+
+            {/* Toggle Switch */}
+            <div
+              className={`goal-switch-card ${value.goal_gradient === 'true' ? 'active' : ''}`}
+              style={{ margin: 0, padding: '8px 14px' }}
+              onClick={() => !disabled && toggleBoolean('goal_gradient')}
+              role="checkbox"
+              aria-checked={value.goal_gradient === 'true'}
+            >
+              <span className="goal-switch-title" style={{ fontWeight: 600, fontSize: '13px' }}>
+                {value.goal_gradient === 'true' ? 'เปิดไล่สี' : 'ปิดไล่สี (สีเดี่ยว)'}
+              </span>
+              <div className="goal-switch-track">
+                <div className="goal-switch-thumb" />
+              </div>
+            </div>
+          </div>
+
+          {/* Live Gradient Bar Preview */}
+          <div className="goal-gradient-preview-box">
+            <div className="goal-gradient-preview-label">
+              <span>ตัวอย่างสีหลอด (Live Bar Preview)</span>
+              <span className="goal-gradient-preview-mode">
+                {value.goal_gradient === 'true' ? 'Linear Gradient 90° (ซ้ายไปขวา)' : 'สีเดี่ยว (Solid Color)'}
+              </span>
+            </div>
+            <div 
+              className="goal-gradient-preview-bar"
+              style={{
+                background: value.goal_gradient === 'true'
+                  ? `linear-gradient(90deg, ${value.goal_bar_color}, ${value.goal_bar_end_color})`
+                  : value.goal_bar_color
+              }}
+            >
+              <div className="goal-gradient-preview-shine" />
+              <div className="goal-gradient-preview-text">
+                ฿{target ? target.toLocaleString('th-TH') : '15,000'} / ฿{target ? target.toLocaleString('th-TH') : '15,000'} (100%)
+              </div>
+            </div>
+          </div>
+
+          {/* Dual Color Pickers: Start & End */}
+          <div className="goal-dual-picker-grid">
+            {/* Start Color */}
+            <label className="goal-picker-box">
+              <div className="goal-picker-info">
+                <span className="goal-picker-role">
+                  {value.goal_gradient === 'true' ? 'สีเริ่มต้น (Start)' : 'สีหลอด (Bar Color)'}
+                </span>
+                <span className="goal-picker-sub">
+                  {value.goal_gradient === 'true' ? 'ฝั่งซ้ายของหลอด' : 'สีหลอดหลัก'}
+                </span>
+              </div>
+              <div className="goal-swatch-wrapper">
+                <div
+                  className="goal-color-preview-circle"
+                  style={{ backgroundColor: value.goal_bar_color }}
+                >
+                  <input
+                    type="color"
+                    className="goal-color-input-hidden"
+                    aria-label="สีหลอดเริ่มต้น"
+                    value={value.goal_bar_color}
+                    disabled={disabled}
+                    onChange={e => update('goal_bar_color', e.target.value)}
+                  />
+                </div>
+                <span className="goal-hex-badge">{value.goal_bar_color.toUpperCase()}</span>
+              </div>
+            </label>
+
+            {/* Gradient Arrow Divider */}
+            <div className="goal-picker-arrow">
+              <ArrowRight size={18} />
+            </div>
+
+            {/* End Color (Enabled when gradient is on) */}
+            <label className={`goal-picker-box ${value.goal_gradient !== 'true' ? 'disabled-dim' : ''}`}>
+              <div className="goal-picker-info">
+                <span className="goal-picker-role">สีปลายทาง (End)</span>
+                <span className="goal-picker-sub">
+                  {value.goal_gradient === 'true' ? 'ฝั่งขวาของหลอด' : 'เปิดไล่สีก่อนใช้งาน'}
+                </span>
+              </div>
+              <div className="goal-swatch-wrapper">
+                <div
+                  className="goal-color-preview-circle"
+                  style={{ backgroundColor: value.goal_bar_end_color }}
+                >
+                  <input
+                    type="color"
+                    className="goal-color-input-hidden"
+                    aria-label="สีหลอดปลายทาง"
+                    value={value.goal_bar_end_color}
+                    disabled={disabled || value.goal_gradient !== 'true'}
+                    onChange={e => update('goal_bar_end_color', e.target.value)}
+                  />
+                </div>
+                <span className="goal-hex-badge">{value.goal_bar_end_color.toUpperCase()}</span>
+              </div>
+            </label>
+          </div>
+
+          {/* Gradient Presets Quick Select */}
+          <div className="goal-presets-section">
+            <div className="goal-presets-title">
+              <span>พรีเซ็ตไล่สีแนะนำ (Gradient Presets)</span>
+              <span className="goal-presets-hint">คลิกเลือกสีพร้อมเปิดใช้งานทันที</span>
+            </div>
+            <div className="goal-presets-list">
+              {gradientPresets.map(preset => {
+                const isSelected = 
+                  value.goal_gradient === 'true' &&
+                  value.goal_bar_color.toLowerCase() === preset.from.toLowerCase() &&
+                  value.goal_bar_end_color.toLowerCase() === preset.to.toLowerCase();
+                return (
+                  <button
+                    key={preset.name}
+                    type="button"
+                    disabled={disabled}
+                    className={`goal-preset-chip ${isSelected ? 'active' : ''}`}
+                    onClick={() => {
+                      onChange({
+                        ...value,
+                        goal_bar_color: preset.from,
+                        goal_bar_end_color: preset.to,
+                        goal_gradient: 'true',
+                      });
+                    }}
+                    title={`${preset.name} (${preset.from} → ${preset.to})`}
+                  >
+                    <span
+                      className="goal-preset-chip-preview"
+                      style={{
+                        background: `linear-gradient(90deg, ${preset.from}, ${preset.to})`,
+                      }}
+                    />
+                    <span className="goal-preset-chip-name">{preset.label}</span>
+                    {isSelected && <Check size={12} strokeWidth={3} className="goal-preset-check" />}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+
+        {/* Other Elements Colors (Track, Background, Borders, Text) */}
+        <h4 className="goal-subcolors-title">สีส่วนประกอบอื่นๆ (Background, Track &amp; Typography)</h4>
         <div className="goal-color-grid">
-          {colors.map(({ key, label }) => (
+          {otherColors.map(({ key, label }) => (
             <label className="goal-color-item" key={key}>
               <span className="goal-color-label">{label}</span>
               <div className="goal-swatch-wrapper">
@@ -243,8 +455,10 @@ export default function GoalAppearanceEditor({
           ))}
         </div>
       </section>
+      )}
 
       {/* Section 3: มิติขนาดและความโค้งมน */}
+      {activeTab === 'sizes' && (
       <section className="goal-section-card">
         <div className="goal-section-header">
           <div className="goal-section-icon icon-amber">
@@ -281,8 +495,10 @@ export default function GoalAppearanceEditor({
           })}
         </div>
       </section>
+      )}
 
       {/* Section 4: ฟอนต์และการแสดงผล */}
+      {activeTab === 'typography' && (
       <section className="goal-section-card">
         <div className="goal-section-header">
           <div className="goal-section-icon icon-emerald">
@@ -320,7 +536,6 @@ export default function GoalAppearanceEditor({
           {[
             { key: 'goal_text_inside', label: 'แสดงตัวเลขในตัวหลอด (50฿ 50%)' },
             { key: 'goal_show_border', label: 'แสดงขอบการ์ด' },
-            { key: 'goal_gradient', label: 'ไล่สีหลอด (Gradient)' },
             { key: 'goal_show_amount', label: 'แสดงยอดเงิน' },
             { key: 'goal_show_percent', label: 'แสดงเปอร์เซ็นต์' },
           ].map(({ key, label }) => {
@@ -621,85 +836,7 @@ export default function GoalAppearanceEditor({
           )}
         </div>
       </section>
-
-      {/* Section 5: Studio Stage Live Preview */}
-      <div className="goal-studio-stage">
-        <div className="goal-studio-stage-header">
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
-            <div className="goal-studio-tag">
-              <span className="goal-studio-pulse" />
-              <span>LIVE OBS PREVIEW</span>
-            </div>
-            <span className="goal-studio-subtitle">
-              ตัวอย่างยอดบริจาค 50% — จำลองภาพสตรีมจริง
-            </span>
-          </div>
-
-          <div className="goal-backdrop-switcher">
-            <span className="goal-backdrop-label">ฉากหลังจำลอง:</span>
-            <button
-              type="button"
-              className={`goal-backdrop-btn${previewBackdrop === 'gaming' ? ' active' : ''}`}
-              onClick={() => setPreviewBackdrop('gaming')}
-              title="จำลองฉากสตรีมเกม"
-            >
-              <Gamepad2 size={13} />
-              <span>เกมสตรีม</span>
-            </button>
-            <button
-              type="button"
-              className={`goal-backdrop-btn${previewBackdrop === 'neon' ? ' active' : ''}`}
-              onClick={() => setPreviewBackdrop('neon')}
-              title="จำลองกราเดียนต์สีสด"
-            >
-              <Palette size={13} />
-              <span>นีออนสีสด</span>
-            </button>
-            <button
-              type="button"
-              className={`goal-backdrop-btn${previewBackdrop === 'checker' ? ' active' : ''}`}
-              onClick={() => setPreviewBackdrop('checker')}
-              title="ตารางโปร่งใส (Alpha)"
-            >
-              <Grid size={13} />
-              <span>ตารางโปร่งใส</span>
-            </button>
-            <button
-              type="button"
-              className={`goal-backdrop-btn${previewBackdrop === 'dark' ? ' active' : ''}`}
-              onClick={() => setPreviewBackdrop('dark')}
-              title="มืดมาตรฐาน"
-            >
-              <Eye size={13} />
-              <span>มืดสตูดิโอ</span>
-            </button>
-          </div>
-        </div>
-
-        <div className={`goal-studio-canvas backdrop-${previewBackdrop}`}>
-          {previewBackdrop === 'gaming' && (
-            <div className="canvas-gaming-elements" aria-hidden="true">
-              <div className="gaming-decor-shape g-shape-1" />
-              <div className="gaming-decor-shape g-shape-2" />
-              <div className="gaming-decor-shape g-shape-3" />
-              <div className="gaming-decor-grid" />
-            </div>
-          )}
-          {previewBackdrop === 'neon' && (
-            <div className="canvas-neon-elements" aria-hidden="true">
-              <div className="neon-decor-orb n-orb-1" />
-              <div className="neon-decor-orb n-orb-2" />
-              <div className="neon-decor-orb n-orb-3" />
-            </div>
-          )}
-          <GoalWidget
-            title={title || 'ค่าอาหารหมา'}
-            target={target}
-            current={(Number.isFinite(target) && target > 0 ? target : 100) * 0.5}
-            appearance={value}
-          />
-        </div>
-      </div>
+      )}
     </div>
   );
 }
