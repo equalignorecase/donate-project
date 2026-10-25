@@ -1,29 +1,49 @@
 import { supabaseAdmin } from '../supabaseAdmin';
+import { maskProfanity, containsProfanity } from '../profanity';
 
 /**
- * Filter vulgar / prohibited words from message
- * @param message
- * @returns filtered message
+ * Filter and mask vulgar / prohibited words from text (names or messages)
+ * Uses both built-in standard dictionary and database blacklist
+ * @param message Input message or name
+ * @returns Filtered text with vulgarities replaced by asterisks
  */
 export async function filterMessage(message: string): Promise<string> {
   if (!message || typeof message !== 'string') return '';
 
-  let filtered = message;
+  let customWords: string[] = [];
   try {
     const { data: words } = await supabaseAdmin
       .from('blacklist')
       .select('word');
 
     if (words && words.length > 0) {
-      for (const item of words) {
-        if (!item.word) continue;
-        const regex = new RegExp(item.word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
-        filtered = filtered.replace(regex, '***');
-      }
+      customWords = words.map((w: { word: string }) => w.word).filter(Boolean);
     }
   } catch (err: any) {
-    console.warn('Error filtering blacklist message:', err.message);
+    console.warn('Error fetching blacklist words:', err.message);
   }
 
-  return filtered;
+  return maskProfanity(message, customWords);
+}
+
+/**
+ * Checks whether text contains any profanity (built-in or custom)
+ */
+export async function checkContainsProfanity(text: string): Promise<boolean> {
+  if (!text || typeof text !== 'string') return false;
+
+  let customWords: string[] = [];
+  try {
+    const { data: words } = await supabaseAdmin
+      .from('blacklist')
+      .select('word');
+
+    if (words && words.length > 0) {
+      customWords = words.map((w: { word: string }) => w.word).filter(Boolean);
+    }
+  } catch (err: any) {
+    console.warn('Error fetching blacklist words:', err.message);
+  }
+
+  return containsProfanity(text, customWords);
 }

@@ -1,3 +1,5 @@
+import { containsProfanity } from './profanity';
+
 export type PaymentMethod = 'promptpay' | 'truemoney';
 export type DonationErrors = Partial<Record<'name' | 'amount' | 'message' | 'method' | 'slip' | 'voucher', string>>;
 
@@ -10,17 +12,22 @@ export interface DonationInput {
   requireSlip?: boolean;
   minAmount?: number;
   voucher?: string;
+  customBlacklist?: readonly string[];
 }
 
 export function validateDonation(input: DonationInput): DonationErrors {
   const errors: DonationErrors = {};
   if (!input.name.trim()) errors.name = 'กรุณาใส่ชื่อผู้สนับสนุน';
   else if (input.name.length > 50) errors.name = 'ชื่อยาวได้ไม่เกิน 50 ตัวอักษร';
+  else if (containsProfanity(input.name, input.customBlacklist)) errors.name = 'ชื่อมีคำไม่สุภาพหรือไม่เหมาะสม';
+
   const minimum = Math.max(1, input.minAmount || 1);
   if (input.method === 'promptpay' && (!/^\d+(\.\d{1,2})?$/.test(input.amount) || !Number.isFinite(Number(input.amount)) || Number(input.amount) < minimum || Number(input.amount) > 1000000)) {
     errors.amount = `ระบุจำนวนเงิน ${minimum.toLocaleString('th-TH')}–1,000,000 บาท และทศนิยมไม่เกิน 2 ตำแหน่ง`;
   }
+
   if (input.message.length > 200) errors.message = 'ข้อความยาวได้ไม่เกิน 200 ตัวอักษร';
+  else if (containsProfanity(input.message, input.customBlacklist)) errors.message = 'ข้อความมีคำไม่สุภาพหรือไม่เหมาะสม';
   if (!['promptpay', 'truemoney'].includes(input.method)) errors.method = 'กรุณาเลือกช่องทางสนับสนุน';
   if (input.method === 'promptpay' && input.requireSlip && !input.hasSlip) errors.slip = 'กรุณาแนบรูปสลิปหลังโอนเงิน';
   if (input.method === 'truemoney') {

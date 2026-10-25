@@ -21,10 +21,25 @@ export async function GET() {
       });
     }
 
+    let blacklist: string[] = [];
+    try {
+      const { data: blacklistRows } = await supabaseAdmin
+        .from('blacklist')
+        .select('word');
+      if (blacklistRows) {
+        blacklist = blacklistRows
+          .map((r: { word: string }) => r.word)
+          .filter((w: string) => typeof w === 'string' && w.trim());
+      }
+    } catch (e: any) {
+      console.warn('Could not load custom blacklist:', e.message);
+    }
+
     return NextResponse.json(
       {
         success: true,
-        settings
+        settings,
+        blacklist
       },
       {
         headers: {

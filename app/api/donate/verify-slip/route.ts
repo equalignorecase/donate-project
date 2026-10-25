@@ -48,7 +48,7 @@ export async function POST(request: Request) {
     }
 
     // 1. Input Sanitization & Validation
-    const name = rawName ? rawName.slice(0, 50) : 'ผู้สนับสนุนนิรนาม';
+    const name = await filterMessage(rawName ? rawName.slice(0, 50) : 'ผู้สนับสนุนนิรนาม');
     const cleanMessage = await filterMessage(rawMessage.slice(0, 200));
 
     const expectedAmount = parseFloat(amountStr);

@@ -9,6 +9,7 @@ import {
   X,
 } from 'lucide-react';
 import { validateDonation, validateSlip, type DonationErrors, type PaymentMethod } from '@/lib/donation-form';
+import { containsProfanity } from '@/lib/profanity';
 import { createDonationQr, redeemDonation, verifyDonation } from '@/lib/donation-client';
 import { readDonationTheme, saveDonationTheme, type DonationTheme } from '@/lib/donation-theme';
 import { useDonationWidgets } from '@/lib/useDonationWidgets';
@@ -59,6 +60,7 @@ export default function DonatePage() {
   const [qrData, setQrData] = useState<PromptPayResult | null>(null);
   const [minAmount, setMinAmount] = useState(INITIAL_AMOUNT);
   const [receiverName, setReceiverName] = useState('');
+  const [customBlacklist, setCustomBlacklist] = useState<string[]>([]);
   const [receipt, setReceipt] = useState<Receipt | null>(null);
   const [statsRevision, setStatsRevision] = useState(0);
   const { data: widgets, error: widgetsError, retry: retryWidgets } = useDonationWidgets(statsRevision);
@@ -119,6 +121,7 @@ export default function DonatePage() {
         const minimum = Number(data.settings?.min_donate);
         if (Number.isFinite(minimum) && minimum > 0) setMinAmount(Math.max(INITIAL_AMOUNT, minimum));
         setReceiverName(data.settings?.receiver_name || '');
+        if (Array.isArray(data.blacklist)) setCustomBlacklist(data.blacklist);
       })
       .catch(() => {
         if (!controller.signal.aborted) setToast({ text: 'โหลดข้อมูลยอดขั้นต่ำไม่สำเร็จ ระบบจะตรวจสอบยอดอีกครั้งตอนยืนยัน', error: true });
@@ -128,6 +131,24 @@ export default function DonatePage() {
 
   function clearError(field: keyof DonationErrors) {
     setErrors((previous) => ({ ...previous, [field]: undefined }));
+  }
+
+  function handleNameChange(val: string) {
+    setName(val);
+    if (containsProfanity(val, customBlacklist)) {
+      setErrors((prev) => ({ ...prev, name: 'ชื่อมีคำไม่สุภาพหรือไม่เหมาะสม' }));
+    } else {
+      clearError('name');
+    }
+  }
+
+  function handleMessageChange(val: string) {
+    setMessage(val);
+    if (containsProfanity(val, customBlacklist)) {
+      setErrors((prev) => ({ ...prev, message: 'ข้อความมีคำไม่สุภาพหรือไม่เหมาะสม' }));
+    } else {
+      clearError('message');
+    }
   }
 
   function removeFile() {
@@ -170,10 +191,14 @@ export default function DonatePage() {
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (submitting.current) return;
-    const nextErrors = validateDonation({ name, message, amount, method, hasSlip: !!file, requireSlip: !!qrData, minAmount, voucher });
+    const nextErrors = validateDonation({ name, message, amount, method, hasSlip: !!file, requireSlip: !!qrData, minAmount, voucher, customBlacklist });
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length) {
-      setToast({ text: 'กรุณาตรวจสอบข้อมูลที่ไฮไลต์ไว้', error: true });
+      if (nextErrors.name === 'ชื่อมีคำไม่สุภาพหรือไม่เหมาะสม' || nextErrors.message === 'ข้อความมีคำไม่สุภาพหรือไม่เหมาะสม') {
+        setToast({ text: 'พบคำไม่สุภาพหรือไม่เหมาะสม กรุณาแก้ไขก่อนทำรายการ', error: true });
+      } else {
+        setToast({ text: 'กรุณาตรวจสอบข้อมูลที่ไฮไลต์ไว้', error: true });
+      }
       const firstField = Object.keys(nextErrors)[0];
       document.getElementById(`donation-${firstField}`)?.focus();
       return;
@@ -370,10 +395,40 @@ export default function DonatePage() {
               <fieldset className={styles.fields} disabled={busy}>
                 <div className={styles.formSection}>
                   <label className={styles.label} htmlFor="donation-name">ชื่อ <span>*</span></label>
-                  <input id="donation-name" className={`${styles.input} ${errors.name ? styles.invalid : ''}`} placeholder="ชื่อที่ต้องการแสดงบนสตรีม" maxLength={50} value={name} onChange={(event) => { setName(event.target.value); clearError('name'); }} autoComplete="nickname" aria-required="true" aria-invalid={!!errors.name} aria-describedby={errors.name ? 'name-error' : undefined} />
+                  <input
+                    id="donation-name"
+                    className={`${styles.input} ${errors.name ? styles.invalid : ''}`}
+                    placeholder="ชื่อที่ต้องการแสดงบนสตรีม"
+                    maxLength={50}
+                    value={name}
+                    onChange={(event) => handleNameChange(event.target.value)}
+                    onBlur={() => {
+                      if (containsProfanity(name, customBlacklist)) {
+                        setErrors((prev) => ({ ...prev, name: 'ชื่อมีคำไม่สุภาพหรือไม่เหมาะสม' }));
+                      }
+                    }}
+                    autoComplete="nickname"
+                    aria-required="true"
+                    aria-invalid={!!errors.name}
+                    aria-describedby={errors.name ? 'name-error' : undefined}
+                  />
                   {errors.name && <p className={styles.error} id="name-error">{errors.name}</p>}
                   <div className={styles.labelRow}><label className={styles.label} htmlFor="donation-message">ข้อความ <span className={styles.optional}>(ไม่บังคับ)</span></label><span>{message.length}/200</span></div>
-                  <textarea id="donation-message" className={`${styles.textarea} ${errors.message ? styles.invalid : ''}`} placeholder="เขียนข้อความถึงสตรีมเมอร์" maxLength={200} value={message} onChange={(event) => { setMessage(event.target.value); clearError('message'); }} aria-invalid={!!errors.message} aria-describedby={errors.message ? 'message-error' : undefined} />
+                  <textarea
+                    id="donation-message"
+                    className={`${styles.textarea} ${errors.message ? styles.invalid : ''}`}
+                    placeholder="เขียนข้อความถึงสตรีมเมอร์"
+                    maxLength={200}
+                    value={message}
+                    onChange={(event) => handleMessageChange(event.target.value)}
+                    onBlur={() => {
+                      if (containsProfanity(message, customBlacklist)) {
+                        setErrors((prev) => ({ ...prev, message: 'ข้อความมีคำไม่สุภาพหรือไม่เหมาะสม' }));
+                      }
+                    }}
+                    aria-invalid={!!errors.message}
+                    aria-describedby={errors.message ? 'message-error' : undefined}
+                  />
                   {errors.message && <p className={styles.error} id="message-error">{errors.message}</p>}
                 </div>
 
@@ -423,7 +478,7 @@ export default function DonatePage() {
 
                 <div className={styles.formBottom}>
                   <div className={styles.total}><span>ยอดโดเนท</span>{method === 'promptpay' ? <strong>฿{displayAmount}<span> THB</span></strong> : <span>ตามยอดที่รับได้จากซอง</span>}</div>
-                  <button className={styles.submitButton} type="submit" disabled={busy}>{busy ? <><LoaderCircle size={20} className={styles.spinner} />{method === 'truemoney' ? 'กำลังรับซองของขวัญ…' : qrData ? 'กำลังตรวจสอบสลิป…' : 'กำลังสร้าง QR…'}</> : <>{method === 'truemoney' ? 'ยืนยันซองของขวัญ' : qrData ? `ยืนยันสลิป ฿${displayAmount}` : `สร้าง QR พร้อมเพย์ ฿${displayAmount}`}<ArrowRight size={19} className={styles.submitArrow} /></>}</button>
+                  <button className={styles.submitButton} type="submit" disabled={busy || !!errors.name || !!errors.message}>{busy ? <><LoaderCircle size={20} className={styles.spinner} />{method === 'truemoney' ? 'กำลังรับซองของขวัญ…' : qrData ? 'กำลังตรวจสอบสลิป…' : 'กำลังสร้าง QR…'}</> : <>{method === 'truemoney' ? 'ยืนยันซองของขวัญ' : qrData ? `ยืนยันสลิป ฿${displayAmount}` : `สร้าง QR พร้อมเพย์ ฿${displayAmount}`}<ArrowRight size={19} className={styles.submitArrow} /></>}</button>
                   <p className={styles.paymentNotice}><ShieldCheck size={13} />{method === 'truemoney' ? 'กดยืนยันเพื่อรับเงินจริงจากซองของขวัญ' : 'ยืนยันการสนับสนุนหลังตรวจสอบสลิปสำเร็จ'}</p>
                 </div>
               </fieldset>

@@ -1,6 +1,26 @@
-import test from 'node:test';
-import assert from 'node:assert/strict';
-import { validateDonation, validateSlip } from '../lib/donation-form.ts';
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+const ts = require('typescript');
+
+for (const extension of ['.ts', '.tsx']) {
+  require.extensions[extension] = (module, filename) => {
+    const originalRequire = module.require.bind(module);
+    module.require = (name) => {
+      if (name.startsWith('@/')) {
+        return originalRequire(path.join(__dirname, '..', name.slice(2)));
+      }
+      return originalRequire(name);
+    };
+    const result = ts.transpileModule(fs.readFileSync(filename, 'utf8'), {
+      compilerOptions: { module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.ReactJSX, target: ts.ScriptTarget.ES2020, esModuleInterop: true },
+    });
+    module._compile(result.outputText, filename);
+  };
+}
+
+const { validateDonation, validateSlip } = require('../lib/donation-form.ts');
 
 test('PromptPay validates the configured minimum and requires a slip only after QR creation', () => {
   assert.deepEqual(validateDonation({ name: 'ผู้ชม', amount: '20.50', message: 'สู้ ๆ', method: 'promptpay', hasSlip: false }), {});
@@ -43,4 +63,22 @@ test('slips accept supported images up to 4 MB and reject other or empty files',
   for (const file of [{ type: 'image/svg+xml', size: 40 }, { type: 'application/pdf', size: 40 }, { type: 'image/png', size: 0 }, { type: 'image/png', size: 4 * 1024 * 1024 + 1 }]) {
     assert.ok(validateSlip(file));
   }
+});
+
+test('rejects profanity and vulgar words in name and message', () => {
+  const badName = validateDonation({ name: 'ไอ้สัส', amount: '20', message: 'ข้อความดีๆ', method: 'promptpay', hasSlip: true });
+  assert.equal(badName.name, 'ชื่อมีคำไม่สุภาพหรือไม่เหมาะสม');
+
+  const badMsg = validateDonation({ name: 'ผู้สนับสนุน', amount: '20', message: 'ควยเอ้ย', method: 'promptpay', hasSlip: true });
+  assert.equal(badMsg.message, 'ข้อความมีคำไม่สุภาพหรือไม่เหมาะสม');
+
+  const customBlocked = validateDonation({
+    name: 'สปอนเซอร์เว็บพนัน',
+    amount: '20',
+    message: '',
+    method: 'promptpay',
+    hasSlip: true,
+    customBlacklist: ['เว็บพนัน']
+  });
+  assert.equal(customBlocked.name, 'ชื่อมีคำไม่สุภาพหรือไม่เหมาะสม');
 });

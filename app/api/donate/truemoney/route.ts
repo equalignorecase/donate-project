@@ -113,8 +113,8 @@ export async function POST(request: Request) {
       );
     }
 
-    // 6. Filter message
-    const donorName = (name || ownerProfile.full_name || 'ผู้สนับสนุนใจดี').trim().slice(0, 50);
+    // 6. Filter name & message
+    const donorName = await filterMessage((name || ownerProfile.full_name || 'ผู้สนับสนุนใจดี').trim().slice(0, 50));
     const rawMessage = (message || '').trim().slice(0, 200);
     const cleanMsg = await filterMessage(rawMessage);
 
