@@ -10,6 +10,10 @@ export default function SupportersOverlay() {
   const [override, setOverride] = useState<SupporterMode | null>(null);
   useEffect(() => { const value = new URLSearchParams(window.location.search).get('mode'); if (value && Object.prototype.hasOwnProperty.call(supporterModes, value)) setOverride(value as SupporterMode); }, []);
   if (!data) return null;
-  const mode = override || data.supporterAppearance.supporter_mode as SupporterMode;
-  return <SupporterWidget donors={data[mode]} appearance={data.supporterAppearance} mode={mode} />;
+  const mode = override || (data.supporterAppearance.supporter_mode as SupporterMode);
+  return (
+    <div className="overlay-center-container">
+      <SupporterWidget donors={data[mode]} appearance={data.supporterAppearance} mode={mode} />
+    </div>
+  );
 }

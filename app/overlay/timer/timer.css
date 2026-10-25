@@ -237,16 +237,26 @@
   font-weight: 600;
   font-size: 13px;
   opacity: 0.95;
-  max-width: 140px;
+  max-width: 170px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.badge-donor-amount {
+  font-weight: 700;
+  color: #fef08a;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
 }
 
 .badge-time-delta {
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 800;
   font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 
 @keyframes floatBadgeUp {
@@ -289,16 +299,100 @@
   font-size: 12px;
   opacity: 0.85;
   gap: 6px;
+  animation: timerFooterFadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes timerFooterFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.96);
+  }
+  to {
+    opacity: 0.85;
+    transform: translateY(0) scale(1);
+  }
 }
 
 .timer-latest-donor {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
+  gap: 6px;
   background: rgba(255, 255, 255, 0.07);
-  padding: 3px 10px;
+  padding: 3px 12px;
   border-radius: 9999px;
   border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.timer-latest-amount {
+  font-weight: 700;
+  color: #fef08a;
+  background: rgba(0, 0, 0, 0.25);
+  padding: 1px 6px;
+  border-radius: 9999px;
+  font-size: 11.5px;
+}
+
+/* ==========================================================================
+   RATE & RULES BANNER (โอนกี่บาท = กี่นาที)
+   ========================================================================== */
+
+.timer-rate-banner {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  margin-top: 10px;
+  padding: 4px 14px;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: var(--timer-accent, #38bdf8);
+  font-size: 13px;
+  font-weight: 600;
+  max-width: 90%;
+  white-space: nowrap;
+  overflow: hidden;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  animation: timerRateFadeIn 0.35s ease-out;
+}
+
+@keyframes timerRateFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.timer-rate-icon {
+  font-size: 13px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.timer-rate-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  letter-spacing: 0.2px;
+  color: #f1f5f9;
+}
+
+.timer-rate-badge {
+  font-size: 10px;
+  padding: 1px 7px;
+  border-radius: 9999px;
+  background: rgba(56, 189, 248, 0.2);
+  color: var(--timer-accent, #38bdf8);
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  font-weight: 700;
+  margin-left: 2px;
+  flex-shrink: 0;
 }
 
 .timer-zero-warning {
@@ -353,6 +447,15 @@
   -webkit-backdrop-filter: blur(8px);
   border: 1px solid rgba(255, 255, 255, 0.18);
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.6);
+}
+
+.timer-widget-container.no-background .timer-rate-banner {
+  background: rgba(15, 23, 42, 0.75);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.6);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
 }
 
 .timer-widget-container.no-background .timer-status-badge {

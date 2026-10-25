@@ -503,8 +503,9 @@ export default function OverlayPage() {
       height: '100vh',
       display: 'flex',
       justifyContent: 'center',
-      alignItems: 'flex-start',
-      paddingTop: '50px',
+      alignItems: 'center',
+      padding: '20px',
+      boxSizing: 'border-box',
       overflow: 'hidden',
       background: 'transparent',
       position: 'relative'

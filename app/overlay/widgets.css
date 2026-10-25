@@ -3,6 +3,20 @@ body.widget-overlay-body {
     margin: 0;
 }
 
+.overlay-center-container {
+    width: 100vw;
+    height: 100vh;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: transparent !important;
+    margin: 0;
+    padding: 20px;
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
 .obs-widget {
     box-sizing: border-box;
     width: min(600px, 100%);
@@ -486,6 +500,7 @@ body.widget-overlay-body {
     display: flex;
     align-items: center;
     justify-content: center;
+    gap: 8px;
     font-weight: 800;
     color: #ffffff;
     pointer-events: none;
@@ -505,6 +520,23 @@ body.widget-overlay-body {
          0 2px 0 #000,
          0 3px 6px rgba(0, 0, 0, 0.95);
     line-height: 1;
+}
+
+.goal-bar-amounts {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.goal-bar-sep {
+    opacity: 0.85;
+    font-weight: 500;
+    margin: 0 1px;
+}
+
+.goal-bar-pct {
+    opacity: 0.95;
+    letter-spacing: 0.3px;
 }
 
 .goal-percent {

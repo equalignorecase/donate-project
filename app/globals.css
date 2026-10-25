@@ -245,8 +245,9 @@ body {
   font-family: var(--alert-font);
   display: flex;
   justify-content: center;
-  align-items: flex-start;
-  padding-top: 50px;
+  align-items: center;
+  padding: 20px;
+  box-sizing: border-box;
 }
 
 .alert-wrapper {

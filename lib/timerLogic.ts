@@ -120,6 +120,26 @@ export function formatDeltaDisplay(deltaSeconds: number): string {
   return `${sign}${m}:${String(s).padStart(2, '0')}`;
 }
 
+export function formatDeltaMinutes(deltaSeconds: number): string {
+  if (deltaSeconds === 0) return '0 นาที';
+  const sign = deltaSeconds > 0 ? '+' : '-';
+  const abs = Math.abs(deltaSeconds);
+  const h = Math.floor(abs / 3600);
+  const m = Math.floor((abs % 3600) / 60);
+  const s = abs % 60;
+
+  if (h > 0) {
+    return `${sign}${h} ชม.${m > 0 ? ` ${m} นาที` : ''}${s > 0 ? ` ${s} วิ` : ''}`;
+  }
+  if (m > 0 && s === 0) {
+    return `${sign}${m} นาที`;
+  }
+  if (m > 0 && s > 0) {
+    return `${sign}${m} นาที ${s} วิ`;
+  }
+  return `${sign}${s} วินาที`;
+}
+
 export function readTimerAppearance(settings: Record<string, string>): TimerAppearance {
   const base = { ...defaultTimerAppearance };
   if (settings.timer_appearance) {
@@ -129,6 +149,7 @@ export function readTimerAppearance(settings: Record<string, string>): TimerAppe
         ...base,
         ...parsed,
         show_background: parsed.show_background !== undefined ? Boolean(parsed.show_background) : base.show_background,
+        show_rate_banner: parsed.show_rate_banner !== undefined ? Boolean(parsed.show_rate_banner) : base.show_rate_banner,
         show_digits_shadow: parsed.show_digits_shadow !== undefined ? Boolean(parsed.show_digits_shadow) : base.show_digits_shadow,
         timer_card_beam: parsed.timer_card_beam !== undefined ? Boolean(parsed.timer_card_beam) : base.timer_card_beam,
         timer_shine_sweep: parsed.timer_shine_sweep !== undefined ? Boolean(parsed.timer_shine_sweep) : base.timer_shine_sweep,
@@ -162,6 +183,9 @@ export function readTimerAppearance(settings: Record<string, string>): TimerAppe
   }
   if (settings.timer_show_donor_badge !== undefined) {
     base.show_donor_badge = settings.timer_show_donor_badge === 'true' || settings.timer_show_donor_badge === '1';
+  }
+  if (settings.timer_show_rate_banner !== undefined) {
+    base.show_rate_banner = settings.timer_show_rate_banner === 'true' || settings.timer_show_rate_banner === '1';
   }
   if (settings.timer_show_digits_shadow !== undefined) {
     base.show_digits_shadow = settings.timer_show_digits_shadow === 'true' || settings.timer_show_digits_shadow === '1';

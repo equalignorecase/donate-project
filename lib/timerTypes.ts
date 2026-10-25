@@ -26,6 +26,7 @@ export interface TimerAppearance {
   title_size: number;  // px
   show_title: boolean;
   show_donor_badge: boolean;
+  show_rate_banner?: boolean;
   show_seconds: boolean;
   show_background: boolean;
   // เงาของตัวเลขนับเวลา (Digits Text Shadow)
@@ -81,6 +82,7 @@ export const defaultTimerAppearance: TimerAppearance = {
   title_size: 16,
   show_title: true,
   show_donor_badge: true,
+  show_rate_banner: true,
   show_seconds: true,
   show_background: true,
   show_digits_shadow: true,

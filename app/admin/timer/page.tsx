@@ -866,6 +866,17 @@ export default function TimerAdminPage() {
                   />
                   แสดงแถบผู้บริจาคล่าสุด
                 </label>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '13.5px', fontWeight: 600, color: 'var(--text-main, #334155)' }}>
+                  <input
+                    type="checkbox"
+                    checked={config.timer_appearance.show_rate_banner !== false}
+                    onChange={e => setConfig(prev => ({
+                      ...prev,
+                      timer_appearance: { ...prev.timer_appearance, show_rate_banner: e.target.checked }
+                    }))}
+                  />
+                  แสดงแถบกติกาอัตราเวลา (โอนกี่บาท = กี่นาที)
+                </label>
               </div>
 
               {/* Title Text */}
@@ -1319,6 +1330,13 @@ export default function TimerAdminPage() {
                       delta: 300,
                       amount: parseFloat(simAmount) || 50
                     }}
+                    baseRate={{
+                      enabled: config.timer_base_rate_enabled,
+                      amount: config.timer_base_rate_amount,
+                      seconds: config.timer_base_rate_seconds,
+                      action: config.timer_base_rate_action,
+                    }}
+                    tierRules={config.timer_tier_rules}
                   />
                 </div>
               </div>

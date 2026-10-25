@@ -3,23 +3,16 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import './timer.css';
 import { supabase } from '@/lib/supabaseClient';
-import {
-  computeRemainingSeconds,
-  formatDeltaDisplay,
-  formatTimerDisplay
-} from '@/lib/timerLogic';
+import { computeRemainingSeconds } from '@/lib/timerLogic';
 import {
   defaultTimerAppearance,
+  TimerAction,
   TimerAppearance,
   TimerEventPayload,
+  TimerRule,
   TimerStatus
 } from '@/lib/timerTypes';
-
-interface FloatingBadge {
-  id: string;
-  delta: number;
-  donorName: string;
-}
+import TimerCard, { FloatingBadge } from './TimerCard';
 
 export default function TimerOverlayPage() {
   const [status, setStatus] = useState<TimerStatus>('paused');
@@ -34,6 +27,14 @@ export default function TimerOverlayPage() {
     delta: number;
     amount?: number;
   } | null>(null);
+
+  const [baseRate, setBaseRate] = useState<{
+    enabled: boolean;
+    amount: number;
+    seconds: number;
+    action: TimerAction;
+  } | undefined>(undefined);
+  const [tierRules, setTierRules] = useState<TimerRule[]>([]);
 
   // Keep refs for event handlers and intervals
   const stateRef = useRef({
@@ -66,6 +67,17 @@ export default function TimerOverlayPage() {
         if (data.data.appearance) {
           setAppearance(prev => ({ ...prev, ...data.data.appearance }));
         }
+        if (data.data.base_rate_enabled !== undefined) {
+          setBaseRate({
+            enabled: data.data.base_rate_enabled,
+            amount: data.data.base_rate_amount ?? 5,
+            seconds: data.data.base_rate_seconds ?? 300,
+            action: data.data.base_rate_action ?? 'add'
+          });
+        }
+        if (Array.isArray(data.data.tier_rules)) {
+          setTierRules(data.data.tier_rules);
+        }
         setDisplaySeconds(data.data.remaining_seconds);
       }
     } catch (err) {
@@ -73,16 +85,27 @@ export default function TimerOverlayPage() {
     }
   }, []);
 
+  // Ref for latest donor auto-hide timer
+  const latestDonorTimerRef = useRef<NodeJS.Timeout | null>(null);
+  useEffect(() => {
+    return () => {
+      if (latestDonorTimerRef.current) {
+        clearTimeout(latestDonorTimerRef.current);
+      }
+    };
+  }, []);
+
   // Trigger floating badge and pulse animation
-  const triggerTimeChangeAnimation = useCallback((delta: number, donorName?: string) => {
+  const triggerTimeChangeAnimation = useCallback((delta: number, donorName?: string, donorAmount?: number) => {
     if (!delta || delta === 0) return;
 
-    // 1. Add floating badge
+    // 1. Add floating badge with optional donor amount
     const badgeId = 'badge-' + Date.now() + '-' + Math.random().toString(36).slice(2, 6);
     const newBadge: FloatingBadge = {
       id: badgeId,
       delta,
-      donorName: donorName || (delta > 0 ? 'โดเนทเพิ่มเวลา' : 'โดเนทลดเวลา')
+      donorName: donorName || (delta > 0 ? 'โดเนทเพิ่มเวลา' : 'โดเนทลดเวลา'),
+      amount: donorAmount
     };
 
     setFloatingBadges(prev => [...prev.slice(-3), newBadge]);
@@ -96,9 +119,15 @@ export default function TimerOverlayPage() {
       setPulseClass('');
     }, 700);
 
-    // 3. Update footer latest donor
+    // 3. Update footer latest donor and auto-hide after 10 seconds
     if (donorName) {
-      setLatestDonor({ name: donorName, delta });
+      setLatestDonor({ name: donorName, delta, amount: donorAmount });
+      if (latestDonorTimerRef.current) {
+        clearTimeout(latestDonorTimerRef.current);
+      }
+      latestDonorTimerRef.current = setTimeout(() => {
+        setLatestDonor(null);
+      }, 10000);
     }
   }, []);
 
@@ -124,7 +153,7 @@ export default function TimerOverlayPage() {
         }
 
         if (data.delta_seconds && data.delta_seconds !== 0) {
-          triggerTimeChangeAnimation(data.delta_seconds, data.donor_name);
+          triggerTimeChangeAnimation(data.delta_seconds, data.donor_name, data.donor_amount);
         }
       })
       .on('broadcast', { event: 'settings_updated' }, () => {
@@ -199,67 +228,18 @@ export default function TimerOverlayPage() {
     }
   }, []);
 
-  // Test / preview badge
+  // Test / preview badge (?test=1, ?preview=1)
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
       if (params.get('test') === '1' || params.get('preview') === '1') {
         const timer = setTimeout(() => {
-          triggerTimeChangeAnimation(300, 'ผู้ชมตัวอย่าง (ทดสอบ)');
+          triggerTimeChangeAnimation(300, 'ผู้ชมตัวอย่าง (ทดสอบ)', 50);
         }, 1000);
         return () => clearTimeout(timer);
       }
     }
   }, [triggerTimeChangeAnimation]);
-
-  const { formatted, isZero } = formatTimerDisplay(displaySeconds);
-
-  const isBackgroundVisible =
-    urlBgOverride !== null
-      ? urlBgOverride
-      : (appearance.show_background !== undefined ? appearance.show_background : true);
-
-  const isShadowEnabled =
-    urlShadowOverride !== null
-      ? urlShadowOverride
-      : (appearance.show_digits_shadow !== false);
-
-  const shadowX = appearance.digits_shadow_x ?? 0;
-  const shadowY = appearance.digits_shadow_y ?? 2;
-  const shadowBlur = urlShadowBlur !== null ? urlShadowBlur : (appearance.digits_shadow_blur ?? 8);
-  const shadowColor = urlShadowColor || appearance.digits_shadow_color || '#000000';
-
-  const digitsTextShadow = isShadowEnabled
-    ? `${shadowX}px ${shadowY}px ${shadowBlur}px ${shadowColor}`
-    : 'none';
-
-  const themeClass = `timer-theme-${appearance.theme || 'glass'}`;
-  const opacityHex = Math.round(Number(appearance.opacity || 90) * 2.55)
-    .toString(16)
-    .padStart(2, '0');
-
-  const activeFont = urlFontOverride || appearance.font || 'LINESeedSansTH';
-
-  const containerStyle: React.CSSProperties = {
-    fontFamily: `'${activeFont}', sans-serif`,
-    width: `${appearance.width || 480}px`,
-    maxWidth: '96vw',
-    padding: isBackgroundVisible ? `${appearance.padding || 24}px` : `${Math.min(appearance.padding || 16, 20)}px 12px`,
-    borderRadius: isBackgroundVisible ? `${appearance.radius || 20}px` : '0px',
-    borderColor: isBackgroundVisible ? (appearance.border_color || '#334155') : 'transparent',
-    color: appearance.text_color || '#ffffff',
-    backgroundColor: isBackgroundVisible ? `${appearance.bg_color || '#0f172a'}${opacityHex}` : 'transparent',
-    boxShadow: isBackgroundVisible ? undefined : 'none',
-    border: isBackgroundVisible ? undefined : 'none',
-    backdropFilter: isBackgroundVisible ? undefined : 'none',
-    WebkitBackdropFilter: isBackgroundVisible ? undefined : 'none',
-    '--timer-accent': appearance.accent_color || '#38bdf8',
-    '--digits-text-shadow': digitsTextShadow
-  } as React.CSSProperties;
-
-  const isCardBeamEnabled = appearance.timer_card_beam !== false && isBackgroundVisible;
-  const isDigitsShineEnabled = appearance.timer_shine_sweep !== false;
-  const shineTheme = appearance.timer_shine_theme || 'cyan';
 
   return (
     <div
@@ -274,81 +254,21 @@ export default function TimerOverlayPage() {
         boxSizing: 'border-box'
       }}
     >
-      <div className={`timer-widget-container ${themeClass} ${!isBackgroundVisible ? 'no-background' : ''}`} style={containerStyle}>
-        {/* Card Specular Beam Sweep (เหมือนหลอดโด) */}
-        {isCardBeamEnabled && (
-          <div className="widget-card-beam-sweep" aria-hidden="true">
-            <span className="widget-card-beam" />
-            <span className="widget-card-sparkle" />
-          </div>
-        )}
-
-        {/* Floating Animation Badges */}
-        <div className="timer-floating-badge-container">
-          {floatingBadges.map(badge => (
-            <div
-              key={badge.id}
-              className={`timer-floating-badge ${badge.delta >= 0 ? 'badge-add' : 'badge-subtract'}`}
-            >
-              <span className="badge-donor-name">{badge.donorName}</span>
-              <span className="badge-time-delta">{formatDeltaDisplay(badge.delta)}</span>
-            </div>
-          ))}
-        </div>
-
-        {/* Header Title */}
-        {appearance.show_title && (
-          <div className="timer-header">
-            <span
-              className="timer-title-text"
-              style={{
-                fontSize: `${appearance.title_size || 16}px`,
-                color: appearance.accent_color || '#38bdf8'
-              }}
-            >
-              {appearance.title || '⏱️ SUBATHON TIMER'}
-            </span>
-
-            {/* Status Indicator */}
-            {status === 'paused' && (
-              <span className="timer-status-badge status-badge-paused">PAUSED</span>
-            )}
-            {status === 'stopped' && isZero && (
-              <span className="timer-status-badge status-badge-ended">ENDED</span>
-            )}
-          </div>
-        )}
-
-        {/* Main Countdown Digits */}
-        <div
-          className={`timer-digits-wrapper ${pulseClass} ${isZero ? 'timer-zero-warning' : ''}`}
-          style={{ fontSize: `${appearance.digits_size || 54}px` }}
-        >
-          <span
-            className={`timer-digits ${isDigitsShineEnabled ? `timer-shimmer-sweep timer-shine-theme-${shineTheme}` : ''}`}
-            style={{
-              fontFamily: `'${activeFont}', sans-serif`,
-              textShadow: digitsTextShadow,
-              ['--digits-color' as any]: appearance.text_color || '#ffffff'
-            }}
-          >
-            {formatted}
-          </span>
-        </div>
-
-        {/* Footer / Latest Donor Attribution */}
-        {appearance.show_donor_badge && latestDonor && (
-          <div className="timer-footer">
-            <span className="timer-latest-donor">
-              <span>ล่าสุด:</span>
-              <strong>{latestDonor.name}</strong>
-              <span style={{ color: latestDonor.delta >= 0 ? '#4ade80' : '#f87171' }}>
-                ({formatDeltaDisplay(latestDonor.delta)})
-              </span>
-            </span>
-          </div>
-        )}
-      </div>
+      <TimerCard
+        appearance={appearance}
+        status={status}
+        displaySeconds={displaySeconds}
+        latestDonor={latestDonor}
+        floatingBadges={floatingBadges}
+        pulseClass={pulseClass}
+        urlBgOverride={urlBgOverride}
+        urlShadowOverride={urlShadowOverride}
+        urlShadowColor={urlShadowColor}
+        urlShadowBlur={urlShadowBlur}
+        urlFontOverride={urlFontOverride}
+        baseRate={baseRate}
+        tierRules={tierRules}
+      />
     </div>
   );
 }

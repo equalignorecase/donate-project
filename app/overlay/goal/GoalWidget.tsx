@@ -149,7 +149,7 @@ export default function GoalWidget({
         className={`goal-title${isHUD ? ' goal-title-hud' : ''}`}
         style={{ 
           fontSize: `${appearance.goal_title_size}px`,
-          textAlign: isFlat ? 'left' : 'center',
+          textAlign: isHUD ? 'left' : 'center',
           color: appearance.goal_text_color ?? '#ffffff',
           marginBottom: isShowDuration && durationText && durationPosition === 'top' ? '6px' : '12px',
           display: isHUD || durationPosition === 'inline' && isShowDuration && durationText ? 'flex' : undefined,
@@ -234,7 +234,7 @@ export default function GoalWidget({
               <span className="goal-bar-shine" aria-hidden="true" />
             </>
           )}
-          {appearance.goal_bar_shine === 'true' && hasGloss && (
+          {appearance.goal_bar_shine === 'true' && (
             <>
               <span className="goal-bar-lead-flare" aria-hidden="true" />
               <span className="goal-bar-shine-sweep" aria-hidden="true">
@@ -247,15 +247,24 @@ export default function GoalWidget({
 
         {isMilestone && [25, 50, 75, 100].map((mark) => <span className="goal-checkpoint" key={mark} data-reached={percent >= mark} aria-hidden="true" style={{ left: `clamp(6px, ${mark}%, calc(100% - 6px))`, color: appearance.goal_text_color }}><i style={{ background: percent >= mark ? barStart : appearance.goal_track_color, borderColor: percent >= mark ? barStart : hexToRgba(appearance.goal_text_color, 0.5) }} /><span>{mark}%</span></span>)}
 
-        {/* Text centered inside the bar: e.g. 50฿ (50%) */}
+        {/* Text centered inside the bar: e.g. ฿1,500 / ฿5,000 (30%) */}
         {isTextInside && (
           <div 
             className="goal-bar-percent" 
             style={{ 
-              fontSize: `${appearance.goal_amount_size ?? 19}px` 
+              fontSize: `${appearance.goal_amount_size ?? 14}px` 
             }}
           >
-            {money(current)}฿ ({percent.toFixed(0)}%)
+            {appearance.goal_show_amount !== 'false' && (
+              <span className="goal-bar-amounts">
+                <strong>฿{money(current)}</strong>
+                <span className="goal-bar-sep">/</span>
+                <span>฿{money(safeTarget)}</span>
+              </span>
+            )}
+            {appearance.goal_show_percent !== 'false' && (
+              <span className="goal-bar-pct">({percent.toFixed(0)}%)</span>
+            )}
           </div>
         )}
       </div>

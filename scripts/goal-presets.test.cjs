@@ -37,16 +37,16 @@ test('choosing a preset retains custom colors, font, width and the deadline', ()
   assert.equal(original.goal_bar_style, 'minimal');
 });
 
-test('Slim is a flat thin bar with amounts below it and no inside text', () => {
+test('Slim is a flat bar with amount and target inside the bar', () => {
   const appearance = applyGoalPreset(goalAppearanceDefaults, 'slim');
   const html = renderToStaticMarkup(React.createElement(GoalWidget, { title: 'ค่าเกม', current: 250, target: 1000, appearance }));
-  assert.match(html, /height:12px/);
+  assert.match(html, /height:28px/);
   assert.match(html, /padding:0/);
   assert.match(html, /box-shadow:none/);
-  assert.ok(html.indexOf('goal-track-slim') < html.indexOf('goal-values'));
+  assert.match(html, /class="goal-bar-percent"/);
   assert.match(html, /฿250/);
-  assert.match(html, /25\.0%/);
-  assert.doesNotMatch(html, /class="goal-bar-percent"/);
+  assert.match(html, /฿1,000/);
+  assert.match(html, /25%/);
 });
 
 test('Capsule displays the amount inside the bar with its optional shine', () => {

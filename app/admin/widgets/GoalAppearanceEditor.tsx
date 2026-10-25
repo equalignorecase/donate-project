@@ -75,7 +75,7 @@ const styleOptions = [
   { style: 'neon', label: 'Neon', desc: 'ขอบเรืองแสง', icon: Zap },
   { style: 'striped', label: 'Striped', desc: 'ลายเส้นเฉียง', icon: Activity },
   { style: 'minimal', label: 'Minimal', desc: 'รูปแบบเรียบเดิม', icon: Layers },
-  { style: 'slim', label: 'Slim', desc: 'ผิวเรียบ ไม่มีขอบและเงา', icon: Sliders },
+  { style: 'slim', label: 'Slim', desc: 'ยอดและเป้าหมายในหลอด', icon: Sliders },
   { style: 'segmented', label: 'Segmented', desc: 'แบ่งหลอดเป็นช่อง', icon: Grid },
   { style: 'hud', label: 'HUD', desc: 'กรอบตัดมุมสองชั้น', icon: Zap },
   { style: 'milestone', label: 'Milestone', desc: 'จุดหมายทุก 25%', icon: Target },
@@ -251,7 +251,7 @@ export default function GoalAppearanceEditor({
               <Sparkles size={18} color={value.goal_bar_shine === 'true' ? 'var(--accent)' : 'var(--text-muted)'} />
               <div>
                 <div className="goal-switch-title">แสง Shine</div>
-                <div className="goal-switch-desc">แสงวิ่งผ่าน Glass, Neon และ Striped หรือแสงขอบสำหรับ HUD</div>
+                <div className="goal-switch-desc">เอฟเฟกต์ลำแสง Silk Specular วิ่งผ่านหลอดโดเนทและประกายแสงเลนส์คริสตัล</div>
               </div>
             </div>
             <div className="goal-switch-track">

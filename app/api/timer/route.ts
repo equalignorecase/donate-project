@@ -33,7 +33,12 @@ export async function GET() {
           initial_seconds: config.timer_initial_seconds,
           max_cap_seconds: config.timer_max_cap_seconds,
           last_updated_at: config.timer_last_updated_at,
-          appearance: config.timer_appearance
+          appearance: config.timer_appearance,
+          base_rate_enabled: config.timer_base_rate_enabled,
+          base_rate_amount: config.timer_base_rate_amount,
+          base_rate_seconds: config.timer_base_rate_seconds,
+          base_rate_action: config.timer_base_rate_action,
+          tier_rules: config.timer_tier_rules
         }
       },
       { headers: { 'Cache-Control': 'no-store' } }

@@ -13,9 +13,9 @@ const common: Partial<GoalAppearance> = {
   goal_show_amount: 'true', goal_show_percent: 'true', goal_title_size: '20',
 };
 export const goalPresets: GoalPreset[] = [
-  { id: 'slim', label: 'Slim', description: 'หลอดบาง ยอดและเปอร์เซ็นต์อยู่ด้านล่าง', settings: {
-    ...common, goal_bar_style: 'slim', goal_bar_height: '12', goal_bar_radius: '6',
-    goal_text_inside: 'false', goal_amount_size: '18', goal_bar_shine: 'false',
+  { id: 'slim', label: 'Slim', description: 'หลอดบาง ยอดและเป้าหมายในหลอด', settings: {
+    ...common, goal_bar_style: 'slim', goal_bar_height: '28', goal_bar_radius: '14',
+    goal_text_inside: 'true', goal_amount_size: '13', goal_bar_shine: 'false',
   } },
   { id: 'capsule', label: 'Capsule', description: 'หลอดมน แสดงยอดด้านใน พร้อมแสง Shine', settings: {
     ...common, goal_bar_style: 'glass', goal_bar_height: '36', goal_bar_radius: '50',
