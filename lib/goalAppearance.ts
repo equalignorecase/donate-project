@@ -95,7 +95,7 @@ export const goalAppearanceRanges: Partial<Record<keyof GoalAppearance, [number,
 
 export function validGoalAppearance(key: keyof GoalAppearance, value: unknown): boolean {
   if (typeof value !== 'string') return false;
-  if (key === 'goal_bar_style') return ['glass', 'neon', 'striped', 'minimal'].includes(value);
+  if (key === 'goal_bar_style') return ['glass', 'neon', 'striped', 'minimal', 'slim', 'segmented', 'hud', 'milestone', 'floating'].includes(value);
   if (key === 'goal_bar_pattern') return goalPatternOptions.some(p => p.value === value);
   if (key === 'goal_font') return goalFontOptions.some(font => font.value === value);
   if (key.endsWith('_color')) return /^#[0-9a-f]{6}$/i.test(value);

@@ -24,6 +24,8 @@ import {
   goalFontOptions,
   formatGoalDuration
 } from '@/lib/goalAppearance';
+import { applyGoalPreset, goalPresets } from '@/lib/goalPresets';
+import GoalWidget from '@/app/overlay/goal/GoalWidget';
 import './goal-editor-premium.css';
 
 interface GoalAppearanceEditorProps {
@@ -69,10 +71,15 @@ const sizes: { key: keyof GoalAppearance; label: string; unit: string }[] = [
 ];
 
 const styleOptions = [
-  { style: 'glass', label: 'แก้วมันวาว (Liquid Glass)', desc: 'ผิวใสสะท้อนแสง 3D ลักชัวรี', icon: Sparkles },
-  { style: 'neon', label: 'นีออนเรืองแสง (Cyber Neon)', desc: 'ขอบเรืองแสงสว่างสดใสสไตล์ไซเบอร์', icon: Zap },
-  { style: 'striped', label: 'ลายเฉียงวิ่ง (Sport Stripe)', desc: 'ลายวิ่งสปอร์ต โฉบเฉี่ยวมีชีวิตชีวา', icon: Activity },
-  { style: 'minimal', label: 'เรียบหรู (Clean Minimal)', desc: 'เรียบเนียน สะอาดตา ทันสมัย', icon: Layers },
+  { style: 'glass', label: 'Glass', desc: 'ผิวสะท้อนแสง', icon: Sparkles },
+  { style: 'neon', label: 'Neon', desc: 'ขอบเรืองแสง', icon: Zap },
+  { style: 'striped', label: 'Striped', desc: 'ลายเส้นเฉียง', icon: Activity },
+  { style: 'minimal', label: 'Minimal', desc: 'รูปแบบเรียบเดิม', icon: Layers },
+  { style: 'slim', label: 'Slim', desc: 'ผิวเรียบ ไม่มีขอบและเงา', icon: Sliders },
+  { style: 'segmented', label: 'Segmented', desc: 'แบ่งหลอดเป็นช่อง', icon: Grid },
+  { style: 'hud', label: 'HUD', desc: 'กรอบตัดมุมสองชั้น', icon: Zap },
+  { style: 'milestone', label: 'Milestone', desc: 'จุดหมายทุก 25%', icon: Target },
+  { style: 'floating', label: 'Floating Label', desc: 'ป้ายยอดเงินตามปลายหลอด', icon: ArrowRight },
 ] as const;
 
 type GoalSubTab = 'style' | 'colors' | 'sizes' | 'typography';
@@ -85,6 +92,7 @@ export default function GoalAppearanceEditor({
   target,
 }: GoalAppearanceEditorProps) {
   const [activeTab, setActiveTab] = useState<GoalSubTab>('style');
+  const previewTarget = Number.isFinite(target) && target > 0 ? target : 15000;
 
   const update = (key: keyof GoalAppearance, next: string) => {
     onChange({ ...value, [key]: next });
@@ -103,8 +111,8 @@ export default function GoalAppearanceEditor({
             <Target size={13} />
             <span>GOAL APPEARANCE STUDIO</span>
           </div>
-          <h2>ปรับแต่งดีไซน์หลอดเป้าหมาย</h2>
-          <p>ปรับหน้าตา สไตล์ ผิวสัมผัส ความโค้งมน และแสงวาว — พรีวิวสดบน OBS ฝั่งขวา</p>
+          <h2>รูปแบบหลอดเป้าหมาย</h2>
+          <p>เลือกแบบ ดูตัวอย่าง แล้วบันทึกเพื่อใช้ใน OBS</p>
         </div>
         <button
           type="button"
@@ -162,12 +170,29 @@ export default function GoalAppearanceEditor({
             <Sparkles size={18} />
           </div>
           <div>
-            <h3>รูปแบบหลอดและเอฟเฟกต์แสงวาว</h3>
-            <p>เลือกสไตล์ผิวสัมผัส พร้อมเปิด/ปิดแอนิเมชันและประกายแสงวาวแบบพรีเมียม</p>
+            <h3>เลือกแบบหลอด</h3>
+            <p>เลือกแบบสำเร็จรูป แล้วปรับสีและขนาดเพิ่มเติมได้</p>
           </div>
         </div>
 
-        {/* 4 Interactive Style Cards */}
+        <div className="goal-preset-grid" role="group" aria-label="แบบหลอดสำเร็จรูป">
+          {goalPresets.map((preset) => {
+            const appearance = applyGoalPreset(value, preset.id);
+            const selected = Object.entries(preset.settings).every(([key, setting]) => value[key as keyof GoalAppearance] === setting);
+            return <button type="button" className="goal-preset-option" key={preset.id} aria-label={`เลือกแบบ ${preset.label}`} aria-pressed={selected} disabled={disabled} onClick={() => onChange(appearance)}>
+              <span className="goal-preset-option-heading"><strong>{preset.label}</strong>{selected ? <Check size={15} aria-hidden="true" /> : preset.id === 'slim' ? <span>แนะนำ</span> : null}</span>
+              <span className="goal-preset-live-preview" aria-hidden="true">
+                <GoalWidget title={title.trim() || 'เป้าหมายโดเนท'} current={previewTarget / 2} target={previewTarget} appearance={{ ...appearance, goal_show_duration: 'false' }} />
+              </span>
+              <span className="goal-preset-option-description">{preset.description}</span>
+            </button>;
+          })}
+        </div>
+        <p className="goal-preset-save-hint">ตัวอย่างแสดงยอด 50% · กดบันทึกเพื่อใช้แบบที่เลือกบนสตรีม</p>
+
+        <details className="goal-advanced-options">
+          <summary>ปรับรูปแบบและเอฟเฟกต์เอง</summary>
+          <div className="goal-advanced-body">
         <div className="goal-style-grid">
           {styleOptions.map(({ style, label, desc, icon: IconComponent }) => {
             const isSelected = value.goal_bar_style === style;
@@ -182,7 +207,7 @@ export default function GoalAppearanceEditor({
               >
                 <div className="goal-style-top">
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <IconComponent size={15} color={isSelected ? '#2563eb' : '#64748b'} />
+                    <IconComponent size={15} color={isSelected ? 'var(--accent)' : 'var(--text-muted)'} />
                     <span className="goal-style-title">{label}</span>
                   </div>
                   {isSelected && <span className="goal-style-badge">ACTIVE</span>}
@@ -223,10 +248,10 @@ export default function GoalAppearanceEditor({
             aria-checked={value.goal_bar_shine === 'true'}
           >
             <div className="goal-switch-info">
-              <Sparkles size={18} color={value.goal_bar_shine === 'true' ? '#2563eb' : '#64748b'} />
+              <Sparkles size={18} color={value.goal_bar_shine === 'true' ? 'var(--accent)' : 'var(--text-muted)'} />
               <div>
-                <div className="goal-switch-title">แสงวาวพาดผ่านหลอด (Luxury Crystal Sheen)</div>
-                <div className="goal-switch-desc">ลำแสงใยไหมฟุ้งเนียนตา พาดผ่านผิวกระจกคริสตัล 3D</div>
+                <div className="goal-switch-title">แสง Shine</div>
+                <div className="goal-switch-desc">แสงวิ่งผ่าน Glass, Neon และ Striped หรือแสงขอบสำหรับ HUD</div>
               </div>
             </div>
             <div className="goal-switch-track">
@@ -241,9 +266,9 @@ export default function GoalAppearanceEditor({
             aria-checked={value.goal_bar_animated === 'true'}
           >
             <div className="goal-switch-info">
-              <Activity size={18} color={value.goal_bar_animated === 'true' ? '#2563eb' : '#64748b'} />
+              <Activity size={18} color={value.goal_bar_animated === 'true' ? 'var(--accent)' : 'var(--text-muted)'} />
               <div>
-                <div className="goal-switch-title">เปิดแสงและลายเคลื่อนไหว (Live Motion)</div>
+                <div className="goal-switch-title">แสงและลายเคลื่อนไหว</div>
                 <div className="goal-switch-desc">ลายเส้นและเงาสะท้อนขยับตลอดเวลาอย่างนุ่มนวล</div>
               </div>
             </div>
@@ -252,6 +277,8 @@ export default function GoalAppearanceEditor({
             </div>
           </div>
         </div>
+          </div>
+        </details>
       </section>
       )}
 
@@ -273,7 +300,7 @@ export default function GoalAppearanceEditor({
           <div className="goal-gradient-header">
             <div>
               <div className="goal-gradient-title">
-                <Sparkles size={16} color="#2563eb" />
+                <Sparkles size={16} color="var(--accent)" />
                 <span>การไล่เฉดสีหลอด (Bar Gradient)</span>
                 {value.goal_gradient === 'true' && (
                   <span className="goal-gradient-badge-active">ACTIVE</span>
@@ -561,7 +588,7 @@ export default function GoalAppearanceEditor({
         <div className="goal-duration-card">
           <div className="goal-duration-header">
             <div className="goal-duration-title-group">
-              <Clock size={16} color="#2563eb" />
+              <Clock size={16} color="var(--accent)" />
               <span className="goal-duration-title">ระยะเวลาเป้าหมาย (Donation Duration / Countdown)</span>
             </div>
             <div
@@ -635,7 +662,7 @@ export default function GoalAppearanceEditor({
               {/* Custom Badge Styling Subsection */}
               <div className="goal-duration-custom-section">
                 <div className="goal-duration-custom-heading">
-                  <Palette size={14} color="#2563eb" />
+                  <Palette size={14} color="var(--accent)" />
                   <span>ปรับแต่งสไตล์ป้ายระยะเวลา (Custom Badge Style)</span>
                 </div>
 

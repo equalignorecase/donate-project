@@ -1474,7 +1474,7 @@ export default function CustomizerPage() {
                               <button
                                 type="button"
                                 className="btn-text-action"
-                                style={{ borderColor: '#000000', background: '#000000', color: '#ffffff' }}
+                                style={{ borderColor: "var(--border)", background: '#000000', color: "var(--text-main)" }}
                                 onClick={() => updateField('alert_text_stroke_color', '#000000')}
                               >
                                 ดำ
@@ -1482,7 +1482,7 @@ export default function CustomizerPage() {
                               <button
                                 type="button"
                                 className="btn-text-action"
-                                style={{ borderColor: '#cbd5e1', background: '#ffffff', color: '#000000' }}
+                                style={{ borderColor: "var(--border)", background: "var(--bg-panel)", color: '#000000' }}
                                 onClick={() => updateField('alert_text_stroke_color', '#ffffff')}
                               >
                                 ขาว
@@ -1490,7 +1490,7 @@ export default function CustomizerPage() {
                               <button
                                 type="button"
                                 className="btn-text-action"
-                                style={{ borderColor: '#2563eb', background: '#2563eb', color: '#ffffff' }}
+                                style={{ borderColor: "var(--border)", background: '#2563eb', color: "var(--text-main)" }}
                                 onClick={() => updateField('alert_text_stroke_color', '#1e3a8a')}
                               >
                                 น้ำเงิน
@@ -1498,7 +1498,7 @@ export default function CustomizerPage() {
                               <button
                                 type="button"
                                 className="btn-text-action"
-                                style={{ borderColor: '#dc2626', background: '#dc2626', color: '#ffffff' }}
+                                style={{ borderColor: "var(--border)", background: '#dc2626', color: "var(--text-main)" }}
                                 onClick={() => updateField('alert_text_stroke_color', '#991b1b')}
                               >
                                 แดง
@@ -1600,7 +1600,7 @@ export default function CustomizerPage() {
                           <div style={{
                             height: '24px',
                             borderRadius: '8px',
-                            border: '1px solid rgba(0,0,0,0.1)',
+                            border: "1px solid var(--border)",
                             boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.06)',
                             background: `linear-gradient(${settings.alert_text_gradient_angle || 135}deg, ${settings.alert_text_gradient_from || '#ff512f'} 0%, ${settings.alert_text_gradient_to || '#dd2476'} 100%)`
                           }} />
@@ -1631,7 +1631,7 @@ export default function CustomizerPage() {
                                     height: '16px',
                                     borderRadius: '50%',
                                     flexShrink: 0,
-                                    border: '1px solid rgba(0,0,0,0.15)',
+                                    border: "1px solid var(--border)",
                                     background: `linear-gradient(135deg, ${p.from}, ${p.to})`
                                   }} />
                                   <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
@@ -1716,7 +1716,7 @@ export default function CustomizerPage() {
                           </div>
                         </div>
 
-                        <div style={{ fontSize: '11px', color: 'var(--text-dim)', lineHeight: 1.45, background: 'rgba(37,99,235,0.04)', padding: '8px 10px', borderRadius: '8px', border: '1px solid rgba(37,99,235,0.15)' }}>
+                        <div style={{ fontSize: '11px', color: 'var(--text-dim)', lineHeight: 1.45, background: "var(--accent-soft)", padding: '8px 10px', borderRadius: '8px', border: "1px solid var(--border)" }}>
                           <strong>รองรับเอฟเฟกต์แสง:</strong> หากเปิดใช้งาน <em>ลำแสงวิ่งบนตัวอักษร (Shine Sweep)</em> แสงจะวิ่งพาดผ่านสีไล่ระดับ Gradient ได้อย่างกลมกลืน
                         </div>
                       </div>
@@ -1749,8 +1749,8 @@ export default function CustomizerPage() {
 
                     {/* Vertical Gaps (ไอคอน ↔ ชื่อ ↔ ข้อความ) */}
                     <div style={{
-                      background: 'rgba(37, 99, 235, 0.05)',
-                      border: '1.5px solid rgba(37, 99, 235, 0.25)',
+                      background: "var(--accent-soft)",
+                      border: "1.5px solid var(--border)",
                       borderRadius: 'var(--radius-md, 12px)',
                       padding: '14px',
                       marginBottom: '14px'
@@ -2386,7 +2386,7 @@ export default function CustomizerPage() {
                       width: '36px',
                       height: '36px',
                       borderRadius: '8px',
-                      background: 'rgba(37, 99, 235, 0.1)',
+                      background: "var(--accent-soft)",
                       color: 'var(--accent, #2563eb)',
                       display: 'flex',
                       alignItems: 'center',
@@ -2614,7 +2614,7 @@ export default function CustomizerPage() {
                               width: '32px',
                               height: '14px',
                               borderRadius: '4px',
-                              border: '1px solid rgba(0,0,0,0.1)',
+                              border: "1px solid var(--border)",
                               background: `linear-gradient(135deg, ${settings.alert_tiered_rare_from || '#00c6ff'}, ${settings.alert_tiered_rare_to || '#0072ff'})`
                             }} />
                           </div>
@@ -2698,7 +2698,7 @@ export default function CustomizerPage() {
                               width: '32px',
                               height: '14px',
                               borderRadius: '4px',
-                              border: '1px solid rgba(0,0,0,0.1)',
+                              border: "1px solid var(--border)",
                               background: `linear-gradient(135deg, ${settings.alert_tiered_epic_from || '#da22ff'}, ${settings.alert_tiered_epic_to || '#9733ee'})`
                             }} />
                           </div>
@@ -2782,7 +2782,7 @@ export default function CustomizerPage() {
                               width: '32px',
                               height: '14px',
                               borderRadius: '4px',
-                              border: '1px solid rgba(0,0,0,0.1)',
+                              border: "1px solid var(--border)",
                               background: `linear-gradient(135deg, ${settings.alert_tiered_legendary_from || '#f12711'}, ${settings.alert_tiered_legendary_to || '#f5af19'})`
                             }} />
                           </div>

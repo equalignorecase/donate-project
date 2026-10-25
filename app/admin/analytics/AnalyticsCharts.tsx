@@ -265,12 +265,12 @@ export function RevenueTrendChart({ daily, weekly, monthly }: RevenueTrendChartP
         >
           <defs>
             <linearGradient id="areaGradient" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.38" />
-              <stop offset="90%" stopColor="#3b82f6" stopOpacity="0.02" />
+              <stop offset="0%" stopColor="var(--accent)" stopOpacity="0.38" />
+              <stop offset="90%" stopColor="var(--accent)" stopOpacity="0.02" />
             </linearGradient>
             <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#2563eb" />
-              <stop offset="100%" stopColor="#60a5fa" />
+              <stop offset="0%" stopColor="var(--primary)" />
+              <stop offset="100%" stopColor="var(--accent)" />
             </linearGradient>
             <linearGradient id="barHoverGradient" x1="0" y1="0" x2="0" y2="1">
               <stop offset="0%" stopColor="#f59e0b" />
@@ -316,7 +316,7 @@ export function RevenueTrendChart({ daily, weekly, monthly }: RevenueTrendChartP
               <path
                 d={linePath}
                 fill="none"
-                stroke="#2563eb"
+                stroke="var(--accent)"
                 strokeWidth="2.5"
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -331,7 +331,7 @@ export function RevenueTrendChart({ daily, weekly, monthly }: RevenueTrendChartP
                     cx={p.x}
                     cy={p.y}
                     r={isHovered ? 6 : p.data.amount > 0 ? 3.5 : 2}
-                    fill={isHovered ? '#f59e0b' : '#2563eb'}
+                    fill={isHovered ? '#f59e0b' : 'var(--accent)'}
                     stroke="var(--bg-panel)"
                     strokeWidth={isHovered ? 2.5 : 1.5}
                     style={{ transition: 'all 0.15s ease' }}
@@ -396,7 +396,7 @@ export function RevenueTrendChart({ daily, weekly, monthly }: RevenueTrendChartP
               y1={paddingTop}
               x2={hoveredPoint.x}
               y2={paddingTop + chartHeight}
-              stroke="#94a3b8"
+              stroke="var(--text-dim)"
               strokeDasharray="3 3"
               strokeWidth="1.2"
             />

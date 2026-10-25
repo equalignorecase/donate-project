@@ -348,7 +348,7 @@ export default function TimerAdminPage() {
       <div className="timer-admin-header">
         <div className="timer-admin-title">
           <h1>
-            <Clock size={28} style={{ color: '#0284c7' }} />
+            <Clock size={28} style={{ color: 'var(--accent)' }} />
             ระบบจับเวลานับถอยหลัง & Subathon (Timer)
           </h1>
           <p>แผงควบคุมระบบนับเวลาแบบเรียลไทม์ พร้อมกฎการคิดเวลาและสตูดิโอปรับแต่ง Widget บน OBS</p>
@@ -427,7 +427,7 @@ export default function TimerAdminPage() {
       {/* Quick Adjust Buttons Bar */}
       <div className="timer-quick-adjust-card">
         <h2>
-          <Zap size={18} style={{ color: '#0284c7' }} />
+          <Zap size={18} style={{ color: 'var(--accent)' }} />
           ปรับเวลาด่วน (Quick Adjust) - ส่งผลไปยัง OBS ทันที
         </h2>
         <div className="quick-adjust-buttons">
@@ -496,7 +496,7 @@ export default function TimerAdminPage() {
           {/* Limits & Initial boundary */}
           <div className="timer-card">
             <h2>
-              <ShieldAlert size={20} style={{ color: '#0284c7' }} />
+              <ShieldAlert size={20} style={{ color: 'var(--accent)' }} />
               ขอบเขตเวลา & เวลาเริ่มต้น
             </h2>
             <p style={{ fontSize: '13px', color: 'var(--text-muted, #64748b)', margin: 0 }}>
@@ -543,7 +543,7 @@ export default function TimerAdminPage() {
           {/* Simulation Test */}
           <div className="timer-card">
             <h2>
-              <Send size={20} style={{ color: '#16a34a' }} />
+              <Send size={20} style={{ color: 'var(--success)' }} />
               ทดสอบจำลองโดเนท (Simulate Test)
             </h2>
             <p style={{ fontSize: '13px', color: 'var(--text-muted, #64748b)', margin: 0 }}>
@@ -595,7 +595,7 @@ export default function TimerAdminPage() {
           {/* Base Rate Rule */}
           <div className="timer-card">
             <h2>
-              <Sliders size={20} style={{ color: '#0284c7' }} />
+              <Sliders size={20} style={{ color: 'var(--accent)' }} />
               อัตราส่วนพื้นฐาน (Default Rate)
             </h2>
             <p style={{ fontSize: '13px', color: 'var(--text-muted, #64748b)', margin: 0 }}>
@@ -777,7 +777,7 @@ export default function TimerAdminPage() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
             <div className="timer-card">
               <h2>
-                <Palette size={20} style={{ color: '#0284c7' }} />
+                <Palette size={20} style={{ color: 'var(--accent)' }} />
                 ธีม & รูปแบบการแสดงผล
               </h2>
 
@@ -1274,7 +1274,7 @@ export default function TimerAdminPage() {
             <div className="timer-preview-card">
               <div className="timer-preview-card-header">
                 <div className="timer-preview-card-title">
-                  <Eye size={18} style={{ color: '#0284c7' }} />
+                  <Eye size={18} style={{ color: 'var(--accent)' }} />
                   พรีวิวสด (Live Studio Preview)
                 </div>
 
@@ -1338,7 +1338,7 @@ export default function TimerAdminPage() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
           <div className="timer-card">
             <h2>
-              <Tv size={20} style={{ color: '#0284c7' }} />
+              <Tv size={20} style={{ color: 'var(--accent)' }} />
               ลิงก์สำหรับ OBS Browser Source
             </h2>
             <p style={{ fontSize: '13px', color: 'var(--text-muted, #64748b)', margin: 0 }}>
@@ -1361,7 +1361,7 @@ export default function TimerAdminPage() {
                 >
                   {copiedUrl === `${origin}/overlay/timer` ? (
                     <>
-                      <CheckCircle2 size={16} style={{ color: '#16a34a' }} /> คัดลอกแล้ว
+                      <CheckCircle2 size={16} style={{ color: 'var(--success)' }} /> คัดลอกแล้ว
                     </>
                   ) : (
                     <>
@@ -1399,7 +1399,7 @@ export default function TimerAdminPage() {
                 >
                   {copiedUrl === `${origin}/overlay/timer?bg=0` ? (
                     <>
-                      <CheckCircle2 size={16} style={{ color: '#16a34a' }} /> คัดลอกแล้ว
+                      <CheckCircle2 size={16} style={{ color: 'var(--success)' }} /> คัดลอกแล้ว
                     </>
                   ) : (
                     <>
@@ -1423,12 +1423,12 @@ export default function TimerAdminPage() {
           {/* OBS Setup Best Practices Guide */}
           <div className="timer-card">
             <h2>
-              <Layers size={20} style={{ color: '#0284c7' }} />
+              <Layers size={20} style={{ color: 'var(--accent)' }} />
               คำแนะนำการตั้งค่าใน OBS Studio
             </h2>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px', marginTop: '4px' }}>
               <div className="timer-subcard">
-                <div style={{ fontSize: '13px', fontWeight: 700, color: '#0284c7', marginBottom: '4px' }}>ความกว้าง (Width)</div>
+                <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--accent)', marginBottom: '4px' }}>ความกว้าง (Width)</div>
                 <div style={{ fontSize: '18px', fontWeight: 800 }}>520 px</div>
                 <div style={{ fontSize: '12px', color: 'var(--text-muted, #64748b)', marginTop: '4px' }}>
                   ครอบคลุมตัวเลขเวลาและป้ายผู้บริจาค
@@ -1436,7 +1436,7 @@ export default function TimerAdminPage() {
               </div>
 
               <div className="timer-subcard">
-                <div style={{ fontSize: '13px', fontWeight: 700, color: '#0284c7', marginBottom: '4px' }}>ความสูง (Height)</div>
+                <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--accent)', marginBottom: '4px' }}>ความสูง (Height)</div>
                 <div style={{ fontSize: '18px', fontWeight: 800 }}>180 px</div>
                 <div style={{ fontSize: '12px', color: 'var(--text-muted, #64748b)', marginTop: '4px' }}>
                   ความสูงมาตรฐาน ไม่กินพื้นที่ฉาก
@@ -1444,8 +1444,8 @@ export default function TimerAdminPage() {
               </div>
 
               <div className="timer-subcard">
-                <div style={{ fontSize: '13px', fontWeight: 700, color: '#0284c7', marginBottom: '4px' }}>Custom CSS</div>
-                <div style={{ fontSize: '13px', fontFamily: 'monospace', color: '#64748b', marginTop: '4px' }}>
+                <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--accent)', marginBottom: '4px' }}>Custom CSS</div>
+                <div style={{ fontSize: '13px', fontFamily: 'monospace', color: 'var(--text-muted)', marginTop: '4px' }}>
                   body &#123; background-color: rgba(0, 0, 0, 0); margin: 0px auto; overflow: hidden; &#125;
                 </div>
               </div>

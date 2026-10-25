@@ -34,6 +34,12 @@ export default function GoalWidget({
   const money = (value: number) => value.toLocaleString('th-TH', { maximumFractionDigits: 0 });
   const effectivePattern = appearance.goal_bar_pattern || (appearance.goal_bar_style === 'striped' ? 'stripes' : 'none');
   const patternOpacity = Math.max(0, Math.min(100, Number(appearance.goal_bar_pattern_opacity ?? 80))) / 100;
+  const isHUD = appearance.goal_bar_style === 'hud';
+  const isMilestone = appearance.goal_bar_style === 'milestone';
+  const isFloating = appearance.goal_bar_style === 'floating';
+  const isFlat = ['slim', 'segmented', 'hud', 'milestone', 'floating'].includes(appearance.goal_bar_style);
+  const isSegmented = appearance.goal_bar_style === 'segmented';
+  const hasGloss = !isFlat && appearance.goal_bar_style !== 'minimal';
 
   // Unfilled Track: สีดำแบบโปร่งแสงพร้อม backdrop blur เมื่อหลอดยังไม่เต็ม
   const trackBlur = Math.max(0, Math.min(40, Number(appearance.goal_track_blur ?? 12)));
@@ -140,21 +146,22 @@ export default function GoalWidget({
       }}
     >
       <h1 
-        className="goal-title"
+        className={`goal-title${isHUD ? ' goal-title-hud' : ''}`}
         style={{ 
           fontSize: `${appearance.goal_title_size}px`,
-          textAlign: 'center',
+          textAlign: isFlat ? 'left' : 'center',
           color: appearance.goal_text_color ?? '#ffffff',
           marginBottom: isShowDuration && durationText && durationPosition === 'top' ? '6px' : '12px',
-          display: durationPosition === 'inline' && isShowDuration && durationText ? 'flex' : undefined,
+          display: isHUD || durationPosition === 'inline' && isShowDuration && durationText ? 'flex' : undefined,
           alignItems: 'center',
-          justifyContent: 'center',
+          justifyContent: isHUD ? 'space-between' : 'center',
           flexWrap: 'wrap',
           gap: '10px',
         }}
       >
         <span>{title}</span>
         {durationPosition === 'inline' && renderDurationBadge(true)}
+        {isHUD && !isTextInside && appearance.goal_show_percent === 'true' && <span className="goal-hud-percent" style={{ color: appearance.goal_accent_color }}>{percent.toFixed(1)}%</span>}
       </h1>
 
       {isShowDuration && durationText && durationPosition === 'top' && (
@@ -163,25 +170,33 @@ export default function GoalWidget({
         </div>
       )}
 
-      {!isTextInside && appearance.goal_show_amount === 'true' && (
+      {!isTextInside && !isFlat && appearance.goal_show_amount === 'true' && (
         <div className="goal-values" style={{ fontSize: `${appearance.goal_amount_size}px` }}>
           <strong>฿{money(current)}</strong>
           <span>/ ฿{money(safeTarget)}</span>
         </div>
       )}
 
-      <div 
+      {isFloating && !isTextInside && appearance.goal_show_amount === 'true' && (
+        <div className="goal-floating-header" style={{ fontSize: `${appearance.goal_amount_size}px`, '--goal-bubble-width': `min(100%, max(88px, calc(${money(current).length + 1}ch + 24px)))` } as React.CSSProperties}>
+          <span className="goal-floating-label" title={`฿${money(current)}`} style={{ left: `clamp(calc(var(--goal-bubble-width) / 2), ${percent}%, calc(100% - var(--goal-bubble-width) / 2))`, color: appearance.goal_text_color, background: appearance.goal_track_color, borderColor: barStart }}>฿{money(current)}</span>
+        </div>
+      )}
+
+      <div className={`goal-rail${isHUD ? ' goal-hud-frame' : ''}${isMilestone ? ' goal-milestone-rail' : ''}`} style={{ filter: isHUD && appearance.goal_bar_shine === 'true' ? `drop-shadow(0 0 5px ${hexToRgba(barStart, 0.4)})` : undefined }}>
+      <div
         className={`goal-track goal-track-${appearance.goal_bar_style}${appearance.goal_bar_animated === 'true' ? ' goal-track-animated' : ''}${percent >= 100 ? ' goal-track-complete' : ''}`} 
         style={{ 
           height: `${appearance.goal_bar_height}px`, 
           borderRadius: Number(appearance.goal_bar_radius ?? 50) >= 40 ? '9999px' : `${appearance.goal_bar_radius}px`, 
-          background: trackBg, 
+          background: isSegmented ? `repeating-linear-gradient(90deg, ${trackBg} 0 20px, transparent 20px 24px)` : trackBg,
           backdropFilter: trackBlur > 0 ? `blur(${trackBlur}px)` : undefined,
           WebkitBackdropFilter: trackBlur > 0 ? `blur(${trackBlur}px)` : undefined,
-          border: '1.5px solid rgba(255, 255, 255, 0.22)',
-          boxShadow: 'inset 0 2px 6px rgba(0, 0, 0, 0.75), 0 4px 14px rgba(0, 0, 0, 0.45)',
+          border: isFlat ? 'none' : '1.5px solid rgba(255, 255, 255, 0.22)',
+          boxShadow: isFlat ? 'none' : 'inset 0 2px 6px rgba(0, 0, 0, 0.75), 0 4px 14px rgba(0, 0, 0, 0.45)',
           color: appearance.goal_bar_color,
-          padding: '4px',
+          padding: isHUD ? '3px' : isFlat ? '0' : '4px',
+          clipPath: isHUD ? 'polygon(4% 0, 100% 0, 100% 80%, 96% 100%, 0 100%, 0 20%)' : undefined,
           boxSizing: 'border-box',
           display: 'flex',
           alignItems: 'center',
@@ -198,9 +213,11 @@ export default function GoalWidget({
           style={{ 
             width: `${percent}%`, 
             height: '100%',
-            borderRadius: '9999px',
-            border: percent > 0 ? '1px solid rgba(255, 255, 255, 0.3)' : 'none',
-            boxShadow: percent > 0 ? '3px 0 10px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.4)' : 'none',
+            borderRadius: isFlat ? `${appearance.goal_bar_radius}px` : '9999px',
+            border: percent > 0 && !isFlat ? '1px solid rgba(255, 255, 255, 0.3)' : 'none',
+            boxShadow: percent > 0 && !isFlat ? '3px 0 10px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.4)' : 'none',
+            maskImage: isSegmented ? 'repeating-linear-gradient(90deg, #000 0 20px, transparent 20px 24px)' : undefined,
+            clipPath: isHUD ? 'polygon(4% 0, 100% 0, 100% 80%, 96% 100%, 0 100%, 0 20%)' : undefined,
             background: barBackground 
           }}
         >
@@ -211,13 +228,13 @@ export default function GoalWidget({
               aria-hidden="true" 
             />
           )}
-          {appearance.goal_bar_style !== 'minimal' && (
+          {hasGloss && (
             <>
               <span className="goal-bar-gloss" aria-hidden="true" />
               <span className="goal-bar-shine" aria-hidden="true" />
             </>
           )}
-          {appearance.goal_bar_shine === 'true' && appearance.goal_bar_style !== 'minimal' && (
+          {appearance.goal_bar_shine === 'true' && hasGloss && (
             <>
               <span className="goal-bar-lead-flare" aria-hidden="true" />
               <span className="goal-bar-shine-sweep" aria-hidden="true">
@@ -227,6 +244,8 @@ export default function GoalWidget({
             </>
           )}
         </div>
+
+        {isMilestone && [25, 50, 75, 100].map((mark) => <span className="goal-checkpoint" key={mark} data-reached={percent >= mark} aria-hidden="true" style={{ left: `clamp(6px, ${mark}%, calc(100% - 6px))`, color: appearance.goal_text_color }}><i style={{ background: percent >= mark ? barStart : appearance.goal_track_color, borderColor: percent >= mark ? barStart : hexToRgba(appearance.goal_text_color, 0.5) }} /><span>{mark}%</span></span>)}
 
         {/* Text centered inside the bar: e.g. 50฿ (50%) */}
         {isTextInside && (
@@ -240,8 +259,24 @@ export default function GoalWidget({
           </div>
         )}
       </div>
+      {isHUD && <svg className="goal-hud-outline" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true" style={{ color: barStart }}><path d="M4 1 H99 V80 L96 99 H1 V20 Z" /><path d="M6 12 H96 V74 L94 88 H4 V26 Z" opacity="0.35" /></svg>}
+      </div>
 
-      {!isTextInside && appearance.goal_show_percent === 'true' && (
+      {!isTextInside && isFlat && !isFloating && (appearance.goal_show_amount === 'true' || appearance.goal_show_percent === 'true') && (
+        <div className="goal-compact-meta" style={{ fontSize: `${appearance.goal_amount_size}px` }}>
+          {appearance.goal_show_amount === 'true' && <div className="goal-values"><strong>฿{money(current)}</strong><span>/ ฿{money(safeTarget)}</span></div>}
+          {appearance.goal_show_percent === 'true' && !isHUD && <span style={{ color: appearance.goal_accent_color }}>{percent.toFixed(1)}%{current >= safeTarget ? ' · ถึงเป้าหมายแล้ว!' : ''}</span>}
+        </div>
+      )}
+
+      {!isTextInside && isFloating && (appearance.goal_show_amount === 'true' || appearance.goal_show_percent === 'true') && (
+        <div className="goal-floating-meta" style={{ fontSize: `${appearance.goal_amount_size}px` }}>
+          {appearance.goal_show_percent === 'true' && <span style={{ color: appearance.goal_accent_color }}>{percent.toFixed(1)}%</span>}
+          {appearance.goal_show_amount === 'true' && <span className="goal-floating-target">เป้าหมาย ฿{money(safeTarget)}</span>}
+        </div>
+      )}
+
+      {!isTextInside && !isFlat && appearance.goal_show_percent === 'true' && (
         <div className="goal-percent" style={{ color: appearance.goal_accent_color }}>
           {percent.toFixed(1)}%{current >= safeTarget ? ' · ถึงเป้าหมายแล้ว!' : ''}
         </div>

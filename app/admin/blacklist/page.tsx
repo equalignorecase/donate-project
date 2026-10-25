@@ -102,14 +102,14 @@ export default function AdminBlacklistPage() {
           fontWeight: 600,
           padding: '4px 10px',
           borderRadius: '999px',
-          background: '#f1f5f9',
-          color: '#475569'
+          background: 'var(--bg-subtle)',
+          color: 'var(--text-muted)'
         }}>
           ทั้งหมด {blacklist.length} คำ
         </span>
       </div>
       <p style={{ color: 'var(--text-muted)', fontSize: '14px', marginBottom: '16px' }}>
-        คำที่อยู่ในรายการนี้จะถูกเซ็นเซอร์เป็น <code style={{ color: 'var(--danger)', background: '#fef2f2', padding: '2px 6px', borderRadius: '4px' }}>***</code> โดยอัตโนมัติก่อนส่งขึ้นหน้าจอ OBS
+        คำที่อยู่ในรายการนี้จะถูกเซ็นเซอร์เป็น <code style={{ color: 'var(--danger)', background: 'var(--danger-soft)', padding: '2px 6px', borderRadius: '4px' }}>***</code> โดยอัตโนมัติก่อนส่งขึ้นหน้าจอ OBS
       </p>
 
       <form onSubmit={handleAddBlacklist} className="blacklist-form">

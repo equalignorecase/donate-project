@@ -3,7 +3,8 @@
 import React, { useState, useEffect, useRef, Suspense } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import '../donate/donate.css';
+import { ArrowLeft, ArrowRight, CircleAlert, Check, Eye, EyeOff, LoaderCircle, Moon, Sun } from 'lucide-react';
+import '../admin/theme.css';
 import './login.css';
 
 interface FormErrors {
@@ -61,16 +62,23 @@ function LoginForm() {
   const [successMessage, setSuccessMessage] = useState<string>('');
   const [hasSubmitted, setHasSubmitted] = useState<boolean>(false);
   const [errors, setErrors] = useState<FormErrors>({});
+  const [theme, setTheme] = useState<'light' | 'dark'>('light');
   useEffect(() => {
+    let initial: 'light' | 'dark' = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
     try {
       const saved = localStorage.getItem('admin_theme');
-      if (saved === 'dark' || saved === 'light') {
-        document.documentElement.setAttribute('data-theme', saved);
-      } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-        document.documentElement.setAttribute('data-theme', 'dark');
-      }
-    } catch (e) {}
+      if (saved === 'dark' || saved === 'light') initial = saved;
+    } catch {}
+    setTheme(initial);
+    document.documentElement.setAttribute('data-theme', initial);
   }, []);
+
+  const toggleTheme = () => {
+    const next = theme === 'dark' ? 'light' : 'dark';
+    setTheme(next);
+    document.documentElement.setAttribute('data-theme', next);
+    try { localStorage.setItem('admin_theme', next); } catch {}
+  };
 
   const handleUsernameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
@@ -145,62 +153,38 @@ function LoginForm() {
   };
 
   return (
-    <div className="login-page-wrapper">
-      <div className="login-container">
-        {/* Header Branding */}
-        <div className="login-header">
-          <div className="login-brand-icon">
-            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M4.9 19.1C1 15.2 1 8.8 4.9 4.9" />
-              <path d="M7.8 16.2c-2.3-2.3-2.3-6.1 0-8.5" />
-              <circle cx="12" cy="12" r="2" />
-              <path d="M16.2 7.8c2.3 2.3 2.3 6.1 0 8.5" />
-              <path d="M19.1 4.9C23 8.8 23 15.1 19.1 19" />
-            </svg>
-          </div>
-          <h1 className="login-title">
-            เข้าสู่ระบบหลังบ้าน
-          </h1>
-          <p className="login-desc">
-            ระบบจัดการสตรีมเมอร์ &amp; ปรับแต่งแจ้งเตือน OBS Studio
-          </p>
+    <main className="login-page-wrapper">
+      <div className="login-image-pane">
+        <img
+          className="login-artwork"
+          src="https://wallpapercat.com/w/full/b/2/c/5827240.jpg"
+          alt=""
+          loading="eager"
+          fetchPriority="high"
+          referrerPolicy="no-referrer"
+          onError={(event) => { event.currentTarget.hidden = true; }}
+        />
+        <Link href="/" className="login-back-link"><ArrowLeft size={16} />กลับหน้าโดเนท</Link>
+        <div className="login-image-caption"><span>localhostvlr</span><p>ระบบจัดการสตรีม</p></div>
+      </div>
+
+      <section className="login-panel" aria-labelledby="login-title">
+        <div className="login-toolbar">
+          <button type="button" className="login-theme-toggle" onClick={toggleTheme} aria-label={theme === 'dark' ? 'ใช้โหมดสว่าง' : 'ใช้โหมดมืด'} title={theme === 'dark' ? 'ใช้โหมดสว่าง' : 'ใช้โหมดมืด'}>
+            {theme === 'dark' ? <Sun size={17} /> : <Moon size={17} />}<span>{theme === 'dark' ? 'โหมดสว่าง' : 'โหมดมืด'}</span>
+          </button>
         </div>
 
-        {/* Notifications */}
-        {errorMessage && (
-          <div className="login-alert error" role="alert">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
-              <circle cx="12" cy="12" r="10" />
-              <line x1="12" y1="8" x2="12" y2="12" />
-              <line x1="12" y1="16" x2="12.01" y2="16" />
-            </svg>
-            <span>{errorMessage}</span>
-          </div>
-        )}
+        <div className="login-container">
+          <header className="login-header"><h1 id="login-title">เข้าสู่ระบบ</h1><p>จัดการโดเนทและการแจ้งเตือนของสตรีม</p></header>
 
-        {successMessage && (
-          <div className="login-alert success" role="status">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
-              <polyline points="20 6 9 17 4 12"></polyline>
-            </svg>
-            <span>{successMessage}</span>
-          </div>
-        )}
+          {errorMessage && <div className="login-alert error" role="alert"><CircleAlert size={17} /><span>{errorMessage}</span></div>}
+          {successMessage && <div className="login-alert success" role="status"><Check size={17} /><span>{successMessage}</span></div>}
 
-        {/* Login Card */}
-        <div className="login-card">
-          <form onSubmit={handleSubmit} noValidate>
-            <div className="login-form-group">
-              <label className="login-label" htmlFor="username">
-                ชื่อผู้ใช้ (Username)
-              </label>
-              <div className="login-input-wrap">
-                <span className="login-input-icon">
-                  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
-                    <circle cx="12" cy="7" r="4" />
-                  </svg>
-                </span>
+          <form onSubmit={handleSubmit} noValidate aria-busy={isLoading}>
+            <fieldset className="login-fields" disabled={isLoading || !!successMessage}>
+              <div className="login-form-group">
+                <label className="login-label" htmlFor="username">ชื่อผู้ใช้</label>
                 <input
                   ref={usernameRef}
                   type="text"
@@ -210,131 +194,55 @@ function LoginForm() {
                   value={username}
                   onChange={handleUsernameChange}
                   autoComplete="username"
-                  autoFocus
+                  autoCapitalize="none"
+                  spellCheck={false}
+                  aria-required="true"
                   aria-invalid={Boolean(hasSubmitted && errors.username)}
                   aria-describedby={hasSubmitted && errors.username ? 'username-error' : undefined}
                 />
+                {hasSubmitted && errors.username && <p id="username-error" role="alert" className="login-error-text">{errors.username}</p>}
               </div>
-              {hasSubmitted && errors.username && (
-                <div id="username-error" role="alert" className="login-error-text">
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
-                    <circle cx="12" cy="12" r="10" />
-                    <line x1="12" y1="8" x2="12" y2="12" />
-                    <line x1="12" y1="16" x2="12.01" y2="16" />
-                  </svg>
-                  <span>{errors.username}</span>
-                </div>
-              )}
-            </div>
 
-            <div className="login-form-group">
-              <label className="login-label" htmlFor="password">
-                รหัสผ่าน (Password)
-              </label>
-              <div className="login-input-wrap">
-                <span className="login-input-icon">
-                  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-                    <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-                  </svg>
-                </span>
-                <input
-                  ref={passwordRef}
-                  type={showPassword ? 'text' : 'password'}
-                  id="password"
-                  className={`login-input has-action ${hasSubmitted && errors.password ? 'input-error' : ''}`}
-                  placeholder="กรอกรหัสผ่าน"
-                  value={password}
-                  onChange={handlePasswordChange}
-                  autoComplete="current-password"
-                  aria-invalid={Boolean(hasSubmitted && errors.password)}
-                  aria-describedby={hasSubmitted && errors.password ? 'password-error' : undefined}
-                />
-                <button
-                  type="button"
-                  className="login-toggle-pw-btn"
-                  onClick={() => setShowPassword(!showPassword)}
-                  aria-label={showPassword ? 'ซ่อนรหัสผ่าน' : 'แสดงรหัสผ่าน'}
-                  title={showPassword ? 'ซ่อนรหัสผ่าน' : 'แสดงรหัสผ่าน'}
-                >
-                  {showPassword ? (
-                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
-                      <line x1="1" y1="1" x2="23" y2="23" />
-                    </svg>
-                  ) : (
-                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                      <circle cx="12" cy="12" r="3" />
-                    </svg>
-                  )}
-                </button>
+              <div className="login-form-group">
+                <label className="login-label" htmlFor="password">รหัสผ่าน</label>
+                <div className="login-input-wrap">
+                  <input
+                    ref={passwordRef}
+                    type={showPassword ? 'text' : 'password'}
+                    id="password"
+                    className={`login-input has-action ${hasSubmitted && errors.password ? 'input-error' : ''}`}
+                    placeholder="กรอกรหัสผ่าน"
+                    value={password}
+                    onChange={handlePasswordChange}
+                    autoComplete="current-password"
+                    aria-required="true"
+                    aria-invalid={Boolean(hasSubmitted && errors.password)}
+                    aria-describedby={hasSubmitted && errors.password ? 'password-error' : undefined}
+                  />
+                  <button type="button" className="login-toggle-pw-btn" onClick={() => setShowPassword((shown) => !shown)} aria-label={showPassword ? 'ซ่อนรหัสผ่าน' : 'แสดงรหัสผ่าน'} aria-controls="password">
+                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                </div>
+                {hasSubmitted && errors.password && <p id="password-error" role="alert" className="login-error-text">{errors.password}</p>}
               </div>
-              {hasSubmitted && errors.password && (
-                <div id="password-error" role="alert" className="login-error-text">
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
-                    <circle cx="12" cy="12" r="10" />
-                    <line x1="12" y1="8" x2="12" y2="12" />
-                    <line x1="12" y1="16" x2="12.01" y2="16" />
-                  </svg>
-                  <span>{errors.password}</span>
-                </div>
-              )}
-            </div>
 
-            <button
-              type="submit"
-              className="login-btn-submit"
-              disabled={isLoading}
-            >
-              {isLoading ? (
-                <>
-                  <span className="login-spinner"></span>
-                  <span>กำลังตรวจสอบ...</span>
-                </>
-              ) : (
-                <>
-                  <span>เข้าสู่ระบบ</span>
-                  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <line x1="5" y1="12" x2="19" y2="12" />
-                    <polyline points="12 5 19 12 12 19" />
-                  </svg>
-                </>
-              )}
-            </button>
+              <button type="submit" className="login-btn-submit" disabled={isLoading || !!successMessage}>
+                {isLoading ? <><LoaderCircle size={18} className="login-spinner" />กำลังตรวจสอบ…</> : successMessage ? <><Check size={18} />เข้าสู่ระบบแล้ว</> : <>เข้าสู่ระบบ<ArrowRight size={18} /></>}
+              </button>
+            </fieldset>
           </form>
-        </div>
 
-        {/* Footer Navigation */}
-        <div className="login-footer-nav">
-          <Link href="/" className="login-footer-link">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M19 12H5M12 19l-7-7 7-7" />
-            </svg>
-            <span>กลับหน้าบริจาค</span>
-          </Link>
-          <span className="login-footer-dot">•</span>
-          <Link href="/overlay" target="_blank" className="login-footer-link">
-            <span>OBS Overlay</span>
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
-              <polyline points="15 3 21 3 21 9" />
-              <line x1="10" y1="14" x2="21" y2="3" />
-            </svg>
-          </Link>
+          <div className="login-footer-nav"><Link href="/" className="login-footer-link">หน้าโดเนท</Link><span aria-hidden="true">·</span><Link href="/overlay" target="_blank" rel="noopener noreferrer" className="login-footer-link">OBS Overlay<ArrowRight size={12} /></Link></div>
         </div>
-      </div>
-    </div>
+        <footer className="login-page-footer">localhostvlr · สำหรับผู้ดูแลระบบ</footer>
+      </section>
+    </main>
   );
 }
 
 export default function LoginPage() {
   return (
-    <Suspense fallback={
-      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        กำลังโหลด...
-      </div>
-    }>
+    <Suspense fallback={<main className="login-page-wrapper login-loading" role="status">กำลังโหลด…</main>}>
       <LoginForm />
     </Suspense>
   );

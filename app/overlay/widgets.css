@@ -163,6 +163,48 @@ body.widget-overlay-body {
     font-size: 20px;
 }
 
+.goal-compact-meta {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 6px 14px;
+    margin-top: 10px;
+    font-variant-numeric: tabular-nums;
+}
+
+.goal-compact-meta .goal-values {
+    justify-content: flex-start;
+    gap: 6px;
+    margin: 0;
+    font-size: inherit;
+}
+
+.goal-compact-meta > span { margin-left: auto; font-size: .8em; }
+
+.goal-compact-meta .goal-values { flex-wrap: wrap; min-width: 0; }
+.goal-rail { position: relative; }
+.goal-title-hud > span:first-child { min-width: 0; overflow-wrap: anywhere; }
+.goal-hud-percent { margin-left: auto; flex-shrink: 0; font-size: .75em; font-variant-numeric: tabular-nums; }
+.goal-hud-outline { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; fill: none; stroke: currentColor; }
+.goal-hud-outline path { stroke-width: 1; vector-effect: non-scaling-stroke; }
+.goal-milestone-rail { padding-bottom: 27px; }
+.goal-checkpoint { position: absolute; top: 0; bottom: 0; width: 0; pointer-events: none; }
+.goal-checkpoint > i { position: absolute; top: 50%; left: 0; width: 12px; height: 12px; transform: translate(-50%, -50%); border: 2px solid; border-radius: 50%; box-sizing: border-box; }
+.goal-checkpoint > span { position: absolute; top: calc(100% + 8px); left: 0; transform: translateX(-50%); white-space: nowrap; font-size: 11px; line-height: 1.4; opacity: .7; font-variant-numeric: tabular-nums; }
+.goal-checkpoint[data-reached='true'] > span { opacity: 1; }
+.goal-checkpoint:last-of-type > span { transform: translateX(calc(-100% + 6px)); }
+.goal-floating-header { position: relative; min-height: calc(1.2em + 22px); }
+.goal-floating-label { position: absolute; top: 0; width: var(--goal-bubble-width); max-width: 100%; padding: 6px 10px; box-sizing: border-box; transform: translateX(-50%); border: 1px solid; border-radius: 9px; font-size: inherit; font-weight: 700; line-height: 1.2; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-variant-numeric: tabular-nums; }
+.goal-floating-meta { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 6px 12px; margin-top: 9px; font-variant-numeric: tabular-nums; }
+.goal-floating-meta > span { font-size: .8em; }
+.goal-floating-target { margin-left: auto; overflow-wrap: anywhere; }
+
+.goal-track-slim .goal-bar-gloss,
+.goal-track-slim .goal-bar-shine,
+.goal-track-segmented .goal-bar-gloss,
+.goal-track-segmented .goal-bar-shine { display: none; }
+
 .goal-track {
     position: relative;
     height: 48px;

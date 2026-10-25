@@ -265,7 +265,7 @@ function AdminOverviewContent() {
           <li>เปิดโปรแกรม <strong>OBS Studio</strong></li>
           <li>ในช่อง <strong>Sources</strong> กดปุ่มเครื่องหมายบวก <strong>(+)</strong> แล้วเลือก <strong>Browser</strong></li>
           <li>ตั้งชื่อเช่น <code>Donate Alert</code> แล้วกด OK</li>
-          <li>ในช่อง <strong>URL</strong> ให้กรอก: <code style={{ color: 'var(--primary)', background: '#f1f5f9', padding: '2px 8px', borderRadius: '4px', fontWeight: 600 }}>http://localhost:3000/overlay</code></li>
+          <li>ในช่อง <strong>URL</strong> ให้กรอก: <code style={{ color: 'var(--primary)', background: 'var(--bg-subtle)', padding: '2px 8px', borderRadius: '4px', fontWeight: 600 }}>http://localhost:3000/overlay</code></li>
           <li>ตั้งค่า <strong>Width:</strong> <code>1920</code> และ <strong>Height:</strong> <code>1080</code> (หรือ 800x600)</li>
           <li>ติ๊กถูกที่ <strong>Shutdown source when not visible</strong> และ <strong>Refresh browser when scene becomes active</strong></li>
           <li>กด <strong>OK</strong> จากนั้นกลับมากดปุ่ม <strong>ส่ง Test Alert</strong> ด้านบนเพื่อเช็คตำแหน่งบนหน้าจอได้ทันที</li>

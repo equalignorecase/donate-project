@@ -19,8 +19,8 @@ export async function POST(request: Request) {
 
     const cleanVoucher = voucher_url.trim();
 
-    // 2. Determine Receiver Phone Number (DB settings > .env > default)
-    let receiverPhone = process.env.TRUEMONEY_PHONE || '0649520055';
+    // 2. Determine Receiver Phone Number (DB settings > .env)
+    let receiverPhone = process.env.TRUEMONEY_PHONE || '';
     try {
       const { data: phoneRow } = await supabaseAdmin
         .from('settings')
@@ -41,7 +41,13 @@ export async function POST(request: Request) {
     }
 
     // 3. Call TrueMoney Redeem API
-    const baseApi = (process.env.TRUEMONEY_API_URL || 'https://localhostvlr-wallet-api.vercel.app').replace(/\/+$/, '');
+    const baseApi = process.env.TRUEMONEY_API_URL?.replace(/\/+$/, '');
+    if (!baseApi) {
+      return NextResponse.json(
+        { success: false, message: 'ระบบ TrueMoney ยังไม่ได้กำหนดค่า TRUEMONEY_API_URL ที่ปลอดภัย' },
+        { status: 500 }
+      );
+    }
     const redeemEndpoint = `${baseApi}/redeem`;
 
     console.log(`[TrueMoney] Calling API: ${redeemEndpoint} for mobile: ${receiverPhone}`);

@@ -2,7 +2,7 @@
    Timer Admin Dashboard Styles - Clean White Cards Responsive Theme
    ========================================================================== */
 
-.timer-admin-container {
+:where(.admin-layout) .timer-admin-container {
   display: flex;
   flex-direction: column;
   gap: 24px;
@@ -13,7 +13,7 @@
 }
 
 /* Header */
-.timer-admin-header {
+:where(.admin-layout) .timer-admin-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -22,48 +22,48 @@
   width: 100%;
 }
 
-.timer-admin-title {
+:where(.admin-layout) .timer-admin-title {
   flex: 1 1 300px;
   min-width: 0;
 }
 
-.timer-admin-title h1 {
+:where(.admin-layout) .timer-admin-title h1 {
   margin: 0;
   font-size: clamp(20px, 3.5vw, 24px);
   font-weight: 800;
-  color: #0f172a;
+  color: var(--text-main);
   display: flex;
   align-items: center;
   gap: 10px;
   line-height: 1.3;
 }
 
-.timer-admin-title p {
+:where(.admin-layout) .timer-admin-title p {
   margin: 4px 0 0;
   font-size: 14px;
-  color: #64748b;
+  color: var(--text-muted);
   line-height: 1.5;
 }
 
 /* ==========================================================================
    1. MAIN CONTROL BOARD CARD (WHITE CARD)
    ========================================================================== */
-.timer-control-card {
-  background: #ffffff;
-  border: 1.5px solid #e2e8f0;
+:where(.admin-layout) .timer-control-card {
+  background: var(--bg-panel);
+  border: 1.5px solid var(--border);
   border-radius: 24px;
   padding: 28px 24px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.08), 0 4px 6px -2px rgba(15, 23, 42, 0.04);
+  box-shadow: 0 10px 25px -5px var(--shadow-color), 0 4px 6px -2px var(--shadow-color);
   position: relative;
   overflow: hidden;
   box-sizing: border-box;
   width: 100%;
 }
 
-.timer-live-display {
+:where(.admin-layout) .timer-live-display {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -71,26 +71,26 @@
   width: 100%;
 }
 
-.timer-live-status {
+:where(.admin-layout) .timer-live-status {
   margin-bottom: 12px;
   display: flex;
   justify-content: center;
 }
 
-.timer-live-digits {
+:where(.admin-layout) .timer-live-digits {
   font-size: clamp(36px, 8.5vw, 68px);
   font-weight: 800;
   font-family: 'JetBrains Mono', 'Chakra Petch', monospace;
-  color: #0284c7;
+  color: var(--accent);
   letter-spacing: clamp(1px, 0.4vw, 2px);
   line-height: 1.1;
   text-align: center;
   word-break: normal;
-  text-shadow: 0 4px 12px rgba(2, 132, 199, 0.15);
+  text-shadow: 0 4px 12px var(--focus-ring);
   user-select: none;
 }
 
-.timer-status-badge {
+:where(.admin-layout) .timer-status-badge {
   font-size: 13px;
   font-weight: 700;
   padding: 5px 14px;
@@ -104,25 +104,25 @@
   text-align: center;
 }
 
-.status-badge-running {
-  background: #dcfce7;
-  color: #15803d;
-  border: 1px solid #86efac;
+:where(.admin-layout) .status-badge-running {
+  background: var(--success-soft);
+  color: var(--success);
+  border: 1px solid var(--success-border);
 }
 
-.status-badge-paused {
-  background: #fef9c3;
-  color: #a16207;
-  border: 1px solid #fde047;
+:where(.admin-layout) .status-badge-paused {
+  background: var(--warning-soft);
+  color: var(--warning);
+  border: 1px solid var(--warning-border);
 }
 
-.status-badge-ended {
-  background: #fee2e2;
-  color: #b91c1c;
-  border: 1px solid #fca5a5;
+:where(.admin-layout) .status-badge-ended {
+  background: var(--danger-soft);
+  color: var(--danger);
+  border: 1px solid var(--danger-border);
 }
 
-.timer-actions-row {
+:where(.admin-layout) .timer-actions-row {
   display: flex;
   gap: 12px;
   flex-wrap: wrap;
@@ -130,7 +130,7 @@
   width: 100%;
 }
 
-.timer-btn {
+:where(.admin-layout) .timer-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -142,103 +142,103 @@
   cursor: pointer;
   border: none;
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-  box-shadow: 0 2px 5px rgba(15, 23, 42, 0.08);
+  box-shadow: 0 2px 5px var(--shadow-color);
   min-height: 42px;
   touch-action: manipulation;
   white-space: nowrap;
   flex-shrink: 0;
 }
 
-.timer-btn:disabled {
+:where(.admin-layout) .timer-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
 
-.timer-btn-primary {
-  background: #0284c7;
+:where(.admin-layout) .timer-btn-primary {
+  background: var(--primary);
   color: #ffffff;
 }
 
-.timer-btn-primary:hover:not(:disabled) {
-  background: #0369a1;
+:where(.admin-layout) .timer-btn-primary:hover:not(:disabled) {
+  background: var(--primary);
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(2, 132, 199, 0.25);
+  box-shadow: 0 4px 12px var(--focus-ring);
 }
 
-.timer-btn-success {
-  background: #16a34a;
+:where(.admin-layout) .timer-btn-success {
+  background: var(--success-solid);
   color: #ffffff;
 }
 
-.timer-btn-success:hover:not(:disabled) {
-  background: #15803d;
+:where(.admin-layout) .timer-btn-success:hover:not(:disabled) {
+  background: var(--success-solid);
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(22, 163, 74, 0.25);
+  box-shadow: 0 4px 12px var(--success-soft);
 }
 
-.timer-btn-warning {
-  background: #d97706;
+:where(.admin-layout) .timer-btn-warning {
+  background: var(--warning-solid);
   color: #ffffff;
 }
 
-.timer-btn-warning:hover:not(:disabled) {
-  background: #b45309;
+:where(.admin-layout) .timer-btn-warning:hover:not(:disabled) {
+  background: var(--warning-solid);
   transform: translateY(-1px);
 }
 
-.timer-btn-danger {
-  background: #dc2626;
+:where(.admin-layout) .timer-btn-danger {
+  background: var(--danger-solid);
   color: #ffffff;
 }
 
-.timer-btn-danger:hover:not(:disabled) {
-  background: #b91c1c;
+:where(.admin-layout) .timer-btn-danger:hover:not(:disabled) {
+  background: var(--danger-solid);
   transform: translateY(-1px);
 }
 
-.timer-btn-secondary {
-  background: #f8fafc;
-  color: #334155;
-  border: 1.5px solid #cbd5e1;
+:where(.admin-layout) .timer-btn-secondary {
+  background: var(--bg-subtle);
+  color: var(--text-muted);
+  border: 1.5px solid var(--border);
 }
 
-.timer-btn-secondary:hover:not(:disabled) {
-  background: #f1f5f9;
-  color: #0f172a;
-  border-color: #94a3b8;
+:where(.admin-layout) .timer-btn-secondary:hover:not(:disabled) {
+  background: var(--bg-subtle);
+  color: var(--text-main);
+  border-color: var(--border);
 }
 
 /* ==========================================================================
    2. QUICK ADJUST CARD (WHITE CARD)
    ========================================================================== */
-.timer-quick-adjust-card {
-  background: #ffffff;
-  border: 1.5px solid #e2e8f0;
+:where(.admin-layout) .timer-quick-adjust-card {
+  background: var(--bg-panel);
+  border: 1.5px solid var(--border);
   border-radius: 24px;
   padding: 20px 24px;
-  box-shadow: 0 4px 15px -3px rgba(15, 23, 42, 0.05);
+  box-shadow: 0 4px 15px -3px var(--shadow-color);
   box-sizing: border-box;
   width: 100%;
 }
 
-.timer-quick-adjust-card h2 {
+:where(.admin-layout) .timer-quick-adjust-card h2 {
   font-size: 16px;
   font-weight: 700;
   margin: 0 0 14px;
-  color: #0f172a;
+  color: var(--text-main);
   display: flex;
   align-items: center;
   gap: 8px;
 }
 
-.quick-adjust-buttons {
+:where(.admin-layout) .quick-adjust-buttons {
   display: flex;
   flex-direction: column;
   gap: 10px;
   width: 100%;
 }
 
-.quick-adjust-group {
+:where(.admin-layout) .quick-adjust-group {
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
@@ -246,14 +246,14 @@
   width: 100%;
 }
 
-.quick-adjust-divider {
+:where(.admin-layout) .quick-adjust-divider {
   display: none;
 }
 
-.btn-adjust-add {
-  background: #f0fdf4;
-  border: 1.5px solid #86efac;
-  color: #16a34a;
+:where(.admin-layout) .btn-adjust-add {
+  background: var(--success-soft);
+  border: 1.5px solid var(--success-border);
+  color: var(--success);
   padding: 9px 18px;
   border-radius: 9999px;
   font-weight: 700;
@@ -269,16 +269,16 @@
   flex-shrink: 0;
 }
 
-.btn-adjust-add:hover:not(:disabled) {
-  background: #dcfce7;
-  border-color: #4ade80;
+:where(.admin-layout) .btn-adjust-add:hover:not(:disabled) {
+  background: var(--success-soft);
+  border-color: var(--success-border);
   transform: translateY(-1px);
 }
 
-.btn-adjust-sub {
-  background: #fef2f2;
-  border: 1.5px solid #fca5a5;
-  color: #dc2626;
+:where(.admin-layout) .btn-adjust-sub {
+  background: var(--danger-soft);
+  border: 1.5px solid var(--danger-border);
+  color: var(--danger);
   padding: 9px 18px;
   border-radius: 9999px;
   font-weight: 700;
@@ -294,16 +294,16 @@
   flex-shrink: 0;
 }
 
-.btn-adjust-sub:hover:not(:disabled) {
-  background: #fee2e2;
-  border-color: #f87171;
+:where(.admin-layout) .btn-adjust-sub:hover:not(:disabled) {
+  background: var(--danger-soft);
+  border-color: var(--danger-border);
   transform: translateY(-1px);
 }
 
 /* ==========================================================================
    3. SETTINGS & RULES CARDS (WHITE CARDS)
    ========================================================================== */
-.timer-grid-2 {
+:where(.admin-layout) .timer-grid-2 {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 380px), 1fr));
   gap: 20px;
@@ -311,57 +311,57 @@
   box-sizing: border-box;
 }
 
-.timer-card {
-  background: #ffffff;
-  border: 1.5px solid #e2e8f0;
+:where(.admin-layout) .timer-card {
+  background: var(--bg-panel);
+  border: 1.5px solid var(--border);
   border-radius: 24px;
   padding: 24px;
   display: flex;
   flex-direction: column;
   gap: 16px;
-  box-shadow: 0 4px 15px -3px rgba(15, 23, 42, 0.05);
+  box-shadow: 0 4px 15px -3px var(--shadow-color);
   box-sizing: border-box;
   width: 100%;
 }
 
-.timer-card h2 {
+:where(.admin-layout) .timer-card h2 {
   font-size: 17px;
   font-weight: 800;
   margin: 0;
-  color: #0f172a;
+  color: var(--text-main);
   display: flex;
   align-items: center;
   gap: 8px;
   flex-wrap: wrap;
 }
 
-.timer-card p {
+:where(.admin-layout) .timer-card p {
   font-size: 13px;
-  color: #64748b;
+  color: var(--text-muted);
   margin: 0;
   line-height: 1.6;
 }
 
-.timer-form-group {
+:where(.admin-layout) .timer-form-group {
   display: flex;
   flex-direction: column;
   gap: 6px;
 }
 
-.timer-form-group label {
+:where(.admin-layout) .timer-form-group label {
   font-size: 13px;
   font-weight: 700;
-  color: #334155;
+  color: var(--text-muted);
   line-height: 1.4;
 }
 
-.timer-form-group input:not([type="checkbox"]):not([type="color"]):not([type="range"]),
-.timer-form-group select {
-  background: #ffffff;
-  border: 1.5px solid #cbd5e1;
+:where(.admin-layout) .timer-form-group input:not([type="checkbox"]):not([type="color"]):not([type="range"]),
+:where(.admin-layout) .timer-form-group select {
+  background: var(--bg-panel);
+  border: 1.5px solid var(--border);
   border-radius: 12px;
   padding: 10px 14px;
-  color: #0f172a;
+  color: var(--text-main);
   font-size: 14px;
   transition: all 0.15s ease;
   min-height: 42px;
@@ -369,11 +369,11 @@
   width: 100%;
 }
 
-.timer-form-group input[type="checkbox"] {
+:where(.admin-layout) .timer-form-group input[type="checkbox"] {
   width: 20px !important;
   height: 20px !important;
   min-height: 20px !important;
-  accent-color: #0284c7;
+  accent-color: var(--accent);
   cursor: pointer;
   margin: 0;
   padding: 0;
@@ -381,62 +381,62 @@
   border-radius: 4px;
 }
 
-.timer-form-group input[type="color"] {
+:where(.admin-layout) .timer-form-group input[type="color"] {
   width: 100%;
   height: 42px;
   min-height: 42px;
   padding: 3px;
-  border: 1.5px solid #cbd5e1;
+  border: 1.5px solid var(--border);
   border-radius: 12px;
-  background: #ffffff;
+  background: var(--bg-panel);
   cursor: pointer;
   box-sizing: border-box;
 }
 
-.timer-form-group input[type="range"] {
+:where(.admin-layout) .timer-form-group input[type="range"] {
   width: 100%;
   height: auto;
   min-height: auto;
   padding: 8px 0;
-  accent-color: #0284c7;
+  accent-color: var(--accent);
   cursor: pointer;
 }
 
-.timer-form-group input:focus,
-.timer-form-group select:focus {
+:where(.admin-layout) .timer-form-group input:focus,
+:where(.admin-layout) .timer-form-group select:focus {
   outline: none;
-  border-color: #0284c7;
-  box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15);
+  border-color: var(--border-focus);
+  box-shadow: 0 0 0 3px var(--focus-ring);
 }
 
-.timer-form-row {
+:where(.admin-layout) .timer-form-row {
   display: flex;
   gap: 12px;
   flex-wrap: wrap;
   width: 100%;
 }
 
-.timer-form-row>.timer-form-group {
+:where(.admin-layout) .timer-form-row>.timer-form-group {
   flex: 1 1 140px;
   min-width: 0;
 }
 
-.timer-form-row-colors {
+:where(.admin-layout) .timer-form-row-colors {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 12px;
   width: 100%;
 }
 
-.timer-form-row-colors>.timer-form-group {
+:where(.admin-layout) .timer-form-row-colors>.timer-form-group {
   min-width: 0;
   flex: auto;
 }
 
 /* Sub-card (e.g. Add rule box) */
-.timer-subcard {
-  background: #f8fafc;
-  border: 1.5px solid #e2e8f0;
+:where(.admin-layout) .timer-subcard {
+  background: var(--bg-subtle);
+  border: 1.5px solid var(--border);
   padding: 16px;
   border-radius: 12px;
   margin-top: 8px;
@@ -444,75 +444,75 @@
   width: 100%;
 }
 
-.timer-subcard-title {
+:where(.admin-layout) .timer-subcard-title {
   font-size: 13px;
   font-weight: 700;
   margin-bottom: 10px;
-  color: #0f172a;
+  color: var(--text-main);
 }
 
 /* Responsive Tier Rules Table */
-.timer-table-wrapper {
+:where(.admin-layout) .timer-table-wrapper {
   width: 100%;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--border);
   border-radius: 10px;
   margin-top: 8px;
   box-sizing: border-box;
 }
 
-.timer-table-wrapper::-webkit-scrollbar {
+:where(.admin-layout) .timer-table-wrapper::-webkit-scrollbar {
   height: 6px;
 }
 
-.timer-table-wrapper::-webkit-scrollbar-track {
-  background: #f1f5f9;
+:where(.admin-layout) .timer-table-wrapper::-webkit-scrollbar-track {
+  background: var(--bg-input);
 }
 
-.timer-table-wrapper::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
+:where(.admin-layout) .timer-table-wrapper::-webkit-scrollbar-thumb {
+  background: var(--bg-subtle);
   border-radius: 4px;
 }
 
-.tier-rules-table {
+:where(.admin-layout) .tier-rules-table {
   width: 100%;
   min-width: 440px;
   border-collapse: collapse;
   font-size: 13px;
 }
 
-.tier-rules-table th {
-  background: #f8fafc;
-  color: #475569;
+:where(.admin-layout) .tier-rules-table th {
+  background: var(--bg-subtle);
+  color: var(--text-muted);
   text-align: left;
   padding: 10px 12px;
   font-weight: 700;
-  border-bottom: 1.5px solid #e2e8f0;
+  border-bottom: 1.5px solid var(--border);
   white-space: nowrap;
 }
 
-.tier-rules-table td {
+:where(.admin-layout) .tier-rules-table td {
   padding: 10px 12px;
-  border-bottom: 1px solid #f1f5f9;
-  color: #1e293b;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-main);
   white-space: nowrap;
 }
 
-.tier-badge-add {
-  color: #16a34a;
+:where(.admin-layout) .tier-badge-add {
+  color: var(--success);
   font-weight: 700;
 }
 
-.tier-badge-sub {
-  color: #dc2626;
+:where(.admin-layout) .tier-badge-sub {
+  color: var(--danger);
   font-weight: 700;
 }
 
-.btn-rule-delete {
+:where(.admin-layout) .btn-rule-delete {
   background: transparent;
   border: none;
-  color: #ef4444;
+  color: var(--danger);
   cursor: pointer;
   padding: 6px;
   border-radius: 6px;
@@ -524,75 +524,75 @@
   min-height: 32px;
 }
 
-.btn-rule-delete:hover {
-  background: #fee2e2;
-  color: #b91c1c;
+:where(.admin-layout) .btn-rule-delete:hover {
+  background: var(--danger-soft);
+  color: var(--danger);
 }
 
 /* Theme selector cards */
-.theme-picker-grid {
+:where(.admin-layout) .theme-picker-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 10px;
   width: 100%;
 }
 
-.theme-card {
+:where(.admin-layout) .theme-card {
   padding: 14px;
   border-radius: 12px;
-  border: 2px solid #e2e8f0;
-  background: #ffffff;
+  border: 2px solid var(--border);
+  background: var(--bg-panel);
   cursor: pointer;
   transition: all 0.2s;
   text-align: center;
   box-sizing: border-box;
 }
 
-.theme-card:hover {
-  border-color: #94a3b8;
+:where(.admin-layout) .theme-card:hover {
+  border-color: var(--border);
   transform: translateY(-1px);
 }
 
-.theme-card.active {
-  border-color: #0284c7;
-  background: #f0f9ff;
-  box-shadow: 0 4px 12px rgba(2, 132, 199, 0.12);
+:where(.admin-layout) .theme-card.active {
+  border-color: var(--border-focus);
+  background: var(--accent-soft);
+  box-shadow: 0 4px 12px var(--focus-ring);
 }
 
-.theme-card-title {
+:where(.admin-layout) .theme-card-title {
   font-weight: 700;
   font-size: 14px;
-  color: #0f172a;
+  color: var(--text-main);
 }
 
-.theme-card-desc {
+:where(.admin-layout) .theme-card-desc {
   font-size: 11px;
-  color: #64748b;
+  color: var(--text-muted);
   margin-top: 4px;
 }
 
 /* OBS Source Box */
-.timer-source-box {
+:where(.admin-layout) .timer-source-box {
   display: flex;
   gap: 8px;
   align-items: center;
   width: 100%;
 }
 
-.timer-source-box input {
+:where(.admin-layout) .timer-source-box input {
   flex: 1 1 0%;
   min-width: 0;
-  background: #f8fafc;
-  border: 1.5px solid #cbd5e1;
+  background: var(--bg-input);
+  border: 1.5px solid var(--border);
   border-radius: 12px;
   padding: 9px 12px;
-  color: #334155;
+  color: var(--text-muted);
   font-size: 13px;
   font-family: monospace;
   box-sizing: border-box;
 }
 
-.timer-source-box .timer-btn {
+:where(.admin-layout) .timer-source-box .timer-btn {
   flex-shrink: 0;
   white-space: nowrap;
   padding: 8px 18px;
@@ -606,59 +606,59 @@
 
 /* Tablet & Smaller Screens (<= 880px) */
 @media (max-width: 880px) {
-  .timer-grid-2 {
+  :where(.admin-layout) .timer-grid-2 {
     grid-template-columns: 1fr;
   }
 }
 
 /* Mobile Screens (<= 640px) */
 @media (max-width: 640px) {
-  .timer-admin-container {
+  :where(.admin-layout) .timer-admin-container {
     gap: 18px;
     padding-bottom: 40px;
   }
 
-  .timer-admin-header {
+  :where(.admin-layout) .timer-admin-header {
     flex-direction: column;
     align-items: stretch;
     gap: 14px;
   }
 
-  .timer-admin-header .timer-btn {
+  :where(.admin-layout) .timer-admin-header .timer-btn {
     width: 100%;
     justify-content: center;
     padding: 13px 20px;
     font-size: 15px;
   }
 
-  .timer-control-card {
+  :where(.admin-layout) .timer-control-card {
     padding: 20px 16px;
     border-radius: 14px;
   }
 
-  .timer-card,
-  .timer-quick-adjust-card {
+  :where(.admin-layout) .timer-card,
+:where(.admin-layout) .timer-quick-adjust-card {
     padding: 18px 16px;
     border-radius: 14px;
   }
 
-  .timer-subcard {
+  :where(.admin-layout) .timer-subcard {
     padding: 14px 12px;
     border-radius: 10px;
   }
 
-  .quick-adjust-divider {
+  :where(.admin-layout) .quick-adjust-divider {
     display: none;
   }
 
-  .quick-adjust-group {
+  :where(.admin-layout) .quick-adjust-group {
     width: 100%;
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(84px, 1fr));
     gap: 8px;
   }
 
-  .quick-adjust-group button {
+  :where(.admin-layout) .quick-adjust-group button {
     width: 100%;
     text-align: center;
     padding: 10px 8px;
@@ -666,12 +666,12 @@
     white-space: nowrap;
   }
 
-  .timer-form-row:not(.timer-form-row-colors) {
+  :where(.admin-layout) .timer-form-row:not(.timer-form-row-colors) {
     flex-direction: column;
     gap: 10px;
   }
 
-  .timer-form-row:not(.timer-form-row-colors)>.timer-form-group {
+  :where(.admin-layout) .timer-form-row:not(.timer-form-row-colors)>.timer-form-group {
     width: 100%;
     flex: auto;
   }
@@ -679,110 +679,110 @@
 
 /* Small Mobile Screens (<= 580px) */
 @media (max-width: 580px) {
-  .timer-actions-row {
+  :where(.admin-layout) .timer-actions-row {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
     gap: 10px;
     width: 100%;
   }
 
-  .timer-actions-row .timer-btn {
+  :where(.admin-layout) .timer-actions-row .timer-btn {
     width: 100%;
     justify-content: center;
     padding: 12px 18px;
     font-size: 14px;
   }
 
-  .timer-source-box {
+  :where(.admin-layout) .timer-source-box {
     flex-wrap: wrap;
   }
 
-  .timer-source-box input {
+  :where(.admin-layout) .timer-source-box input {
     width: 100%;
     flex: 1 1 100%;
   }
 
-  .timer-source-box .timer-btn {
+  :where(.admin-layout) .timer-source-box .timer-btn {
     flex: 1 1 calc(50% - 4px);
     justify-content: center;
   }
 }
 
 @media (max-width: 380px) {
-  .timer-actions-row {
+  :where(.admin-layout) .timer-actions-row {
     grid-template-columns: 1fr;
   }
 
-  .timer-source-box .timer-btn {
+  :where(.admin-layout) .timer-source-box .timer-btn {
     flex: 1 1 100%;
   }
 }
 
 /* Extra Small Screens (<= 440px) */
 @media (max-width: 440px) {
-  .theme-picker-grid {
+  :where(.admin-layout) .theme-picker-grid {
     grid-template-columns: 1fr;
   }
 
-  .timer-form-row-colors {
+  :where(.admin-layout) .timer-form-row-colors {
     grid-template-columns: 1fr;
     gap: 10px;
   }
 }
 
 /* Background Toggle Buttons */
-.bg-toggle-grid {
+:where(.admin-layout) .bg-toggle-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 10px;
 }
 
 @media (max-width: 480px) {
-  .bg-toggle-grid {
+  :where(.admin-layout) .bg-toggle-grid {
     grid-template-columns: 1fr;
   }
 }
 
-.bg-toggle-btn {
+:where(.admin-layout) .bg-toggle-btn {
   display: flex;
   align-items: center;
   gap: 12px;
   padding: 12px 14px;
   border-radius: 12px;
-  border: 1.5px solid #e2e8f0;
-  background: #f8fafc;
-  color: #1e293b;
+  border: 1.5px solid var(--border);
+  background: var(--bg-subtle);
+  color: var(--text-main);
   text-align: left;
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   box-sizing: border-box;
 }
 
-.bg-toggle-btn:hover {
-  background: #f1f5f9;
-  border-color: #cbd5e1;
+:where(.admin-layout) .bg-toggle-btn:hover {
+  background: var(--bg-subtle);
+  border-color: var(--border);
 }
 
-.bg-toggle-btn.active {
-  background: #f0f9ff;
-  border-color: #0284c7;
-  box-shadow: 0 0 0 2px rgba(2, 132, 199, 0.2);
+:where(.admin-layout) .bg-toggle-btn.active {
+  background: var(--accent-soft);
+  border-color: var(--border-focus);
+  box-shadow: 0 0 0 2px var(--focus-ring);
 }
 
-.bg-toggle-icon {
+:where(.admin-layout) .bg-toggle-icon {
   font-size: 22px;
   flex-shrink: 0;
 }
 
-.bg-toggle-title {
+:where(.admin-layout) .bg-toggle-title {
   font-size: 13.5px;
   font-weight: 700;
-  color: #0f172a;
+  color: var(--text-main);
 }
 
-.bg-toggle-desc {
+:where(.admin-layout) .bg-toggle-desc {
   font-size: 11.5px;
-  color: #64748b;
+  color: var(--text-muted);
   margin-top: 2px;
   line-height: 1.35;
 }
@@ -800,65 +800,65 @@
 }
 
 /* Shadow Customizer Section */
-.timer-sub-section {
+:where(.admin-layout) .timer-sub-section {
   margin-top: 14px;
   padding-top: 14px;
-  border-top: 1px solid #e2e8f0;
+  border-top: 1px solid var(--border);
   display: flex;
   flex-direction: column;
   gap: 12px;
 }
 
-.timer-sub-section-title {
+:where(.admin-layout) .timer-sub-section-title {
   font-size: 13.5px;
   font-weight: 700;
-  color: #1e293b;
+  color: var(--text-main);
   display: flex;
   align-items: center;
   gap: 6px;
 }
 
-.stroke-toggle-grid {
+:where(.admin-layout) .stroke-toggle-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 8px;
 }
 
-.stroke-toggle-btn {
+:where(.admin-layout) .stroke-toggle-btn {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
   padding: 8px 12px;
   border-radius: 8px;
-  border: 1.5px solid #e2e8f0;
-  background: #f8fafc;
-  color: #334155;
+  border: 1.5px solid var(--border);
+  background: var(--bg-subtle);
+  color: var(--text-muted);
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.15s;
 }
 
-.stroke-toggle-btn:hover {
-  background: #f1f5f9;
-  border-color: #cbd5e1;
+:where(.admin-layout) .stroke-toggle-btn:hover {
+  background: var(--bg-subtle);
+  border-color: var(--border);
 }
 
-.stroke-toggle-btn.active {
-  background: #f0f9ff;
-  border-color: #0284c7;
-  color: #0284c7;
+:where(.admin-layout) .stroke-toggle-btn.active {
+  background: var(--accent-soft);
+  border-color: var(--border-focus);
+  color: var(--accent);
   font-weight: 700;
-  box-shadow: 0 0 0 2px rgba(2, 132, 199, 0.15);
+  box-shadow: 0 0 0 2px var(--focus-ring);
 }
 
-.preset-btn {
+:where(.admin-layout) .preset-btn {
   padding: 8px 16px;
   border-radius: 9999px;
-  border: 1.5px solid #e2e8f0;
-  background: #ffffff;
-  color: #334155;
+  border: 1.5px solid var(--border);
+  background: var(--bg-panel);
+  color: var(--text-muted);
   font-size: 12px;
   font-weight: 600;
   cursor: pointer;
@@ -868,24 +868,24 @@
   flex-shrink: 0;
 }
 
-.preset-btn:hover {
-  background: #f0f9ff;
-  border-color: #0284c7;
-  color: #0284c7;
+:where(.admin-layout) .preset-btn:hover {
+  background: var(--accent-soft);
+  border-color: var(--border-focus);
+  color: var(--accent);
 }
 
-.preset-colors-row {
+:where(.admin-layout) .preset-colors-row {
   display: flex;
   align-items: center;
   gap: 8px;
   flex-wrap: wrap;
 }
 
-.preset-color-chip {
+:where(.admin-layout) .preset-color-chip {
   width: 26px;
   height: 26px;
   border-radius: 6px;
-  border: 2px solid #cbd5e1;
+  border: 2px solid var(--border);
   cursor: pointer;
   padding: 0;
   display: inline-flex;
@@ -894,250 +894,250 @@
   transition: transform 0.15s, border-color 0.15s;
 }
 
-.preset-color-chip:hover {
+:where(.admin-layout) .preset-color-chip:hover {
   transform: scale(1.1);
-  border-color: #0284c7;
+  border-color: var(--border-focus);
 }
 
-.preset-color-chip.active {
-  border-color: #0284c7;
-  box-shadow: 0 0 0 2px rgba(2, 132, 199, 0.3);
+:where(.admin-layout) .preset-color-chip.active {
+  border-color: var(--border-focus);
+  box-shadow: 0 0 0 2px var(--focus-ring);
 }
 
 /* ==========================================================================
    5. TIMER ADMIN - DARK MODE THEME OVERRIDES
    ========================================================================== */
 
-[data-theme="dark"] .timer-admin-title h1 {
-  color: #f8fafc;
+[data-theme="dark"] :where(.admin-layout) .timer-admin-title h1 {
+  color: var(--text-muted);
 }
 
-[data-theme="dark"] .timer-admin-title p {
-  color: #94a3b8;
+[data-theme="dark"] :where(.admin-layout) .timer-admin-title p {
+  color: var(--text-muted);
 }
 
 /* Main Control Card */
-[data-theme="dark"] .timer-control-card {
-  background: #111827;
-  border-color: #1f293d;
-  box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.5), 0 0 1px rgba(255, 255, 255, 0.05);
+[data-theme="dark"] :where(.admin-layout) .timer-control-card {
+  background: var(--bg-panel);
+  border-color: var(--border);
+  box-shadow: 0 10px 30px -5px var(--shadow-color), 0 0 1px var(--shadow-color);
 }
 
-[data-theme="dark"] .timer-live-digits {
-  color: #38bdf8;
-  text-shadow: 0 4px 24px rgba(56, 189, 248, 0.35);
+[data-theme="dark"] :where(.admin-layout) .timer-live-digits {
+  color: var(--accent);
+  text-shadow: 0 4px 24px var(--focus-ring);
 }
 
-[data-theme="dark"] .status-badge-running {
-  background: rgba(16, 185, 129, 0.16);
-  color: #34d399;
-  border-color: rgba(16, 185, 129, 0.35);
+[data-theme="dark"] :where(.admin-layout) .status-badge-running {
+  background: var(--success-soft);
+  color: var(--success);
+  border-color: var(--success-border);
 }
 
-[data-theme="dark"] .status-badge-paused {
-  background: rgba(245, 158, 11, 0.16);
-  color: #fbbf24;
-  border-color: rgba(245, 158, 11, 0.35);
+[data-theme="dark"] :where(.admin-layout) .status-badge-paused {
+  background: var(--danger-soft);
+  color: var(--warning);
+  border-color: var(--danger-border);
 }
 
-[data-theme="dark"] .status-badge-ended {
-  background: rgba(239, 68, 68, 0.16);
-  color: #f87171;
-  border-color: rgba(239, 68, 68, 0.35);
+[data-theme="dark"] :where(.admin-layout) .status-badge-ended {
+  background: var(--danger-soft);
+  color: var(--danger);
+  border-color: var(--danger-border);
 }
 
-[data-theme="dark"] .timer-btn-secondary {
-  background: #1e293b;
-  color: #f1f5f9;
-  border-color: #334155;
+[data-theme="dark"] :where(.admin-layout) .timer-btn-secondary {
+  background: var(--bg-subtle);
+  color: var(--text-muted);
+  border-color: var(--border);
 }
 
-[data-theme="dark"] .timer-btn-secondary:hover:not(:disabled) {
-  background: #27374f;
-  color: #ffffff;
-  border-color: #475569;
+[data-theme="dark"] :where(.admin-layout) .timer-btn-secondary:hover:not(:disabled) {
+  background: var(--bg-subtle);
+  color: var(--text-main);
+  border-color: var(--border);
 }
 
 /* Quick Adjust Card */
-[data-theme="dark"] .timer-quick-adjust-card {
-  background: #111827;
-  border-color: #1f293d;
-  box-shadow: 0 4px 20px -3px rgba(0, 0, 0, 0.4);
+[data-theme="dark"] :where(.admin-layout) .timer-quick-adjust-card {
+  background: var(--bg-panel);
+  border-color: var(--border);
+  box-shadow: 0 4px 20px -3px var(--shadow-color);
 }
 
-[data-theme="dark"] .timer-quick-adjust-card h2 {
-  color: #f8fafc;
+[data-theme="dark"] :where(.admin-layout) .timer-quick-adjust-card h2 {
+  color: var(--text-muted);
 }
 
-[data-theme="dark"] .btn-adjust-add {
-  background: rgba(16, 185, 129, 0.12);
-  border-color: rgba(16, 185, 129, 0.35);
-  color: #34d399;
+[data-theme="dark"] :where(.admin-layout) .btn-adjust-add {
+  background: var(--success-soft);
+  border-color: var(--success-border);
+  color: var(--success);
 }
 
-[data-theme="dark"] .btn-adjust-add:hover:not(:disabled) {
-  background: rgba(16, 185, 129, 0.22);
-  border-color: #10b981;
-  color: #6ee7b7;
+[data-theme="dark"] :where(.admin-layout) .btn-adjust-add:hover:not(:disabled) {
+  background: var(--success-soft);
+  border-color: var(--success-border);
+  color: var(--success);
 }
 
-[data-theme="dark"] .btn-adjust-sub {
-  background: rgba(239, 68, 68, 0.12);
-  border-color: rgba(239, 68, 68, 0.35);
-  color: #f87171;
+[data-theme="dark"] :where(.admin-layout) .btn-adjust-sub {
+  background: var(--danger-soft);
+  border-color: var(--danger-border);
+  color: var(--danger);
 }
 
-[data-theme="dark"] .btn-adjust-sub:hover:not(:disabled) {
-  background: rgba(239, 68, 68, 0.22);
-  border-color: #ef4444;
-  color: #fca5a5;
+[data-theme="dark"] :where(.admin-layout) .btn-adjust-sub:hover:not(:disabled) {
+  background: var(--danger-soft);
+  border-color: var(--danger-border);
+  color: var(--danger);
 }
 
 /* Settings Cards */
-[data-theme="dark"] .timer-card {
-  background: #111827;
-  border-color: #1f293d;
-  box-shadow: 0 4px 20px -3px rgba(0, 0, 0, 0.4);
+[data-theme="dark"] :where(.admin-layout) .timer-card {
+  background: var(--bg-panel);
+  border-color: var(--border);
+  box-shadow: 0 4px 20px -3px var(--shadow-color);
 }
 
-[data-theme="dark"] .timer-card h2 {
-  color: #f8fafc;
+[data-theme="dark"] :where(.admin-layout) .timer-card h2 {
+  color: var(--text-muted);
 }
 
-[data-theme="dark"] .timer-card p,
-[data-theme="dark"] .timer-card-desc {
-  color: #94a3b8;
+[data-theme="dark"] :where(.admin-layout) .timer-card p,
+[data-theme="dark"] :where(.admin-layout) .timer-card-desc {
+  color: var(--text-muted);
 }
 
-[data-theme="dark"] .timer-form-group label {
-  color: #cbd5e1;
+[data-theme="dark"] :where(.admin-layout) .timer-form-group label {
+  color: var(--text-main);
 }
 
-[data-theme="dark"] .timer-form-group input:not([type="checkbox"]):not([type="color"]):not([type="range"]),
-[data-theme="dark"] .timer-form-group select {
-  background: #0b0f19;
-  border-color: #223049;
-  color: #f8fafc;
+[data-theme="dark"] :where(.admin-layout) .timer-form-group input:not([type="checkbox"]):not([type="color"]):not([type="range"]),
+[data-theme="dark"] :where(.admin-layout) .timer-form-group select {
+  background: var(--bg-input);
+  border-color: var(--border);
+  color: var(--text-muted);
 }
 
-[data-theme="dark"] .timer-form-group input:not([type="checkbox"]):not([type="color"]):not([type="range"]):focus,
-[data-theme="dark"] .timer-form-group select:focus {
-  border-color: #38bdf8;
-  box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.2);
+[data-theme="dark"] :where(.admin-layout) .timer-form-group input:not([type="checkbox"]):not([type="color"]):not([type="range"]):focus,
+[data-theme="dark"] :where(.admin-layout) .timer-form-group select:focus {
+  border-color: var(--border-focus);
+  box-shadow: 0 0 0 3px var(--focus-ring);
 }
 
-[data-theme="dark"] .timer-form-group input[type="color"] {
-  background: #0b0f19;
-  border-color: #223049;
+[data-theme="dark"] :where(.admin-layout) .timer-form-group input[type="color"] {
+  background: var(--bg-input);
+  border-color: var(--border);
 }
 
 /* Sub-card */
-[data-theme="dark"] .timer-subcard {
-  background: #0d1424;
-  border-color: #1f293d;
+[data-theme="dark"] :where(.admin-layout) .timer-subcard {
+  background: var(--bg-subtle);
+  border-color: var(--border);
 }
 
-[data-theme="dark"] .timer-subcard-title {
-  color: #f8fafc;
+[data-theme="dark"] :where(.admin-layout) .timer-subcard-title {
+  color: var(--text-muted);
 }
 
 /* Tier Rules Table */
-[data-theme="dark"] .timer-table-wrapper {
-  border-color: #1f293d;
+[data-theme="dark"] :where(.admin-layout) .timer-table-wrapper {
+  border-color: var(--border);
 }
 
-[data-theme="dark"] .timer-table-wrapper::-webkit-scrollbar-track {
-  background: #0d1424;
+[data-theme="dark"] :where(.admin-layout) .timer-table-wrapper::-webkit-scrollbar-track {
+  background: var(--bg-input);
 }
 
-[data-theme="dark"] .timer-table-wrapper::-webkit-scrollbar-thumb {
-  background: #26354f;
+[data-theme="dark"] :where(.admin-layout) .timer-table-wrapper::-webkit-scrollbar-thumb {
+  background: var(--border);
 }
 
-[data-theme="dark"] .tier-rules-table th {
-  background: #141d2e;
-  color: #94a3b8;
-  border-bottom-color: #1f293d;
+[data-theme="dark"] :where(.admin-layout) .tier-rules-table th {
+  background: var(--bg-panel);
+  color: var(--text-muted);
+  border-bottom-color: var(--border);
 }
 
-[data-theme="dark"] .tier-rules-table td {
-  color: #f1f5f9;
-  border-bottom-color: #182234;
+[data-theme="dark"] :where(.admin-layout) .tier-rules-table td {
+  color: var(--text-muted);
+  border-bottom-color: var(--border);
 }
 
-[data-theme="dark"] .tier-badge-add {
-  color: #34d399;
+[data-theme="dark"] :where(.admin-layout) .tier-badge-add {
+  color: var(--success);
 }
 
-[data-theme="dark"] .tier-badge-sub {
-  color: #f87171;
+[data-theme="dark"] :where(.admin-layout) .tier-badge-sub {
+  color: var(--danger);
 }
 
-[data-theme="dark"] .btn-rule-delete {
-  color: #f87171;
+[data-theme="dark"] :where(.admin-layout) .btn-rule-delete {
+  color: var(--danger);
 }
 
-[data-theme="dark"] .btn-rule-delete:hover {
-  background: rgba(239, 68, 68, 0.2);
-  color: #fca5a5;
+[data-theme="dark"] :where(.admin-layout) .btn-rule-delete:hover {
+  background: var(--danger-soft);
+  color: var(--danger);
 }
 
 /* Theme Cards */
-[data-theme="dark"] .theme-card {
-  background: #141d2e;
-  border-color: #1f293d;
+[data-theme="dark"] :where(.admin-layout) .theme-card {
+  background: var(--bg-panel);
+  border-color: var(--border);
 }
 
-[data-theme="dark"] .theme-card:hover {
-  border-color: #334155;
-  background: #182438;
+[data-theme="dark"] :where(.admin-layout) .theme-card:hover {
+  border-color: var(--border);
+  background: var(--bg-subtle);
 }
 
-[data-theme="dark"] .theme-card.active {
-  border-color: #38bdf8;
-  background: rgba(2, 132, 199, 0.16);
-  box-shadow: 0 4px 14px rgba(2, 132, 199, 0.25);
+[data-theme="dark"] :where(.admin-layout) .theme-card.active {
+  border-color: var(--border-focus);
+  background: rgba(var(--accent-rgb), 0.16);
+  box-shadow: 0 4px 14px var(--focus-ring);
 }
 
-[data-theme="dark"] .theme-card-title {
-  color: #f8fafc;
+[data-theme="dark"] :where(.admin-layout) .theme-card-title {
+  color: var(--text-muted);
 }
 
-[data-theme="dark"] .theme-card-desc {
-  color: #94a3b8;
+[data-theme="dark"] :where(.admin-layout) .theme-card-desc {
+  color: var(--text-muted);
 }
 
 /* OBS Source Box */
-[data-theme="dark"] .timer-source-box input {
-  background: #0b0f19;
-  border-color: #223049;
-  color: #93c5fd;
+[data-theme="dark"] :where(.admin-layout) .timer-source-box input {
+  background: var(--bg-input);
+  border-color: var(--border);
+  color: var(--accent);
 }
 
 /* Background Toggles */
-[data-theme="dark"] .bg-toggle-btn {
-  background: #141d2e;
-  border-color: #1f293d;
-  color: #f1f5f9;
+[data-theme="dark"] :where(.admin-layout) .bg-toggle-btn {
+  background: var(--bg-panel);
+  border-color: var(--border);
+  color: var(--text-muted);
 }
 
-[data-theme="dark"] .bg-toggle-btn:hover {
-  background: #1a273e;
-  border-color: #334155;
+[data-theme="dark"] :where(.admin-layout) .bg-toggle-btn:hover {
+  background: var(--bg-subtle);
+  border-color: var(--border);
 }
 
-[data-theme="dark"] .bg-toggle-btn.active {
-  background: rgba(2, 132, 199, 0.18);
-  border-color: #38bdf8;
-  box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.25);
+[data-theme="dark"] :where(.admin-layout) .bg-toggle-btn.active {
+  background: rgba(var(--accent-rgb), 0.18);
+  border-color: var(--border-focus);
+  box-shadow: 0 0 0 2px var(--focus-ring);
 }
 
-[data-theme="dark"] .bg-toggle-title {
-  color: #f8fafc;
+[data-theme="dark"] :where(.admin-layout) .bg-toggle-title {
+  color: var(--text-muted);
 }
 
-[data-theme="dark"] .bg-toggle-desc {
-  color: #94a3b8;
+[data-theme="dark"] :where(.admin-layout) .bg-toggle-desc {
+  color: var(--text-muted);
 }
 
 /* Preview Checkerboard */
@@ -1146,105 +1146,105 @@
 }
 
 /* Sub-section & Toggles */
-[data-theme="dark"] .timer-sub-section {
-  border-top-color: #1f293d;
+[data-theme="dark"] :where(.admin-layout) .timer-sub-section {
+  border-top-color: var(--border);
 }
 
-[data-theme="dark"] .timer-sub-section-title {
-  color: #f8fafc;
+[data-theme="dark"] :where(.admin-layout) .timer-sub-section-title {
+  color: var(--text-muted);
 }
 
-[data-theme="dark"] .stroke-toggle-btn {
-  background: #141d2e;
-  border-color: #1f293d;
-  color: #cbd5e1;
+[data-theme="dark"] :where(.admin-layout) .stroke-toggle-btn {
+  background: var(--bg-panel);
+  border-color: var(--border);
+  color: var(--text-main);
 }
 
-[data-theme="dark"] .stroke-toggle-btn:hover {
-  background: #1a273e;
-  border-color: #334155;
-  color: #f8fafc;
+[data-theme="dark"] :where(.admin-layout) .stroke-toggle-btn:hover {
+  background: var(--bg-subtle);
+  border-color: var(--border);
+  color: var(--text-muted);
 }
 
-[data-theme="dark"] .stroke-toggle-btn.active {
-  background: rgba(2, 132, 199, 0.18);
-  border-color: #38bdf8;
-  color: #38bdf8;
-  box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.25);
+[data-theme="dark"] :where(.admin-layout) .stroke-toggle-btn.active {
+  background: rgba(var(--accent-rgb), 0.18);
+  border-color: var(--border-focus);
+  color: var(--accent);
+  box-shadow: 0 0 0 2px var(--focus-ring);
 }
 
-[data-theme="dark"] .preset-btn {
-  background: #141d2e;
-  border-color: #1f293d;
-  color: #cbd5e1;
+[data-theme="dark"] :where(.admin-layout) .preset-btn {
+  background: var(--bg-panel);
+  border-color: var(--border);
+  color: var(--text-main);
 }
 
-[data-theme="dark"] .preset-btn:hover {
-  background: rgba(2, 132, 199, 0.18);
-  border-color: #38bdf8;
-  color: #38bdf8;
+[data-theme="dark"] :where(.admin-layout) .preset-btn:hover {
+  background: rgba(var(--accent-rgb), 0.18);
+  border-color: var(--border-focus);
+  color: var(--accent);
 }
 
-[data-theme="dark"] .preset-color-chip {
-  border-color: #334155;
+[data-theme="dark"] :where(.admin-layout) .preset-color-chip {
+  border-color: var(--border);
 }
 
-[data-theme="dark"] .preset-color-chip:hover,
-[data-theme="dark"] .preset-color-chip.active {
-  border-color: #38bdf8;
+[data-theme="dark"] :where(.admin-layout) .preset-color-chip:hover,
+[data-theme="dark"] :where(.admin-layout) .preset-color-chip.active {
+  border-color: var(--border-focus);
 }
 
 /* Information Banners & Badges */
-.timer-info-banner {
+:where(.admin-layout) .timer-info-banner {
   font-size: 12.5px;
-  color: #0369a1;
-  background: #f0f9ff;
+  color: var(--accent);
+  background: var(--accent-soft);
   padding: 8px 12px;
   border-radius: 8px;
-  border: 1px solid #bae6fd;
+  border: 1px solid var(--accent-border);
 }
 
-[data-theme="dark"] .timer-info-banner {
-  color: #7dd3fc;
-  background: rgba(2, 132, 199, 0.14);
-  border-color: rgba(56, 189, 248, 0.3);
+[data-theme="dark"] :where(.admin-layout) .timer-info-banner {
+  color: var(--accent);
+  background: rgba(var(--accent-rgb), 0.14);
+  border-color: rgba(var(--accent-rgb), 0.3);
 }
 
-.timer-code-badge {
-  color: #0284c7;
-  background: #f1f5f9;
+:where(.admin-layout) .timer-code-badge {
+  color: var(--accent);
+  background: var(--bg-input);
   padding: 1px 4px;
   border-radius: 4px;
 }
 
-[data-theme="dark"] .timer-code-badge {
-  color: #38bdf8;
-  background: #1e293b;
-  border: 1px solid #334155;
+[data-theme="dark"] :where(.admin-layout) .timer-code-badge {
+  color: var(--accent);
+  background: var(--bg-input);
+  border: 1px solid var(--border);
 }
 
 /* ==========================================================================
    5. TIMER TABS NAVIGATION & STUDIO LIVE PREVIEW
    ========================================================================== */
 
-.timer-tabs-nav {
+:where(.admin-layout) .timer-tabs-nav {
   display: flex;
   gap: 8px;
   background: var(--bg-panel, #ffffff);
   border: 1.5px solid var(--border, #e2e8f0);
   padding: 6px;
   border-radius: 9999px;
-  box-shadow: 0 4px 16px -2px rgba(15, 23, 42, 0.05);
+  box-shadow: 0 4px 16px -2px var(--shadow-color);
   margin-bottom: 4px;
   flex-wrap: wrap;
 }
 
-[data-theme="dark"] .timer-tabs-nav {
-  background: #0d1424;
-  border-color: #1f293d;
+[data-theme="dark"] :where(.admin-layout) .timer-tabs-nav {
+  background: var(--bg-subtle);
+  border-color: var(--border);
 }
 
-.timer-tab-btn {
+:where(.admin-layout) .timer-tab-btn {
   flex: 1;
   min-width: 140px;
   display: inline-flex;
@@ -1264,24 +1264,24 @@
   white-space: nowrap;
 }
 
-.timer-tab-btn:hover:not(.active) {
+:where(.admin-layout) .timer-tab-btn:hover:not(.active) {
   color: var(--text-main, #0f172a);
-  background: rgba(15, 23, 42, 0.04);
+  background: var(--bg-subtle);
 }
 
-[data-theme="dark"] .timer-tab-btn:hover:not(.active) {
-  color: #f8fafc;
-  background: rgba(255, 255, 255, 0.06);
+[data-theme="dark"] :where(.admin-layout) .timer-tab-btn:hover:not(.active) {
+  color: var(--text-muted);
+  background: var(--bg-subtle);
 }
 
-.timer-tab-btn.active {
-  background: #0284c7;
+:where(.admin-layout) .timer-tab-btn.active {
+  background: var(--primary);
   color: #ffffff;
-  box-shadow: 0 4px 12px rgba(2, 132, 199, 0.3);
+  box-shadow: 0 4px 12px var(--focus-ring);
 }
 
 /* Side-by-side Design Studio Layout */
-.timer-design-layout {
+:where(.admin-layout) .timer-design-layout {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 460px;
   gap: 24px;
@@ -1290,12 +1290,12 @@
 }
 
 @media (max-width: 1080px) {
-  .timer-design-layout {
+  :where(.admin-layout) .timer-design-layout {
     grid-template-columns: 1fr;
   }
 }
 
-.timer-sticky-preview {
+:where(.admin-layout) .timer-sticky-preview {
   position: sticky;
   top: 24px;
   display: flex;
@@ -1303,20 +1303,20 @@
   gap: 16px;
 }
 
-.timer-preview-card {
-  background: #ffffff;
-  border: 1.5px solid #e2e8f0;
+:where(.admin-layout) .timer-preview-card {
+  background: var(--bg-panel);
+  border: 1.5px solid var(--border);
   border-radius: 24px;
   padding: 20px;
-  box-shadow: 0 10px 30px -5px rgba(15, 23, 42, 0.08);
+  box-shadow: 0 10px 30px -5px var(--shadow-color);
 }
 
-[data-theme="dark"] .timer-preview-card {
-  background: #0d1424;
-  border-color: #1f293d;
+[data-theme="dark"] :where(.admin-layout) .timer-preview-card {
+  background: var(--bg-subtle);
+  border-color: var(--border);
 }
 
-.timer-preview-card-header {
+:where(.admin-layout) .timer-preview-card-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -1325,17 +1325,17 @@
   gap: 8px;
 }
 
-.timer-preview-card-title {
+:where(.admin-layout) .timer-preview-card-title {
   display: flex;
   align-items: center;
   gap: 8px;
   font-size: 14px;
   font-weight: 700;
-  color: #0f172a;
+  color: var(--text-main);
 }
 
-[data-theme="dark"] .timer-preview-card-title {
-  color: #f8fafc;
+[data-theme="dark"] :where(.admin-layout) .timer-preview-card-title {
+  color: var(--text-muted);
 }
 
 .timer-preview-stage {
@@ -1377,7 +1377,7 @@
   max-width: 100%;
 }
 
-.timer-preview-bg-switcher {
+:where(.admin-layout) .timer-preview-bg-switcher {
   display: inline-flex;
   gap: 4px;
   background: var(--bg-hover, #f1f5f9);
@@ -1386,12 +1386,12 @@
   border: 1px solid var(--border, #e2e8f0);
 }
 
-[data-theme="dark"] .timer-preview-bg-switcher {
-  background: #1e293b;
-  border-color: #334155;
+[data-theme="dark"] :where(.admin-layout) .timer-preview-bg-switcher {
+  background: var(--bg-subtle);
+  border-color: var(--border);
 }
 
-.preview-bg-btn {
+:where(.admin-layout) .preview-bg-btn {
   padding: 5px 12px;
   border-radius: 9999px;
   border: none;
@@ -1405,23 +1405,23 @@
   font-family: inherit;
 }
 
-.preview-bg-btn:hover:not(.active) {
+:where(.admin-layout) .preview-bg-btn:hover:not(.active) {
   color: var(--text-main, #0f172a);
 }
 
-.preview-bg-btn.active {
-  background: #ffffff;
-  color: #0284c7;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+:where(.admin-layout) .preview-bg-btn.active {
+  background: var(--bg-panel);
+  color: var(--accent);
+  box-shadow: 0 2px 6px var(--shadow-color);
 }
 
-[data-theme="dark"] .preview-bg-btn.active {
-  background: #0f172a;
-  color: #38bdf8;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+[data-theme="dark"] :where(.admin-layout) .preview-bg-btn.active {
+  background: var(--bg-panel);
+  color: var(--accent);
+  box-shadow: 0 2px 6px var(--shadow-color);
 }
 
-.timer-preview-hint {
+:where(.admin-layout) .timer-preview-hint {
   font-size: 12px;
   color: var(--text-muted, #64748b);
   text-align: center;
@@ -1430,7 +1430,7 @@
 }
 
 /* Quick adjust container refinement */
-.timer-quick-adjust-card h2 {
+:where(.admin-layout) .timer-quick-adjust-card h2 {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -1441,11 +1441,11 @@
 
 /* Responsive tab grid for small screens */
 @media (max-width: 640px) {
-  .timer-tabs-nav {
+  :where(.admin-layout) .timer-tabs-nav {
     border-radius: 16px;
     padding: 4px;
   }
-  .timer-tab-btn {
+  :where(.admin-layout) .timer-tab-btn {
     min-width: calc(50% - 4px);
     font-size: 12px;
     padding: 8px 10px;

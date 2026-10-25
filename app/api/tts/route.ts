@@ -7,6 +7,20 @@ export const dynamic = 'force-dynamic';
 const audioCache = new Map<string, Buffer>();
 const MAX_CACHE_SIZE = 150;
 
+// Simple In-Memory Rate Limiter (จำกัด 12 ครั้งต่อนาทีต่อหนึ่ง IP)
+const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
+function isRateLimited(ip: string, limit = 12, windowMs = 60000): boolean {
+  const now = Date.now();
+  const entry = rateLimitMap.get(ip);
+  if (!entry || now > entry.resetAt) {
+    rateLimitMap.set(ip, { count: 1, resetAt: now + windowMs });
+    return false;
+  }
+  if (entry.count >= limit) return true;
+  entry.count += 1;
+  return false;
+}
+
 /**
  * Split text into chunks safe for Google Translate TTS (~160 chars max per request)
  */
@@ -87,9 +101,15 @@ async function generateGoogleTts(text: string): Promise<Buffer> {
 
 export async function GET(request: Request) {
   try {
+    const forwardedFor = request.headers.get('x-forwarded-for') || '127.0.0.1';
+    const clientIp = forwardedFor.split(',')[0].trim();
+    if (isRateLimited(clientIp, 12, 60000)) {
+      return new NextResponse('คุณส่งคำขอสังเคราะห์เสียงถี่เกินไป กรุณารอสักครู่', { status: 429 });
+    }
+
     const { searchParams } = new URL(request.url);
     const rawText = searchParams.get('text') || '';
-    const text = rawText.trim().slice(0, 1000);
+    const text = rawText.trim().slice(0, 300);
 
     if (!text) {
       return new NextResponse('ข้อความต้องไม่ว่างเปล่า', { status: 400 });

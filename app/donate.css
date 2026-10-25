@@ -303,8 +303,8 @@ body {
   min-width: 0;
 }
 
-.donate-col-left > .form-group:last-child,
-.donate-col-right > .form-group:last-child {
+.donate-col-left>.form-group:last-child,
+.donate-col-right>.form-group:last-child {
   margin-bottom: 0;
 }
 
@@ -1950,7 +1950,7 @@ textarea.input-control {
     margin-bottom: 0;
   }
 
-  .donate-col-left > .form-group:last-child {
+  .donate-col-left>.form-group:last-child {
     margin-bottom: 22px;
   }
 

@@ -1,4 +1,4 @@
-﻿import { NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 function decodeBase64Url(value: string): Uint8Array<ArrayBuffer> {
@@ -44,9 +44,36 @@ async function hasValidSession(token: string | undefined): Promise<boolean> {
   }
 }
 
+function extractToken(request: NextRequest): string | undefined {
+  const cookie = request.cookies.get('admin_session')?.value;
+  if (cookie) return cookie;
+
+  const authHeader = request.headers.get('authorization');
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    return authHeader.substring(7).trim();
+  }
+
+  const customHeader = request.headers.get('x-admin-token');
+  if (customHeader) return customHeader.trim();
+
+  return undefined;
+}
+
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  const isAuthenticated = await hasValidSession(request.cookies.get('admin_session')?.value);
+  const token = extractToken(request);
+  const secret = process.env.ADMIN_SECRET;
+  const isDirectSecret = Boolean(secret && token && token === secret);
+  const isAuthenticated = isDirectSecret || (await hasValidSession(token));
+
+  if (pathname.startsWith('/api/admin')) {
+    if (!isAuthenticated) {
+      return NextResponse.json(
+        { success: false, message: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+  }
 
   if (pathname.startsWith('/admin') || pathname.startsWith('/customizer')) {
     if (!isAuthenticated) {
@@ -68,5 +95,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/admin/:path*', '/customizer/:path*', '/login']
+  matcher: ['/admin/:path*', '/customizer/:path*', '/login', '/api/admin/:path*']
 };

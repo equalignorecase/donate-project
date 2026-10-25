@@ -170,7 +170,7 @@ export default function SupporterAppearanceEditor({
           <fieldset disabled={disabled} className="goal-editor-controls">
             <legend>สีและธีมพื้นหลัง</legend>
             <div style={{ marginBottom: '14px' }}>
-              <span style={{ fontSize: '13px', fontWeight: 600, color: '#94a3b8', display: 'block', marginBottom: '8px' }}>
+              <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: '8px' }}>
                 พรีเซ็ตสีพื้นหลังการ์ดด่วน:
               </span>
               <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
@@ -190,10 +190,10 @@ export default function SupporterAppearanceEditor({
                         borderRadius: '9999px',
                         fontSize: '12px',
                         fontWeight: 600,
-                        color: isSelected ? '#ffffff' : '#cbd5e1',
-                        background: isSelected ? 'rgba(37, 99, 235, 0.35)' : 'rgba(255, 255, 255, 0.05)',
-                        border: isSelected ? '1px solid #60a5fa' : '1px solid rgba(255, 255, 255, 0.1)',
-                        boxShadow: isSelected ? '0 0 12px rgba(59, 130, 246, 0.4)' : undefined,
+                        color: isSelected ? 'var(--accent)' : 'var(--text-main)',
+                        background: isSelected ? 'var(--accent-soft)' : 'var(--bg-subtle)',
+                        border: isSelected ? '1px solid var(--accent-border)' : '1px solid var(--border)',
+                        boxShadow: undefined,
                         cursor: disabled ? 'not-allowed' : 'pointer',
                         transition: 'all 0.15s ease',
                       }}
@@ -204,7 +204,7 @@ export default function SupporterAppearanceEditor({
                           height: '12px',
                           borderRadius: '50%',
                           backgroundColor: preset.color,
-                          border: '1px solid rgba(255, 255, 255, 0.4)',
+                          border: "1px solid var(--border)",
                           flexShrink: 0,
                         }}
                       />

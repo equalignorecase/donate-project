@@ -2,7 +2,7 @@
    Live Stream Studio Simulator Styles
    ========================================================== */
 
-.simulator-container {
+:where(.admin-layout) .simulator-container {
   display: flex;
   flex-direction: column;
   gap: 20px;
@@ -13,59 +13,59 @@
 }
 
 /* Header & Action Bar */
-.simulator-header {
+:where(.admin-layout) .simulator-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   flex-wrap: wrap;
   gap: 16px;
   padding: 20px 24px;
-  background: rgba(15, 23, 42, 0.7);
+  background: var(--bg-panel);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--border);
   border-radius: 24px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 8px 32px var(--shadow-color);
 }
 
-.simulator-title-group h1 {
+:where(.admin-layout) .simulator-title-group h1 {
   font-size: 24px;
   font-weight: 800;
-  color: #ffffff;
+  color: var(--text-main);
   margin: 0 0 6px;
   display: flex;
   align-items: center;
   gap: 10px;
 }
 
-.simulator-title-badge {
+:where(.admin-layout) .simulator-title-badge {
   display: inline-flex;
   align-items: center;
   gap: 6px;
   padding: 4px 10px;
-  background: rgba(59, 130, 246, 0.2);
-  border: 1px solid rgba(96, 165, 250, 0.4);
+  background: rgba(var(--accent-rgb), 0.2);
+  border: 1px solid rgba(var(--accent-rgb), 0.3);
   border-radius: 999px;
   font-size: 11px;
   font-weight: 700;
-  color: #60a5fa;
+  color: var(--accent);
   letter-spacing: 0.5px;
 }
 
-.simulator-subtitle {
+:where(.admin-layout) .simulator-subtitle {
   font-size: 13px;
-  color: #94a3b8;
+  color: var(--text-muted);
   margin: 0;
 }
 
-.simulator-actions {
+:where(.admin-layout) .simulator-actions {
   display: flex;
   align-items: center;
   gap: 10px;
   flex-wrap: wrap;
 }
 
-.simulator-btn {
+:where(.admin-layout) .simulator-btn {
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -79,50 +79,50 @@
   white-space: nowrap;
 }
 
-.simulator-btn-primary {
+:where(.admin-layout) .simulator-btn-primary {
   color: #ffffff;
-  background: linear-gradient(135deg, #2563eb, #1d4ed8);
-  border-color: #60a5fa;
-  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.4);
+  background: linear-gradient(135deg, var(--primary), var(--primary));
+  border-color: var(--border-focus);
+  box-shadow: 0 4px 14px var(--focus-ring);
 }
 
-.simulator-btn-primary:hover {
-  background: linear-gradient(135deg, #3b82f6, #2563eb);
+:where(.admin-layout) .simulator-btn-primary:hover {
+  background: linear-gradient(135deg, var(--primary), var(--primary));
   transform: translateY(-1px);
 }
 
-.simulator-btn-secondary {
-  color: #e2e8f0;
-  background: rgba(255, 255, 255, 0.08);
-  border-color: rgba(255, 255, 255, 0.15);
+:where(.admin-layout) .simulator-btn-secondary {
+  color: var(--text-main);
+  background: var(--bg-subtle);
+  border-color: var(--border);
 }
 
-.simulator-btn-secondary:hover {
-  background: rgba(255, 255, 255, 0.15);
-  color: #ffffff;
+:where(.admin-layout) .simulator-btn-secondary:hover {
+  background: var(--bg-subtle);
+  color: var(--text-main);
 }
 
 /* Control Strip */
-.simulator-control-strip {
+:where(.admin-layout) .simulator-control-strip {
   display: flex;
   justify-content: space-between;
   align-items: center;
   flex-wrap: wrap;
   gap: 14px;
   padding: 14px 20px;
-  background: rgba(15, 23, 42, 0.6);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
   border-radius: 18px;
 }
 
-.simulator-widget-toggles {
+:where(.admin-layout) .simulator-widget-toggles {
   display: flex;
   align-items: center;
   gap: 8px;
   flex-wrap: wrap;
 }
 
-.simulator-toggle-btn {
+:where(.admin-layout) .simulator-toggle-btn {
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -130,79 +130,79 @@
   border-radius: 9999px;
   font-size: 12px;
   font-weight: 700;
-  color: #94a3b8;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: var(--text-muted);
+  background: var(--bg-subtle);
+  border: 1px solid var(--border);
   cursor: pointer;
   transition: all 0.15s ease;
 }
 
-.simulator-toggle-btn.active {
-  color: #ffffff;
-  background: rgba(37, 99, 235, 0.25);
-  border-color: #3b82f6;
-  box-shadow: 0 0 10px rgba(59, 130, 246, 0.35);
+:where(.admin-layout) .simulator-toggle-btn.active {
+  color: var(--text-main);
+  background: rgba(var(--accent-rgb), 0.25);
+  border-color: var(--border-focus);
+  box-shadow: 0 0 10px var(--focus-ring);
 }
 
-.simulator-toggle-dot {
+:where(.admin-layout) .simulator-toggle-dot {
   width: 7px;
   height: 7px;
   border-radius: 50%;
-  background: #64748b;
+  background: var(--bg-subtle);
 }
 
-.simulator-toggle-btn.active .simulator-toggle-dot {
-  background: #22c55e;
-  box-shadow: 0 0 6px #22c55e;
+:where(.admin-layout) .simulator-toggle-btn.active .simulator-toggle-dot {
+  background: var(--success-solid);
+  box-shadow: 0 0 6px var(--success-soft);
 }
 
 /* Backdrop Switcher in Simulator */
-.simulator-backdrop-group {
+:where(.admin-layout) .simulator-backdrop-group {
   display: flex;
   align-items: center;
   gap: 6px;
   flex-wrap: wrap;
 }
 
-.simulator-backdrop-btn {
+:where(.admin-layout) .simulator-backdrop-btn {
   display: inline-flex;
   align-items: center;
   gap: 6px;
   padding: 6px 14px;
   font-size: 12px;
   font-weight: 600;
-  color: #cbd5e1;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: var(--text-main);
+  background: var(--bg-subtle);
+  border: 1px solid var(--border);
   border-radius: 9999px;
   cursor: pointer;
   transition: all 0.15s ease;
 }
 
-.simulator-backdrop-btn:hover {
-  background: rgba(255, 255, 255, 0.12);
-  color: #ffffff;
+:where(.admin-layout) .simulator-backdrop-btn:hover {
+  background: var(--bg-subtle);
+  color: var(--text-main);
 }
 
-.simulator-backdrop-btn.active {
+:where(.admin-layout) .simulator-backdrop-btn.active {
   color: #ffffff;
-  background: linear-gradient(135deg, #2563eb, #1d4ed8);
-  border-color: #60a5fa;
-  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.4);
+  background: linear-gradient(135deg, var(--primary), var(--primary));
+  border-color: var(--border-focus);
+  box-shadow: 0 2px 8px var(--focus-ring);
 }
 
 /* Main 16:9 Screen Canvas Wrapper */
-.simulator-screen-outer {
+:where(.admin-layout) .simulator-screen-outer {
   position: relative;
   width: 100%;
-  background: #020617;
-  border: 2px solid rgba(59, 130, 246, 0.3);
+  background: var(--bg-panel);
+  border: 2px solid rgba(var(--accent-rgb), 0.3);
   border-radius: 24px;
   overflow: hidden;
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6), inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+  box-shadow: 0 20px 50px var(--shadow-color), inset 0 0 0 1px var(--shadow-color);
 }
 
-.simulator-screen-ratio {
+:where(.admin-layout) .simulator-screen-ratio {
   position: relative;
   width: 100%;
   padding-top: 56.25%; /* 16:9 Aspect Ratio */
@@ -251,34 +251,34 @@
 }
 
 /* Streamer Mockup Elements */
-.sim-cam-frame {
+:where(.admin-layout) .sim-cam-frame {
   position: absolute;
   top: 15%;
   left: 6%;
   width: 24%;
   height: 28%;
-  border: 2px solid rgba(56, 189, 248, 0.5);
+  border: 2px solid rgba(var(--accent-rgb), 0.3);
   border-radius: 12px;
-  background: rgba(15, 23, 42, 0.6);
+  background: var(--bg-panel);
   backdrop-filter: blur(8px);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  color: #94a3b8;
+  color: var(--text-muted);
   font-size: 13px;
   font-weight: 700;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 8px 24px var(--shadow-color);
   pointer-events: none;
 }
 
-.sim-cam-frame svg {
+:where(.admin-layout) .sim-cam-frame svg {
   margin-bottom: 6px;
-  color: #38bdf8;
+  color: var(--accent);
 }
 
 /* Draggable Widget Item */
-.simulator-widget-draggable {
+:where(.admin-layout) .simulator-widget-draggable {
   position: absolute;
   transform: translate(-50%, -50%);
   cursor: grab;
@@ -287,22 +287,22 @@
   z-index: 10;
 }
 
-.simulator-widget-draggable:active,
-.simulator-widget-draggable.is-dragging {
+:where(.admin-layout) .simulator-widget-draggable:active,
+:where(.admin-layout) .simulator-widget-draggable.is-dragging {
   cursor: grabbing;
   z-index: 50 !important;
 }
 
-.simulator-widget-draggable.selected {
-  outline: 2px dashed #60a5fa;
+:where(.admin-layout) .simulator-widget-draggable.selected {
+  outline: 2px dashed var(--border-focus);
   outline-offset: 6px;
   border-radius: 12px;
-  box-shadow: 0 0 20px rgba(59, 130, 246, 0.5);
+  box-shadow: 0 0 20px var(--focus-ring);
   z-index: 40;
 }
 
 /* Widget Header Toolbar overlay when selected or hovered */
-.sim-widget-handle-bar {
+:where(.admin-layout) .sim-widget-handle-bar {
   position: absolute;
   top: -38px;
   left: 50%;
@@ -311,10 +311,10 @@
   align-items: center;
   gap: 6px;
   padding: 4px 10px;
-  background: rgba(15, 23, 42, 0.95);
-  border: 1px solid rgba(96, 165, 250, 0.6);
+  background: var(--bg-panel);
+  border: 1px solid rgba(var(--accent-rgb), 0.3);
   border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 4px 12px var(--shadow-color);
   white-space: nowrap;
   pointer-events: auto;
   opacity: 0;
@@ -322,122 +322,122 @@
   z-index: 60;
 }
 
-.simulator-widget-draggable:hover .sim-widget-handle-bar,
-.simulator-widget-draggable.selected .sim-widget-handle-bar,
-.simulator-widget-draggable.is-dragging .sim-widget-handle-bar {
+:where(.admin-layout) .simulator-widget-draggable:hover .sim-widget-handle-bar,
+:where(.admin-layout) .simulator-widget-draggable.selected .sim-widget-handle-bar,
+:where(.admin-layout) .simulator-widget-draggable.is-dragging .sim-widget-handle-bar {
   opacity: 1;
 }
 
-.sim-widget-handle-title {
+:where(.admin-layout) .sim-widget-handle-title {
   font-size: 11px;
   font-weight: 800;
-  color: #60a5fa;
+  color: var(--accent);
   letter-spacing: 0.3px;
 }
 
-.sim-widget-handle-coords {
+:where(.admin-layout) .sim-widget-handle-coords {
   font-size: 10px;
   font-weight: 700;
-  color: #94a3b8;
-  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-muted);
+  background: var(--bg-subtle);
   padding: 2px 6px;
   border-radius: 4px;
 }
 
-.sim-widget-scale-badge {
+:where(.admin-layout) .sim-widget-scale-badge {
   font-size: 10px;
   font-weight: 800;
-  color: #38bdf8;
-  background: rgba(56, 189, 248, 0.15);
-  border: 1px solid rgba(56, 189, 248, 0.35);
+  color: var(--accent);
+  background: rgba(var(--accent-rgb), 0.15);
+  border: 1px solid rgba(var(--accent-rgb), 0.3);
   padding: 2px 6px;
   border-radius: 4px;
 }
 
 /* Corner Resize Handles */
-.sim-resize-handle {
+:where(.admin-layout) .sim-resize-handle {
   position: absolute;
   width: 14px;
   height: 14px;
-  background: #ffffff;
-  border: 2px solid #2563eb;
+  background: var(--bg-panel);
+  border: 2px solid var(--border-focus);
   border-radius: 3px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 2px 8px var(--shadow-color);
   z-index: 70;
   transition: transform 0.12s ease, background 0.12s ease;
   pointer-events: auto;
 }
 
-.sim-resize-handle:hover,
-.sim-resize-handle.active {
+:where(.admin-layout) .sim-resize-handle:hover,
+:where(.admin-layout) .sim-resize-handle.active {
   transform: scale(1.35);
-  background: #60a5fa;
-  border-color: #ffffff;
+  background: var(--primary);
+  border-color: var(--border);
 }
 
-.sim-resize-tl {
+:where(.admin-layout) .sim-resize-tl {
   top: -7px;
   left: -7px;
   cursor: nwse-resize;
 }
 
-.sim-resize-tr {
+:where(.admin-layout) .sim-resize-tr {
   top: -7px;
   right: -7px;
   cursor: nesw-resize;
 }
 
-.sim-resize-bl {
+:where(.admin-layout) .sim-resize-bl {
   bottom: -7px;
   left: -7px;
   cursor: nesw-resize;
 }
 
-.sim-resize-br {
+:where(.admin-layout) .sim-resize-br {
   bottom: -7px;
   right: -7px;
   cursor: nwse-resize;
 }
 
 /* Snap Presets Floating Bar */
-.simulator-presets-bar {
+:where(.admin-layout) .simulator-presets-bar {
   display: flex;
   align-items: center;
   gap: 8px;
   padding: 12px 18px;
-  background: rgba(15, 23, 42, 0.8);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
   border-radius: 18px;
   flex-wrap: wrap;
 }
 
-.simulator-presets-label {
+:where(.admin-layout) .simulator-presets-label {
   font-size: 12px;
   font-weight: 700;
-  color: #94a3b8;
+  color: var(--text-muted);
   margin-right: 4px;
 }
 
-.sim-snap-btn {
+:where(.admin-layout) .sim-snap-btn {
   padding: 5px 12px;
   font-size: 11px;
   font-weight: 700;
-  color: #cbd5e1;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--text-main);
+  background: var(--bg-subtle);
+  border: 1px solid var(--border);
   border-radius: 9999px;
   cursor: pointer;
   transition: all 0.15s ease;
 }
 
-.sim-snap-btn:hover {
-  background: rgba(37, 99, 235, 0.3);
-  border-color: #60a5fa;
-  color: #ffffff;
+:where(.admin-layout) .sim-snap-btn:hover {
+  background: rgba(var(--accent-rgb), 0.3);
+  border-color: var(--border-focus);
+  color: var(--text-main);
 }
 
 /* Toast message */
-.simulator-toast {
+:where(.admin-layout) .simulator-toast {
   position: fixed;
   bottom: 30px;
   right: 30px;
@@ -445,13 +445,13 @@
   align-items: center;
   gap: 10px;
   padding: 12px 20px;
-  background: #1e293b;
-  border: 1px solid #3b82f6;
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-focus);
   border-radius: 16px;
-  color: #ffffff;
+  color: var(--text-main);
   font-size: 13px;
   font-weight: 700;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 10px 30px var(--shadow-color);
   animation: sim-toast-in 0.25s ease-out;
   z-index: 10000;
 }
@@ -468,13 +468,13 @@
 }
 
 /* Alert Box Wireframe Placeholder (when idle & selected) */
-.sim-alert-placeholder {
+:where(.admin-layout) .sim-alert-placeholder {
   width: 580px;
   max-width: 90vw;
   height: 140px;
-  border: 2px dashed rgba(96, 165, 250, 0.45);
+  border: 2px dashed rgba(var(--accent-rgb), 0.3);
   border-radius: 24px;
-  background: rgba(30, 58, 138, 0.15);
+  background: rgba(var(--accent-rgb), 0.15);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -483,10 +483,10 @@
   backdrop-filter: blur(4px);
 }
 
-.sim-alert-placeholder-text {
+:where(.admin-layout) .sim-alert-placeholder-text {
   font-size: 13px;
   font-weight: 700;
-  color: #93c5fd;
+  color: var(--accent);
   text-align: center;
   pointer-events: none;
 }

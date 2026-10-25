@@ -453,7 +453,7 @@ export default function SimulatorPage() {
       <div className="simulator-header">
         <div className="simulator-title-group">
           <h1>
-            <Monitor size={26} color="#3b82f6" />
+            <Monitor size={26} color="var(--accent)" />
             <span>จำลองจอไลฟ์สตรีม (Live Stream Studio)</span>
             <span className="simulator-title-badge">OBS 16:9 CANVAS</span>
           </h1>
@@ -473,12 +473,12 @@ export default function SimulatorPage() {
             <span>ทดสอบยิง Alert</span>
           </button>
 
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', background: 'rgba(255, 255, 255, 0.05)', padding: '3px 6px', borderRadius: '8px', border: '1px solid rgba(255, 255, 255, 0.1)' }}>
-            <span style={{ fontSize: '11px', color: '#94a3b8', marginRight: '4px', fontWeight: 600 }}>Tier:</span>
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', background: 'var(--bg-subtle)', padding: '3px 6px', borderRadius: '8px', border: '1px solid var(--border)' }}>
+            <span style={{ fontSize: '11px', color: 'var(--text-muted)', marginRight: '4px', fontWeight: 600 }}>Tier:</span>
             <button
               type="button"
               className="simulator-btn sm"
-              style={{ padding: '3px 8px', fontSize: '11px', background: 'transparent', border: 'none', color: '#e2e8f0' }}
+              style={{ padding: '3px 8px', fontSize: '11px', background: 'transparent', border: 'none', color: 'var(--text-main)' }}
               onClick={() => triggerTestAlert(20, 'สมชาย ใจดี', 'เป็นกำลังใจให้นะครับ สตรีมสนุกมาก!')}
               title="ทดสอบระดับ Common (20 บาท - สีปกติ)"
             >
@@ -505,7 +505,7 @@ export default function SimulatorPage() {
             <button
               type="button"
               className="simulator-btn sm"
-              style={{ padding: '3px 8px', fontSize: '11px', background: 'rgba(234, 88, 12, 0.2)', border: '1px solid rgba(234, 88, 12, 0.4)', color: alertSettings.alert_tiered_legendary_color || '#ea580c', borderRadius: '4px' }}
+              style={{ padding: '3px 8px', fontSize: '11px', background: 'rgba(234, 88, 12, 0.2)', border: "1px solid var(--border)", color: alertSettings.alert_tiered_legendary_color || '#ea580c', borderRadius: '4px' }}
               onClick={() => triggerTestAlert(1000, 'สุลต่าน ใจป๋า', 'เติมพลังให้ครับ สู้ๆ! 👑')}
               title="ทดสอบระดับ Legendary (1,000 บาท - สีตัวอักษร Legendary)"
             >
@@ -549,7 +549,7 @@ export default function SimulatorPage() {
       <div className="simulator-control-strip">
         {/* Left: Widget show/hide toggles */}
         <div className="simulator-widget-toggles">
-          <span style={{ fontSize: '12px', fontWeight: 700, color: '#94a3b8', marginRight: '6px' }}>
+          <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-muted)', marginRight: '6px' }}>
             เปิด/ปิด วิดเจ็ต:
           </span>
           {(['alert', 'goal', 'supporters', 'timer'] as (keyof StudioSceneLayout)[]).map(key => (
@@ -567,7 +567,7 @@ export default function SimulatorPage() {
 
         {/* Right: Backdrop Simulator Switcher */}
         <div className="simulator-backdrop-group">
-          <span style={{ fontSize: '12px', fontWeight: 700, color: '#94a3b8', marginRight: '6px' }}>
+          <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-muted)', marginRight: '6px' }}>
             ฉากหลังจำลอง:
           </span>
           <button
@@ -640,7 +640,7 @@ export default function SimulatorPage() {
           <button
             type="button"
             className="sim-snap-btn"
-            style={{ background: 'rgba(56, 189, 248, 0.2)', borderColor: '#38bdf8', color: '#ffffff', marginLeft: 'auto' }}
+            style={{ background: 'var(--accent-soft)', borderColor: 'var(--accent-border)', color: 'var(--accent)', marginLeft: 'auto' }}
             onClick={handleResetScale}
             title="รีเซ็ตขนาดวิดเจ็ตนี้กลับเป็น 100%"
           >

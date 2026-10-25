@@ -10,11 +10,12 @@ export interface WidgetData {
   allTime: Supporter[];
 }
 
-export function summarizeWidgets(rows: { name: string; amount: number | string; created_at: string }[], settings: Record<string, string>, now = new Date()): WidgetData {
+export function summarizeWidgets(rows: { name: string; amount: number | string; created_at: string }[], settings: Record<string, string>, now = new Date(), limitOverride?: number): WidgetData {
   const dateKey = (date: Date) => new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Bangkok', year: 'numeric', month: '2-digit', day: '2-digit' }).format(date);
   const today = dateKey(now);
   const supporterAppearance = readSupporterAppearance(settings);
-  const limit = Number(supporterAppearance.supporter_limit);
+  const limit = Number.isInteger(limitOverride) && limitOverride >= 1 && limitOverride <= 10
+    ? limitOverride : Number(supporterAppearance.supporter_limit);
   const start = settings.goal_started_at ? Date.parse(settings.goal_started_at) : 0;
   const totals = [new Map<string, number>(), new Map<string, number>(), new Map<string, number>()];
   let current = 0;

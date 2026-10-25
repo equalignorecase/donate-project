@@ -488,7 +488,7 @@ export default function AdminDonationsPage() {
             type="button"
             className={`btn sm ${filterStatus === 'failed' ? 'primary' : 'secondary'}`}
             onClick={() => handleFilterChange('failed')}
-            style={filterStatus === 'failed' ? { background: '#ef4444', borderColor: '#ef4444' } : {}}
+            style={filterStatus === 'failed' ? { background: 'var(--danger)', borderColor: 'var(--danger)' } : {}}
           >
             ไม่ผ่าน ({failedCount})
           </button>
@@ -524,7 +524,7 @@ export default function AdminDonationsPage() {
               </tr>
             ) : (
               paginatedDonations.map((item) => (
-                <tr key={item.id} style={item.status === 'failed' ? { background: 'rgba(239, 68, 68, 0.02)' } : {}}>
+                <tr key={item.id} style={item.status === 'failed' ? { background: 'var(--danger-soft)' } : {}}>
                   <td style={{ whiteSpace: 'nowrap', fontSize: '12px', color: 'var(--text-muted)' }}>
                     {item.created_at ? new Date(item.created_at).toLocaleString('th-TH', { timeZone: 'Asia/Bangkok' }) : '-'}
                   </td>
@@ -545,7 +545,7 @@ export default function AdminDonationsPage() {
                     style={{
                       fontSize: item.status === 'failed' ? '12px' : '11px',
                       fontFamily: item.status === 'failed' ? 'inherit' : 'monospace',
-                      color: item.status === 'failed' ? '#ef4444' : 'var(--text-dim)',
+                      color: item.status === 'failed' ? 'var(--danger)' : 'var(--text-dim)',
                       maxWidth: '260px',
                       wordBreak: 'break-word',
                       lineHeight: '1.4'
@@ -602,7 +602,7 @@ export default function AdminDonationsPage() {
                               handleOpenEdit(item);
                             }}
                           >
-                            <Edit3 size={13} style={{ color: '#2563eb' }} />
+                            <Edit3 size={13} style={{ color: 'var(--accent)' }} />
                             <span>แก้ไขข้อมูล</span>
                           </button>
 
@@ -826,8 +826,8 @@ export default function AdminDonationsPage() {
                   gap: '10px',
                   padding: '12px 14px',
                   borderRadius: '8px',
-                  background: 'rgba(56, 189, 248, 0.08)',
-                  border: '1px solid rgba(56, 189, 248, 0.25)',
+                  background: 'var(--accent-soft)',
+                  border: '1px solid var(--accent-border)',
                   marginTop: '4px'
                 }}>
                   <input
@@ -977,7 +977,7 @@ export default function AdminDonationsPage() {
         <div className="modal-overlay" onClick={() => !isSubmitting && setIsDeleteOpen(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <h3 className="modal-title" style={{ color: '#ef4444' }}>
+              <h3 className="modal-title" style={{ color: 'var(--danger)' }}>
                 <AlertTriangle size={18} />
                 ยืนยันการลบรายการโดเนท
               </h3>
@@ -1027,7 +1027,7 @@ export default function AdminDonationsPage() {
         <div className="modal-overlay" onClick={() => !isSubmitting && setIsClearFailedOpen(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <h3 className="modal-title" style={{ color: '#ef4444' }}>
+              <h3 className="modal-title" style={{ color: 'var(--danger)' }}>
                 <Trash2 size={18} />
                 ยืนยันล้างรายการที่ไม่ผ่านทั้งหมด
               </h3>

@@ -1,0 +1,109 @@
+/* Shared management UI palette. Stream artwork and saved OBS colors stay separate. */
+.admin-layout,
+.login-page-wrapper {
+  color-scheme: light;
+  color: var(--text-main);
+  --bg-page: #F6F7FB;
+  --bg-panel: #FFFFFF;
+  --bg-card: #FFFFFF;
+  --bg-subtle: #F0F1F6;
+  --bg-input: #F8F9FC;
+  --bg-main: var(--bg-card);
+  --border: #E2E5EE;
+  --border-color: var(--border);
+  --border-subtle: var(--border);
+  --border-focus: #7C3AED;
+  --primary: #7C3AED;
+  --primary-hover: #6D28D9;
+  --accent: #7C3AED;
+  --accent-rgb: 124, 58, 237;
+  --accent-soft: #7C3AED0D;
+  --accent-light: var(--accent-soft);
+  --accent-border: #7C3AED33;
+  --accent-glow: #7C3AED1A;
+  --focus-ring: #7C3AED24;
+  --text-main: #191D2B;
+  --text-muted: #626B7F;
+  --text-dim: #687185;
+  --success: #167650;
+  --success-solid: #167650;
+  --success-soft: #E9F7F0;
+  --success-light: var(--success-soft);
+  --success-border: #16765038;
+  --warning: #A65C1D;
+  --warning-solid: #A65C1D;
+  --warning-soft: #FFF7EC;
+  --warning-border: #A65C1D38;
+  --danger: #B42345;
+  --danger-solid: #B42345;
+  --danger-soft: #FFF0F3;
+  --danger-light: var(--danger-soft);
+  --danger-border: #B4234538;
+  --shadow-color: #1F254214;
+  --shadow-sm: 0 1px 3px #1F25420A;
+  --shadow-card: 0 10px 30px #1F25420D;
+  --shadow-pop: 0 20px 60px #1F254226;
+  --modal-backdrop: #090B1399;
+  --admin-grid: #747C920D;
+  --radius-2xl: 28px;
+  --radius-xl: 24px;
+  --radius-lg: 20px;
+  --radius-md: 14px;
+  --radius-sm: 10px;
+  --radius-pill: 9999px;
+  --font-family: 'LINESeedSansTH', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --transition: all .2s ease;
+}
+
+[data-theme='dark'] .admin-layout,
+[data-theme='dark'] .login-page-wrapper {
+  color-scheme: dark;
+  --bg-page: #0F1117;
+  --bg-panel: #191C25;
+  --bg-card: #191C25;
+  --bg-subtle: #222631;
+  --bg-input: #12151D;
+  --border: #303543;
+  --border-focus: #A78BFA;
+  --accent: #B59AF9;
+  --accent-rgb: 167, 139, 250;
+  --accent-soft: #8B5CF618;
+  --accent-border: #8B5CF64D;
+  --accent-glow: #8B5CF61A;
+  --focus-ring: #8B5CF626;
+  --text-main: #F4F5FA;
+  --text-muted: #A1A8B8;
+  --text-dim: #969EAF;
+  --success: #79D6AE;
+  --success-soft: #79D6AE12;
+  --success-border: #79D6AE40;
+  --warning: #E7AE70;
+  --warning-soft: #E7AE7012;
+  --warning-border: #E7AE7040;
+  --danger: #F4A0AF;
+  --danger-soft: #F4A0AF12;
+  --danger-border: #F4A0AF40;
+  --shadow-color: #00000033;
+  --shadow-sm: 0 1px 3px #00000026;
+  --shadow-card: 0 10px 30px #00000026;
+  --shadow-pop: 0 20px 60px #00000040;
+  --admin-grid: #A99AC20D;
+}
+
+/* Keep selection states legible without painting a whole panel purple. */
+.admin-layout .sidebar-link.active,
+.admin-layout .tab-btn.active,
+.admin-layout .sidebar-user-card.active {
+  color: var(--accent);
+  background: var(--accent-soft);
+  border-color: var(--accent-border);
+}
+.admin-layout input:not([type='color']):not([type='range']),
+.admin-layout select,
+.admin-layout textarea {
+  accent-color: var(--primary);
+}
+.admin-layout :is(button, a, input, select, textarea):focus-visible {
+  outline: 2px solid var(--border-focus);
+  outline-offset: 3px;
+}

@@ -43,7 +43,7 @@ export default function Modal({
         left: 0,
         right: 0,
         bottom: 0,
-        backgroundColor: 'rgba(15, 23, 42, 0.6)',
+        backgroundColor: 'var(--modal-backdrop, rgba(15, 23, 42, 0.6))',
         backdropFilter: 'blur(4px)',
         display: 'flex',
         alignItems: 'center',
@@ -59,13 +59,13 @@ export default function Modal({
     >
       <div
         style={{
-          backgroundColor: '#ffffff',
+          backgroundColor: 'var(--bg-panel, #ffffff)',
           borderRadius: '24px',
           maxWidth,
           width: '100%',
           padding: '28px',
           boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
-          border: '1px solid #e2e8f0',
+          border: '1px solid var(--border, #e2e8f0)',
           position: 'relative'
         }}
       >

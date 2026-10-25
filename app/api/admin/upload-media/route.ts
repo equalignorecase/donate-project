@@ -21,14 +21,13 @@ const ALLOWED_MIME_TYPES = new Set([
   'image/png',
   'image/jpeg',
   'image/webp',
-  'image/svg+xml',
   'video/webm',
   'video/mp4',
   'video/quicktime'
 ]);
 
 const ALLOWED_EXTENSIONS = new Set([
-  'mp3', 'wav', 'ogg', 'gif', 'png', 'jpg', 'jpeg', 'webp', 'svg', 'webm', 'mp4', 'mov'
+  'mp3', 'wav', 'ogg', 'gif', 'png', 'jpg', 'jpeg', 'webp', 'webm', 'mp4', 'mov'
 ]);
 
 export async function POST(request: Request) {
