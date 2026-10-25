@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import axios from 'axios';
+import { prepareTtsText } from '@/lib/tts-helper';
 
 export const dynamic = 'force-dynamic';
 
@@ -109,7 +110,7 @@ export async function GET(request: Request) {
 
     const { searchParams } = new URL(request.url);
     const rawText = searchParams.get('text') || '';
-    const text = rawText.trim().slice(0, 300);
+    const text = prepareTtsText(rawText.trim().slice(0, 300));
 
     if (!text) {
       return new NextResponse('ข้อความต้องไม่ว่างเปล่า', { status: 400 });

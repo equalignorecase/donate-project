@@ -7,6 +7,7 @@ import { supabase } from '@/lib/supabaseClient';
 import { Donation, AlertSettings } from '@/lib/types/database';
 import AlertCard, { getAlertTier } from './alert/AlertCard';
 import { amountToThaiWords } from '@/lib/thaiNumber';
+import { prepareTtsText } from '@/lib/tts-helper';
 
 const ICONS: Record<string, React.ReactNode> = {
   gift: (
@@ -351,6 +352,7 @@ export default function OverlayPage() {
     if (item.message && item.message.trim() !== '') {
       textToSpeak += ` ${item.message.trim()}`;
     }
+    textToSpeak = prepareTtsText(textToSpeak);
 
     const volume = Math.min(Math.max(parseFloat(String(s.alert_volume || 80)) / 100, 0), 1);
 

@@ -17,6 +17,7 @@ import { supporterDefaults, SupporterAppearance } from '@/lib/supporterAppearanc
 import { defaultTimerAppearance, TimerAppearance, TimerStatus } from '@/lib/timerTypes';
 import { Supporter } from '@/lib/widgets';
 import { amountToThaiWords } from '@/lib/thaiNumber';
+import { prepareTtsText } from '@/lib/tts-helper';
 import '@/app/overlay/overlay.css';
 import '@/app/overlay/widgets.css';
 import '@/app/overlay/timer/timer.css';
@@ -196,6 +197,7 @@ export default function OverlayScenePage() {
     if (item.message && item.message.trim() !== '') {
       textToSpeak += ` ${item.message.trim()}`;
     }
+    textToSpeak = prepareTtsText(textToSpeak);
     const volume = Math.min(Math.max(parseFloat(String(s.alert_volume || 80)) / 100, 0), 1);
 
     if (ttsTimeoutRef.current) {
