@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { Skeleton } from '@/app/components';
 import { useAdmin } from '../AdminContext';
 
 interface ProfileData {
@@ -206,21 +207,7 @@ export default function AdminProfilePage() {
   };
 
   if (isLoading) {
-    return (
-      <div className="panel" style={{ textAlign: 'center', padding: '60px 20px', color: 'var(--text-dim)' }}>
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ animation: 'spin 1s linear infinite', marginBottom: '12px' }}>
-          <line x1="12" y1="2" x2="12" y2="6"></line>
-          <line x1="12" y1="18" x2="12" y2="22"></line>
-          <line x1="4.93" y1="4.93" x2="7.76" y2="7.76"></line>
-          <line x1="16.24" y1="16.24" x2="19.07" y2="19.07"></line>
-          <line x1="2" y1="12" x2="6" y2="12"></line>
-          <line x1="18" y1="12" x2="22" y2="12"></line>
-          <line x1="4.93" y1="19.07" x2="7.76" y2="16.24"></line>
-          <line x1="16.24" y1="7.76" x2="19.07" y2="4.93"></line>
-        </svg>
-        <div>กำลังโหลดข้อมูลโปรไฟล์...</div>
-      </div>
-    );
+    return <ProfileSkeleton />;
   }
 
   const avatarChar = (profile?.displayName || profile?.username || 'A')[0].toUpperCase();
@@ -573,6 +560,72 @@ export default function AdminProfilePage() {
               )}
             </button>
           </form>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ProfileSkeleton() {
+  return (
+    <div aria-hidden="true">
+      {/* Profile Overview Card Skeleton */}
+      <div className="profile-overview-card" style={{ padding: '24px', marginBottom: '24px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '20px', flexWrap: 'wrap' }}>
+          <Skeleton width="64px" height="64px" radius="9999px" />
+          <div style={{ flex: 1, minWidth: '200px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
+              <Skeleton width="160px" height="24px" />
+              <Skeleton width="110px" height="22px" radius="999px" />
+            </div>
+            <Skeleton width="120px" height="14px" />
+          </div>
+          <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+            <Skeleton width="140px" height="32px" radius="8px" />
+            <Skeleton width="160px" height="32px" radius="8px" />
+          </div>
+        </div>
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '24px' }}>
+        {/* General Form Panel */}
+        <div className="panel" style={{ padding: '24px' }}>
+          <Skeleton width="180px" height="20px" style={{ marginBottom: '8px' }} />
+          <Skeleton width="260px" height="13px" style={{ marginBottom: '20px' }} />
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <div>
+              <Skeleton width="100px" height="14px" style={{ marginBottom: '6px' }} />
+              <Skeleton width="100%" height="40px" radius="8px" />
+            </div>
+            <div>
+              <Skeleton width="80px" height="14px" style={{ marginBottom: '6px' }} />
+              <Skeleton width="100%" height="40px" radius="8px" />
+            </div>
+            <Skeleton width="120px" height="40px" radius="8px" style={{ marginTop: '8px' }} />
+          </div>
+        </div>
+
+        {/* Password Form Panel */}
+        <div className="panel" style={{ padding: '24px' }}>
+          <Skeleton width="160px" height="20px" style={{ marginBottom: '8px' }} />
+          <Skeleton width="280px" height="13px" style={{ marginBottom: '20px' }} />
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <div>
+              <Skeleton width="110px" height="14px" style={{ marginBottom: '6px' }} />
+              <Skeleton width="100%" height="40px" radius="8px" />
+            </div>
+            <div>
+              <Skeleton width="100px" height="14px" style={{ marginBottom: '6px' }} />
+              <Skeleton width="100%" height="40px" radius="8px" />
+            </div>
+            <div>
+              <Skeleton width="120px" height="14px" style={{ marginBottom: '6px' }} />
+              <Skeleton width="100%" height="40px" radius="8px" />
+            </div>
+            <Skeleton width="140px" height="40px" radius="8px" style={{ marginTop: '8px' }} />
+          </div>
         </div>
       </div>
     </div>

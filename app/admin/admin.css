@@ -3412,3 +3412,40 @@
   border-top: 1px solid var(--border);
   margin-top: 24px;
 }
+
+/* ==========================================================================
+   Admin Skeleton Shimmer Loading
+   ========================================================================== */
+.admin-skeleton {
+  display: block;
+  background-color: var(--bg-subtle, #f0f1f6);
+  background-image: linear-gradient(
+    90deg,
+    var(--bg-subtle, #f0f1f6) 0%,
+    rgba(255, 255, 255, 0.7) 50%,
+    var(--bg-subtle, #f0f1f6) 100%
+  );
+  background-size: 200% 100%;
+  animation: admin-skeleton-shimmer 1.6s infinite ease-in-out;
+  border-radius: var(--radius-sm, 8px);
+}
+
+[data-theme='dark'] .admin-skeleton,
+:root[data-theme='dark'] .admin-skeleton {
+  background-color: var(--bg-subtle, #222631);
+  background-image: linear-gradient(
+    90deg,
+    var(--bg-subtle, #222631) 0%,
+    rgba(255, 255, 255, 0.08) 50%,
+    var(--bg-subtle, #222631) 100%
+  );
+}
+
+@keyframes admin-skeleton-shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}

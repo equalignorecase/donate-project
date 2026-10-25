@@ -4,6 +4,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { Plus, Trash2, Edit3, RefreshCw, X, AlertTriangle, MoreHorizontal, Play } from 'lucide-react';
 import { Donation } from '@/lib/types/database';
+import { Skeleton } from '@/app/components';
 import { useAdmin } from '../AdminContext';
 
 export default function AdminDonationsPage() {
@@ -513,11 +514,22 @@ export default function AdminDonationsPage() {
           </thead>
           <tbody>
             {isLoading ? (
-              <tr>
-                <td colSpan={7} style={{ textAlign: 'center', color: 'var(--text-dim)', padding: '36px' }}>
-                  กำลังโหลดข้อมูล...
-                </td>
-              </tr>
+              Array.from({ length: 6 }).map((_, idx) => (
+                <tr key={`skeleton-${idx}`} aria-hidden="true">
+                  <td><Skeleton width="115px" height="15px" /></td>
+                  <td><Skeleton width="130px" height="15px" /></td>
+                  <td><Skeleton width="75px" height="16px" /></td>
+                  <td><Skeleton width="180px" height="15px" /></td>
+                  <td><Skeleton width="140px" height="14px" /></td>
+                  <td><Skeleton width="65px" height="22px" radius="9999px" /></td>
+                  <td style={{ textAlign: 'center' }}>
+                    <div style={{ display: 'inline-flex', gap: '6px', justifyContent: 'center' }}>
+                      <Skeleton width="28px" height="28px" radius="6px" />
+                      <Skeleton width="28px" height="28px" radius="6px" />
+                    </div>
+                  </td>
+                </tr>
+              ))
             ) : paginatedDonations.length === 0 ? (
               <tr>
                 <td colSpan={7} style={{ textAlign: 'center', color: 'var(--text-dim)', padding: '36px' }}>

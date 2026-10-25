@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { ShieldAlert, Plus, X, Loader2 } from 'lucide-react';
 import { BlacklistWord } from '@/lib/types/database';
+import { Skeleton } from '@/app/components';
 import { useAdmin } from '../AdminContext';
 
 export default function AdminBlacklistPage() {
@@ -97,16 +98,20 @@ export default function AdminBlacklistPage() {
           <ShieldAlert size={18} />
           จัดการคำหยาบและคำต้องห้าม (Blacklist)
         </h2>
-        <span style={{
-          fontSize: '12px',
-          fontWeight: 600,
-          padding: '4px 10px',
-          borderRadius: '999px',
-          background: 'var(--bg-subtle)',
-          color: 'var(--text-muted)'
-        }}>
-          ทั้งหมด {blacklist.length} คำ
-        </span>
+        {isLoading ? (
+          <Skeleton width="75px" height="24px" radius="999px" />
+        ) : (
+          <span style={{
+            fontSize: '12px',
+            fontWeight: 600,
+            padding: '4px 10px',
+            borderRadius: '999px',
+            background: 'var(--bg-subtle)',
+            color: 'var(--text-muted)'
+          }}>
+            ทั้งหมด {blacklist.length} คำ
+          </span>
+        )}
       </div>
       <p style={{ color: 'var(--text-muted)', fontSize: '14px', marginBottom: '16px' }}>
         คำที่อยู่ในรายการนี้จะถูกเซ็นเซอร์เป็น <code style={{ color: 'var(--danger)', background: 'var(--danger-soft)', padding: '2px 6px', borderRadius: '4px' }}>***</code> โดยอัตโนมัติก่อนส่งขึ้นหน้าจอ OBS
@@ -148,7 +153,17 @@ export default function AdminBlacklistPage() {
 
       <div className="tags-list">
         {isLoading ? (
-          <span style={{ color: 'var(--text-dim)', fontSize: '13px' }}>กำลังโหลดคำต้องห้าม...</span>
+          <>
+            {[72, 88, 64, 96, 78, 110, 84, 68, 92, 76].map((w, idx) => (
+              <Skeleton
+                key={idx}
+                width={`${w}px`}
+                height="32px"
+                radius="9999px"
+                style={{ display: 'inline-block' }}
+              />
+            ))}
+          </>
         ) : blacklist.length === 0 ? (
           <span style={{ color: 'var(--text-dim)', fontSize: '13px' }}>ยังไม่มีคำในแบล็กลิสต์</span>
         ) : (

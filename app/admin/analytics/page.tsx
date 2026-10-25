@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback, Suspense } from 'react';
 import Link from 'next/link';
-import { StatCard } from '@/app/components';
+import { StatCard, StatCardSkeleton, Skeleton } from '@/app/components';
 import { useAdmin } from '../AdminContext';
 import {
   RevenueTrendChart,
@@ -128,12 +128,7 @@ function AnalyticsPageContent() {
   };
 
   if (isLoading) {
-    return (
-      <div className="analytics-loading-state">
-        <div className="spinner-glow"></div>
-        <p>กำลังประมวลผลสถิติและข้อมูลเชิงลึก...</p>
-      </div>
-    );
+    return <AnalyticsSkeleton />;
   }
 
   if (!data) {
@@ -301,15 +296,70 @@ function AnalyticsPageContent() {
   );
 }
 
+function AnalyticsSkeleton() {
+  return (
+    <div className="analytics-page-container" aria-hidden="true">
+      <div className="analytics-top-header">
+        <div>
+          <Skeleton width="180px" height="14px" style={{ marginBottom: '8px' }} />
+          <Skeleton width="320px" height="28px" style={{ marginBottom: '8px' }} />
+          <Skeleton width="420px" height="14px" />
+        </div>
+        <div className="analytics-header-actions" style={{ display: 'flex', gap: '8px' }}>
+          <Skeleton width="100px" height="36px" radius="8px" />
+          <Skeleton width="80px" height="36px" radius="8px" />
+        </div>
+      </div>
+
+      <div className="stats-grid">
+        <StatCardSkeleton />
+        <StatCardSkeleton />
+        <StatCardSkeleton />
+        <StatCardSkeleton />
+      </div>
+
+      {/* Chart 1 Skeleton */}
+      <div className="panel" style={{ padding: '24px', marginBottom: '24px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+          <div>
+            <Skeleton width="200px" height="20px" style={{ marginBottom: '6px' }} />
+            <Skeleton width="300px" height="13px" />
+          </div>
+          <Skeleton width="160px" height="32px" radius="8px" />
+        </div>
+        <Skeleton width="100%" height="240px" radius="12px" />
+      </div>
+
+      {/* Chart 2 Skeleton */}
+      <div className="panel" style={{ padding: '24px', marginBottom: '24px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+          <div>
+            <Skeleton width="220px" height="20px" style={{ marginBottom: '6px' }} />
+            <Skeleton width="280px" height="13px" />
+          </div>
+        </div>
+        <Skeleton width="100%" height="220px" radius="12px" />
+      </div>
+
+      {/* Leaderboard Skeleton */}
+      <div className="panel" style={{ padding: '24px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+          <Skeleton width="180px" height="20px" />
+          <Skeleton width="140px" height="32px" radius="8px" />
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          {[1, 2, 3, 4, 5].map((i) => (
+            <Skeleton key={i} width="100%" height="48px" radius="8px" />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function AdminAnalyticsPage() {
   return (
-    <Suspense
-      fallback={
-        <div style={{ textAlign: 'center', padding: '60px', color: 'var(--text-dim)' }}>
-          กำลังโหลดสถิติเชิงลึก...
-        </div>
-      }
-    >
+    <Suspense fallback={<AnalyticsSkeleton />}>
       <AnalyticsPageContent />
     </Suspense>
   );

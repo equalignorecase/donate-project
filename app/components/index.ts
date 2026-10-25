@@ -15,3 +15,6 @@ export type { ModalProps } from './Modal';
 
 export { default as SessionWatcher } from './SessionWatcher';
 export type { SessionWatcherProps } from './SessionWatcher';
+
+export { default as Skeleton, Skeleton as SkeletonBase, StatCardSkeleton, TableRowSkeleton } from './Skeleton';
+export type { SkeletonProps } from './Skeleton';

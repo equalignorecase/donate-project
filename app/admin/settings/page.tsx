@@ -20,6 +20,7 @@ import {
   Volume1
 } from 'lucide-react';
 import { AlertSettings } from '@/lib/types/database';
+import { Skeleton } from '@/app/components';
 import { useAdmin } from '../AdminContext';
 import { ALERT_SOUND_PRESETS } from '@/lib/constants';
 
@@ -173,12 +174,7 @@ export default function AdminSettingsPage() {
   };
 
   if (isLoading) {
-    return (
-      <div className="panel" style={{ textAlign: 'center', padding: '60px 20px', color: 'var(--text-dim)' }}>
-        <Loader2 className="spinner" size={24} style={{ margin: '0 auto 12px' }} />
-        <div>กำลังโหลดการตั้งค่าระบบ...</div>
-      </div>
-    );
+    return <SettingsSkeleton />;
   }
 
   const currentVolume = Number(settings.alert_volume ?? 80);
@@ -770,6 +766,60 @@ export default function AdminSettingsPage() {
           </button>
         </div>
       </form>
+    </div>
+  );
+}
+
+function SettingsSkeleton() {
+  return (
+    <div aria-hidden="true">
+      {/* Top Header Bar Skeleton */}
+      <div className="settings-page-header" style={{ marginBottom: '24px' }}>
+        <div>
+          <Skeleton width="160px" height="26px" style={{ marginBottom: '8px' }} />
+          <Skeleton width="340px" height="14px" />
+        </div>
+        <Skeleton width="140px" height="40px" radius="8px" />
+      </div>
+
+      {/* Tabs Skeleton */}
+      <div style={{ display: 'flex', gap: '8px', marginBottom: '24px' }}>
+        <Skeleton width="180px" height="42px" radius="8px" />
+        <Skeleton width="190px" height="42px" radius="8px" />
+        <Skeleton width="210px" height="42px" radius="8px" />
+      </div>
+
+      {/* Settings Panel Skeleton */}
+      <div className="panel" style={{ padding: '28px' }}>
+        <div style={{ marginBottom: '24px' }}>
+          <Skeleton width="220px" height="20px" style={{ marginBottom: '8px' }} />
+          <Skeleton width="320px" height="14px" />
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px', marginBottom: '28px' }}>
+          <div>
+            <Skeleton width="120px" height="14px" style={{ marginBottom: '8px' }} />
+            <Skeleton width="100%" height="42px" radius="8px" />
+          </div>
+          <div>
+            <Skeleton width="130px" height="14px" style={{ marginBottom: '8px' }} />
+            <Skeleton width="100%" height="42px" radius="8px" />
+          </div>
+          <div>
+            <Skeleton width="140px" height="14px" style={{ marginBottom: '8px' }} />
+            <Skeleton width="100%" height="42px" radius="8px" />
+          </div>
+          <div>
+            <Skeleton width="110px" height="14px" style={{ marginBottom: '8px' }} />
+            <Skeleton width="100%" height="42px" radius="8px" />
+          </div>
+        </div>
+
+        <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '24px' }}>
+          <Skeleton width="180px" height="20px" style={{ marginBottom: '12px' }} />
+          <Skeleton width="100%" height="90px" radius="10px" />
+        </div>
+      </div>
     </div>
   );
 }

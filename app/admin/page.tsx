@@ -4,7 +4,7 @@ import React, { useState, useEffect, useMemo, Suspense } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Donation } from '@/lib/types/database';
-import { StatCard } from '@/app/components';
+import { StatCard, StatCardSkeleton, Skeleton } from '@/app/components';
 import { useAdmin } from './AdminContext';
 
 function AdminOverviewContent() {
@@ -137,58 +137,69 @@ function AdminOverviewContent() {
     <>
       {/* Stats Overview Cards */}
       <div className="stats-grid">
-        <StatCard
-          iconVariant="green"
-          icon={
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <rect x="2" y="5" width="20" height="14" rx="2"></rect>
-              <line x1="2" y1="10" x2="22" y2="10"></line>
-            </svg>
-          }
-          title="ยอดโดเนทวันนี้"
-          value={`฿${(stats.todayAmount || 0).toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
-          subtitle={`${stats.todayCount || 0} รายการ`}
-        />
+        {isLoading ? (
+          <>
+            <StatCardSkeleton />
+            <StatCardSkeleton />
+            <StatCardSkeleton />
+            <StatCardSkeleton />
+          </>
+        ) : (
+          <>
+            <StatCard
+              iconVariant="green"
+              icon={
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="2" y="5" width="20" height="14" rx="2"></rect>
+                  <line x1="2" y1="10" x2="22" y2="10"></line>
+                </svg>
+              }
+              title="ยอดโดเนทวันนี้"
+              value={`฿${(stats.todayAmount || 0).toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+              subtitle={`${stats.todayCount || 0} รายการ`}
+            />
 
-        <StatCard
-          iconVariant="blue"
-          icon={
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="18" y1="20" x2="18" y2="10"></line>
-              <line x1="12" y1="20" x2="12" y2="4"></line>
-              <line x1="6" y1="20" x2="6" y2="14"></line>
-            </svg>
-          }
-          title="ยอดรวมทั้งหมด"
-          value={`฿${(stats.totalAmount || 0).toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
-          subtitle={`${stats.count || 0} รายการ`}
-        />
+            <StatCard
+              iconVariant="blue"
+              icon={
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="18" y1="20" x2="18" y2="10"></line>
+                  <line x1="12" y1="20" x2="12" y2="4"></line>
+                  <line x1="6" y1="20" x2="6" y2="14"></line>
+                </svg>
+              }
+              title="ยอดรวมทั้งหมด"
+              value={`฿${(stats.totalAmount || 0).toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+              subtitle={`${stats.count || 0} รายการ`}
+            />
 
-        <StatCard
-          iconVariant="purple"
-          icon={
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2z"></path>
-              <line x1="13" y1="5" x2="13" y2="19" strokeDasharray="2"></line>
-            </svg>
-          }
-          title="โควต้า SlipOK คงเหลือ"
-          value={quota ? `${quota.quota ?? quota.remaining ?? quota.limit ?? 100} สลิป` : '100 สลิป'}
-          subtitle={quota ? (quota.endDate ? `หมดอายุ ${quota.endDate}` : quota.status ? `สถานะ: ${quota.status}` : 'ปกติ') : 'ตรวจสอบสถานะ...'}
-        />
+            <StatCard
+              iconVariant="purple"
+              icon={
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2z"></path>
+                  <line x1="13" y1="5" x2="13" y2="19" strokeDasharray="2"></line>
+                </svg>
+              }
+              title="โควต้า SlipOK คงเหลือ"
+              value={quota ? `${quota.quota ?? quota.remaining ?? quota.limit ?? 100} สลิป` : '100 สลิป'}
+              subtitle={quota ? (quota.endDate ? `หมดอายุ ${quota.endDate}` : quota.status ? `สถานะ: ${quota.status}` : 'ปกติ') : 'ตรวจสอบสถานะ...'}
+            />
 
-        <StatCard
-          iconVariant="orange"
-          icon={
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="12" cy="8" r="7"></circle>
-              <polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline>
-            </svg>
-          }
-          title="ผู้สนับสนุนสูงสุด"
-          value={<span style={{ fontSize: '17px', wordBreak: 'break-word' }}>{topDonator}</span>}
-          subtitle="Top Supporter"
-        />
+            <StatCard
+              iconVariant="orange"
+              icon={
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="8" r="7"></circle>
+                  <polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline>
+                </svg>
+              }
+              title="ผู้สนับสนุนสูงสุด"
+              value={<span style={{ fontSize: '17px', wordBreak: 'break-word' }}>{topDonator}</span>}
+              subtitle="Top Supporter"
+            />
+          </>
+        )}
       </div>
       {/* Recent Donations Preview */}
       <div className="panel">
@@ -208,7 +219,30 @@ function AdminOverviewContent() {
         </div>
 
         {isLoading ? (
-          <p style={{ color: 'var(--text-dim)', textAlign: 'center', padding: '20px 0' }}>กำลังโหลดข้อมูล...</p>
+          <div className="table-responsive">
+            <table>
+              <thead>
+                <tr>
+                  <th>วัน-เวลา</th>
+                  <th>ชื่อผู้สนับสนุน</th>
+                  <th>ยอดเงิน</th>
+                  <th>ข้อความ</th>
+                  <th>สถานะ</th>
+                </tr>
+              </thead>
+              <tbody>
+                {[1, 2, 3, 4, 5].map((key) => (
+                  <tr key={key} aria-hidden="true">
+                    <td><Skeleton width="130px" height="15px" /></td>
+                    <td><Skeleton width="110px" height="15px" /></td>
+                    <td><Skeleton width="70px" height="15px" /></td>
+                    <td><Skeleton width="180px" height="15px" /></td>
+                    <td><Skeleton width="65px" height="22px" radius="9999px" /></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         ) : recentDonations.length === 0 ? (
           <p style={{ color: 'var(--text-dim)', textAlign: 'center', padding: '20px 0' }}>ยังไม่มีรายการโดเนท</p>
         ) : (
