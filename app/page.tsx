@@ -109,7 +109,7 @@ export default function DonatePage() {
   useEffect(() => { if (qrData) qrHeading.current?.focus(); }, [qrData]);
   useEffect(() => {
     const controller = new AbortController();
-    fetch('/api/admin/settings', { signal: controller.signal })
+    fetch('/api/settings', { signal: controller.signal })
       .then(async (response) => {
         if (!response.ok) throw new Error('Settings unavailable');
         return response.json();
