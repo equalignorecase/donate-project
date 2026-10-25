@@ -71,6 +71,67 @@ export interface VerifiedSlipResult {
   raw?: any;
 }
 
+/**
+ * Smart Thai & English Bank Name Matcher
+ * Handles PDPA bank masking (e.g., "นัฐพงษ์ น", "นัฐพงษ์ น.", "Nattapong N.", "นาย นัฐพงษ์ นาค***")
+ */
+export function isThaiNameMatch(slipRaw: string, expectedRaw: string): boolean {
+  if (!slipRaw || !expectedRaw) return false;
+
+  const stripTitles = (str: string) =>
+    str
+      .replace(/^(นาย|นางสาว|นาง|บจก\.|หจก\.|mr\.|mrs\.|ms\.|miss)\s*/gi, '')
+      .replace(/\s+/g, ' ')
+      .trim()
+      .toLowerCase();
+
+  const slip = stripTitles(slipRaw);
+  const expected = stripTitles(expectedRaw);
+
+  // 1. Direct or substring match
+  if (slip === expected || slip.includes(expected) || expected.includes(slip)) {
+    return true;
+  }
+
+  // 2. Tokenize by whitespace
+  const slipTokens = slip.split(' ').filter(Boolean);
+  const expectedTokens = expected.split(' ').filter(Boolean);
+
+  if (slipTokens.length === 0 || expectedTokens.length === 0) return false;
+
+  const slipFirst = slipTokens[0];
+  const expectedFirst = expectedTokens[0];
+
+  // First name match
+  const firstMatches =
+    slipFirst === expectedFirst ||
+    (slipFirst.length >= 3 && expectedFirst.startsWith(slipFirst)) ||
+    (expectedFirst.length >= 3 && slipFirst.startsWith(expectedFirst));
+
+  if (!firstMatches) return false;
+
+  // If slip only provides a single token (e.g. only first name provided on slip)
+  if (slipTokens.length === 1) return true;
+
+  // Clean last names of punctuation / masking markers (., *, -, _)
+  const slipLastClean = slipTokens.slice(1).join('').replace(/[\.\*\-_]/g, '').trim();
+  const expectedLastClean = expectedTokens.slice(1).join('').replace(/[\.\*\-_]/g, '').trim();
+
+  // If no expected last name to compare with or slip has no remaining last name letters
+  if (!expectedLastClean || !slipLastClean) return true;
+
+  // Check if slip last name is prefix of expected last name OR initial character matches
+  if (
+    expectedLastClean.startsWith(slipLastClean) ||
+    slipLastClean.startsWith(expectedLastClean.slice(0, 1)) ||
+    expectedLastClean.startsWith(slipLastClean.slice(0, 1))
+  ) {
+    return true;
+  }
+
+  return false;
+}
+
 export async function verifySlip({
   fileBuffer,
   fileName,
@@ -184,33 +245,26 @@ export async function verifySlip({
     throw new Error('กรุณาตั้งค่าชื่อหรือเลขบัญชี/พร้อมเพย์ผู้รับก่อนเปิดรับโดเนท');
   }
 
-  // Name verification (supports aliases separated by comma, ignores placeholder "test test")
+  // Name verification (supports aliases separated by comma, handles PDPA masked surnames like "นัฐพงษ์ น")
   const cleanExpectedName = expectedReceiverName.trim();
   const isPlaceholderName = cleanExpectedName.toLowerCase() === 'test test';
   if (cleanExpectedName && !isPlaceholderName) {
-    const receiverDisplayName: string = (slipData.receiver?.displayName || '').toLowerCase();
-    const receiverName: string = (slipData.receiver?.name || '').toLowerCase();
-
-    // Remove titles like นาย, นาง, นางสาว, mr., mrs., ms. for fuzzy matching
-    const stripTitles = (str: string) =>
-      str.replace(/^(นาย|นางสาว|นาง|บจก\.|หจก\.|mr\.|mrs\.|ms\.|miss)\s*/gi, '').trim();
+    const candidateSlipNames = [
+      slipData.receiver?.displayName,
+      slipData.receiver?.name
+    ].filter(Boolean) as string[];
 
     const nameAliases = cleanExpectedName
       .split(/[,;|]+/)
-      .map((s) => stripTitles(s.trim().toLowerCase()))
+      .map((s) => s.trim())
       .filter(Boolean);
 
     const match = nameAliases.some((alias) => {
-      return (
-        receiverDisplayName.includes(alias) ||
-        receiverName.includes(alias) ||
-        stripTitles(receiverDisplayName).includes(alias) ||
-        stripTitles(receiverName).includes(alias)
-      );
+      return candidateSlipNames.some((slipName) => isThaiNameMatch(slipName, alias));
     });
 
     if (!match) {
-      const shownReceiver = slipData.receiver?.displayName || slipData.receiver?.name || 'ไม่ระบุ';
+      const shownReceiver = candidateSlipNames.join(' / ') || 'ไม่ระบุ';
       const err: any = new Error(`ชื่อบัญชีผู้รับในสลิป (${shownReceiver}) ไม่ตรงกับชื่อที่กำหนดไว้ (${cleanExpectedName})`);
       err.code = 1014;
       err.details = { transRef, slipData };
