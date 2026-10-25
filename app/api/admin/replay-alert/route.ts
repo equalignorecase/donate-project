@@ -15,7 +15,7 @@ export async function POST(request: Request) {
 
     const filteredMsg = await filterMessage(message || '');
     const replayData: Donation = {
-      id: id || 'replay-' + Date.now(),
+      id: `replay-${id || 'item'}-${Date.now()}`,
       name: (name || 'ผู้สนับสนุน').slice(0, 50),
       amount: parseFloat(amount) || 50,
       message: filteredMsg.slice(0, 200),
