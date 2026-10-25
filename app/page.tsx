@@ -262,7 +262,7 @@ export default function DonatePage() {
             <div className={styles.profileBody}>
               <div className={styles.avatar}>
                 <img
-                  src="https://p19-common-sign.tiktokcdn.com/tos-alisg-avt-0068/1701eddcb4ac472a709a2ae18515bb44~tplv-tiktokx-cropcenter:1080:1080.jpeg?dr=14579&refresh_token=ff4e99c5&x-expires=1792908000&x-signature=5exOqTpXIunHCcL6bj%2F3yupRDOc%3D&t=4d5b0474&ps=13740610&shp=a5d48078&shcp=81f88b70&idc=my2"
+                  src="https://images-ext-1.discordapp.net/external/cMOpxLeIcsFKBJ8U-v76kQWnng4bF7xK_JlAlfIDCBw/%3Fdr%3D14579%26refresh_token%3D5acd7a9e%26x-expires%3D1793080800%26x-signature%3DX76s%252F8R5nZX82d%252FNmiqCZb8AS3o%253D%26t%3D4d5b0474%26ps%3D13740610%26shp%3Da5d48078%26shcp%3D81f88b70%26idc%3Dmy/https/p16-common-sign.tiktokcdn.com/tos-alisg-avt-0068/1701eddcb4ac472a709a2ae18515bb44~tplv-tiktokx-cropcenter%3A1080%3A1080.jpeg?format=webp&width=1690&height=1690"
                   alt="รูปโปรไฟล์ localhostvlr"
                   width={70}
                   height={70}
