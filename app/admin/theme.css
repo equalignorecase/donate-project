@@ -1,4 +1,4 @@
-/* Shared management UI palette. Stream artwork and saved OBS colors stay separate. */
+:root,
 .admin-layout,
 .login-page-wrapper {
   color-scheme: light;
@@ -55,6 +55,7 @@
   --transition: all .2s ease;
 }
 
+[data-theme='dark'],
 [data-theme='dark'] .admin-layout,
 [data-theme='dark'] .login-page-wrapper {
   color-scheme: dark;

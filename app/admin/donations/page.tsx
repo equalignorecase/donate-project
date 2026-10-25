@@ -160,6 +160,7 @@ export default function AdminDonationsPage() {
     setFormMessage(item.message || '');
     setFormStatus(item.status || 'verified');
     setFormRef(item.transaction_ref || item.trans_ref || '');
+    setFormTriggerAlert(false);
     setIsEditOpen(true);
   };
 
@@ -235,7 +236,8 @@ export default function AdminDonationsPage() {
           amount: parsedAmount,
           message: formMessage.trim(),
           status: formStatus,
-          transaction_ref: formRef.trim()
+          transaction_ref: formRef.trim(),
+          triggerAlert: formTriggerAlert
         })
       });
 
@@ -737,7 +739,8 @@ export default function AdminDonationsPage() {
 
       {/* CREATE MODAL */}
       {isMounted && isCreateOpen && createPortal(
-        <div className="modal-overlay" onClick={() => !isSubmitting && setIsCreateOpen(false)}>
+        <div className="admin-layout modal-portal-root">
+          <div className="modal-overlay" onClick={() => !isSubmitting && setIsCreateOpen(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h3 className="modal-title">
@@ -862,13 +865,15 @@ export default function AdminDonationsPage() {
               </div>
             </form>
           </div>
-        </div>,
-        document.body
-      )}
+        </div>
+      </div>,
+      document.body
+    )}
 
       {/* EDIT MODAL */}
       {isMounted && isEditOpen && selectedDonation && createPortal(
-        <div className="modal-overlay" onClick={() => !isSubmitting && setIsEditOpen(false)}>
+        <div className="admin-layout modal-portal-root">
+          <div className="modal-overlay" onClick={() => !isSubmitting && setIsEditOpen(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h3 className="modal-title">
@@ -947,6 +952,19 @@ export default function AdminDonationsPage() {
                     />
                   </div>
                 </div>
+
+                {formStatus === 'verified' && selectedDonation.status !== 'verified' && (
+                  <div className="form-group" style={{ marginTop: '6px' }}>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '13.5px', fontWeight: 600, color: 'var(--text-main)' }}>
+                      <input
+                        type="checkbox"
+                        checked={formTriggerAlert}
+                        onChange={(e) => setFormTriggerAlert(e.target.checked)}
+                      />
+                      🔔 ส่งการแจ้งเตือนและอ่านออกเสียงขึ้นจอ OBS ทันที
+                    </label>
+                  </div>
+                )}
               </div>
 
               <div className="modal-footer">
@@ -968,13 +986,15 @@ export default function AdminDonationsPage() {
               </div>
             </form>
           </div>
-        </div>,
-        document.body
-      )}
+        </div>
+      </div>,
+      document.body
+    )}
 
       {/* SINGLE DELETE MODAL */}
       {isMounted && isDeleteOpen && selectedDonation && createPortal(
-        <div className="modal-overlay" onClick={() => !isSubmitting && setIsDeleteOpen(false)}>
+        <div className="admin-layout modal-portal-root">
+          <div className="modal-overlay" onClick={() => !isSubmitting && setIsDeleteOpen(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h3 className="modal-title" style={{ color: 'var(--danger)' }}>
@@ -1018,13 +1038,15 @@ export default function AdminDonationsPage() {
               </button>
             </div>
           </div>
-        </div>,
-        document.body
-      )}
+        </div>
+      </div>,
+      document.body
+    )}
 
       {/* CLEAR ALL FAILED MODAL */}
       {isMounted && isClearFailedOpen && createPortal(
-        <div className="modal-overlay" onClick={() => !isSubmitting && setIsClearFailedOpen(false)}>
+        <div className="admin-layout modal-portal-root">
+          <div className="modal-overlay" onClick={() => !isSubmitting && setIsClearFailedOpen(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h3 className="modal-title" style={{ color: 'var(--danger)' }}>
@@ -1068,9 +1090,10 @@ export default function AdminDonationsPage() {
               </button>
             </div>
           </div>
-        </div>,
-        document.body
-      )}
+        </div>
+      </div>,
+      document.body
+    )}
     </div>
   );
 }

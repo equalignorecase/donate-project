@@ -112,7 +112,7 @@ export async function PUT(request: Request) {
 
   try {
     const body = await request.json();
-    const { id, name, amount, message, status, transaction_ref } = body;
+    const { id, name, amount, message, status, transaction_ref, triggerAlert } = body;
 
     if (!id) {
       return NextResponse.json({ success: false, message: 'ไม่พบ ID รายการโดเนท' }, { status: 400 });
@@ -141,6 +141,22 @@ export async function PUT(request: Request) {
       .single();
 
     if (error) throw error;
+
+    if (triggerAlert && updated.status === 'verified') {
+      const channel = supabaseAdmin.channel('donation-alerts');
+      try {
+        await channel.httpSend('donation', {
+          id: updated.id,
+          name: updated.name,
+          amount: updated.amount,
+          message: updated.message
+        });
+      } catch (realtimeErr: any) {
+        console.warn('Realtime alert broadcast error on edit:', realtimeErr.message);
+      } finally {
+        await supabaseAdmin.removeChannel(channel).catch(() => {});
+      }
+    }
 
     return NextResponse.json({ success: true, donation: updated });
   } catch (err: any) {
