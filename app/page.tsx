@@ -228,6 +228,46 @@ export default function DonatePage() {
     }
   }
 
+  async function saveQrImage() {
+    if (!qrData) return;
+    const dataUrl = qrData.qrImage || qrData.qrDataUrl;
+    if (!dataUrl) return;
+
+    try {
+      const response = await fetch(dataUrl);
+      const blob = await response.blob();
+      const filename = `promptpay-${qrData.amount}thb.png`;
+      const file = new File([blob], filename, { type: 'image/png' });
+
+      if (typeof navigator !== 'undefined' && navigator.canShare && navigator.canShare({ files: [file] })) {
+        try {
+          await navigator.share({
+            files: [file],
+            title: `PromptPay QR ฿${qrData.amount}`,
+          });
+          return;
+        } catch (shareErr: any) {
+          if (shareErr?.name === 'AbortError') return;
+        }
+      }
+
+      const blobUrl = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 2000);
+      setToast({ text: 'บันทึกรูป QR เรียบร้อยแล้ว' });
+    } catch {
+      setToast({
+        text: 'ไม่สามารถบันทึกรูปอัตโนมัติได้ กรุณากดค้างที่รูป QR เพื่อบันทึกภาพ',
+        error: true,
+      });
+    }
+  }
+
   function openInfo(key: keyof typeof INFO) {
     setInfo(key);
     infoDialog.current?.showModal();
@@ -363,7 +403,11 @@ export default function DonatePage() {
                     <span className={styles.qrBrand}><img src="/payments/promptpay.png" alt="PromptPay" width={132} height={44} /></span>
                     <img className={styles.qrImage} src={qrData.qrImage || qrData.qrDataUrl} alt={`QR PromptPay จำนวน ${displayAmount} บาท`} />
                     <strong className={styles.qrAmount}>฿{displayAmount} THB</strong> 
-                    <div className={styles.qrActions}><button type="button" onClick={copyPromptPay}><Copy size={14} />คัดลอกหมายเลข</button><a href={qrData.qrImage || qrData.qrDataUrl} download={`promptpay-${qrData.amount}thb.png`}><Download size={14} />บันทึก QR</a></div>
+                    <div className={styles.qrActions}>
+                      <button type="button" onClick={copyPromptPay}><Copy size={14} />คัดลอกหมายเลข</button>
+                      <button type="button" onClick={saveQrImage}><Download size={14} />บันทึก QR</button>
+                    </div>
+                    <span className={styles.qrTip}>ทริก: หากบันทึกไม่ได้ สามารถกดค้างที่รูป QR เพื่อบันทึกภาพได้โดยตรง</span>
                   </div>
                   <p className={styles.paymentHint}>ตรวจสอบผู้รับและยอดก่อนโอน หากโอนแล้วแต่ยืนยันไม่สำเร็จ ให้เก็บหลักฐานและติดต่อผู้ดูแลก่อนทำรายการซ้ำ</p>
                 </div>
