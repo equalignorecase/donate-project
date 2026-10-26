@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { Target, Trophy, ExternalLink, Eye, RotateCcw, Sparkles } from 'lucide-react';
 import { useAdmin } from '../AdminContext';
 import { GoalAppearance, goalAppearanceDefaults, readGoalAppearance } from '@/lib/goalAppearance';
-import { SupporterAppearance, supporterDefaults, readSupporterAppearance, SupporterMode } from '@/lib/supporterAppearance';
+import { SupporterAppearance, supporterDefaults, readSupporterAppearance, SupporterMode, supporterModes } from '@/lib/supporterAppearance';
 import GoalAppearanceEditor from './GoalAppearanceEditor';
 import SupporterAppearanceEditor from './SupporterAppearanceEditor';
 import GoalWidget from '@/app/overlay/goal/GoalWidget';
@@ -332,7 +332,12 @@ export default function WidgetsAdmin() {
           <div className="widgets-main-col">
             <form id="supporters-form" onSubmit={event => void save(event, 'supporters')}>
               {errors.supporters && <p role="alert" className="widget-error">{errors.supporters}</p>}
-              <SupporterAppearanceEditor value={supporters} onChange={setSupporters} disabled={disabled} />
+              <SupporterAppearanceEditor
+                value={supporters}
+                onChange={setSupporters}
+                disabled={disabled}
+                allTimeDonors={widgetData?.allTime}
+              />
             </form>
           </div>
 
@@ -412,6 +417,33 @@ export default function WidgetsAdmin() {
                     </button>
                   </div>
                 </div>
+
+                {section === 'supporters' && (
+                  <div style={{ display: 'flex', gap: '6px', marginBottom: '12px', flexWrap: 'wrap' }}>
+                    {(Object.entries(supporterModes) as [SupporterMode, string][]).map(([modeKey, label]) => {
+                      const isActive = supporters.supporter_mode === modeKey;
+                      return (
+                        <button
+                          key={modeKey}
+                          type="button"
+                          className={`preview-bg-pill ${isActive ? 'active' : ''}`}
+                          onClick={() => setSupporters(prev => ({ ...prev, supporter_mode: modeKey }))}
+                          style={{
+                            fontSize: '11.5px',
+                            padding: '4px 10px',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '4px',
+                            cursor: 'pointer'
+                          }}
+                        >
+                          {modeKey === 'allTime' && <Trophy size={11} />}
+                          <span>{label}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
 
                 <div className={`widget-preview-frame bg-${previewBg}`}>
                   <div className="widget-preview-content">

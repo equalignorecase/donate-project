@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { Palette, Grid, Sliders } from 'lucide-react';
+import { Palette, Grid, Sliders, Trophy } from 'lucide-react';
 import { goalFontOptions } from '@/lib/goalAppearance';
 import { SupporterAppearance, supporterDefaults, supporterModes, supporterRanges } from '@/lib/supporterAppearance';
+import { Supporter } from '@/lib/widgets';
 import './goal-editor-premium.css';
 
 type SupporterSubTab = 'general' | 'colors' | 'sizes';
@@ -40,11 +41,13 @@ const bgPresets = [
 export default function SupporterAppearanceEditor({
   value,
   onChange,
-  disabled
+  disabled,
+  allTimeDonors = []
 }: {
   value: SupporterAppearance;
   onChange: (next: SupporterAppearance) => void;
   disabled: boolean;
+  allTimeDonors?: Supporter[];
 }) {
   const [activeTab, setActiveTab] = useState<SupporterSubTab>('general');
   const update = (key: keyof SupporterAppearance, next: string) => onChange({ ...value, [key]: next });
@@ -108,6 +111,37 @@ export default function SupporterAppearanceEditor({
                   ))}
                 </select>
               </label>
+
+              {value.supporter_mode === 'allTime' && (
+                <div style={{
+                  gridColumn: '1 / -1',
+                  padding: '10px 14px',
+                  background: 'rgba(56, 189, 248, 0.08)',
+                  border: '1px solid rgba(56, 189, 248, 0.22)',
+                  borderRadius: '12px',
+                  fontSize: '12.5px',
+                  color: 'var(--text-main)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  flexWrap: 'wrap',
+                  gap: '8px'
+                }}>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                    <Trophy size={15} style={{ color: '#38bdf8', flexShrink: 0 }} />
+                    <span><strong>อันดับตลอดเวลา:</strong> คำนวณจากยอดสะสมของผู้สนับสนุนที่มีในฐานข้อมูลทั้งหมดตั้งแต่เริ่มต้น</span>
+                  </span>
+                  {allTimeDonors.length > 0 ? (
+                    <span style={{ color: 'var(--text-muted)', fontSize: '11.5px' }}>
+                      พบในฐานข้อมูล <strong>{allTimeDonors.length}</strong> คน (อันดับ 1: <strong>{allTimeDonors[0]?.name}</strong> ฿{allTimeDonors[0]?.amount?.toLocaleString()})
+                    </span>
+                  ) : (
+                    <span style={{ color: 'var(--text-muted)', fontSize: '11.5px' }}>
+                      (ยังไม่พบยอดบริจาคที่ยืนยันแล้วในฐานข้อมูล)
+                    </span>
+                  )}
+                </div>
+              )}
 
               <label className="goal-font-control">
                 ฟอนต์ตัวอักษร
