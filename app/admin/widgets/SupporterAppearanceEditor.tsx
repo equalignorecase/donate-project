@@ -268,8 +268,8 @@ export default function SupporterAppearanceEditor({
           </fieldset>
 
           <fieldset disabled={disabled} className="goal-editor-controls">
-            <legend>ลำแสงวิ่งพาดผ่านตัวอักษร (Text Shine Sweep)</legend>
-            <div className="goal-toggle-grid" style={{ marginBottom: value.supporter_shine_sweep !== 'false' ? '12px' : 0 }}>
+            <legend>ลำแสงวิ่งพาดผ่านตัวอักษร (Text Shine Sweep 60fps GPU)</legend>
+            <div className="goal-toggle-grid" style={{ marginBottom: value.supporter_shine_sweep !== 'false' ? '8px' : 0 }}>
               <label>
                 <input
                   type="checkbox"
@@ -279,6 +279,12 @@ export default function SupporterAppearanceEditor({
                 <span>เปิดลำแสงวิ่งพาดผ่านตัวอักษรชื่อและยอดเงิน</span>
               </label>
             </div>
+            {value.supporter_shine_sweep !== 'false' && (
+              <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '14px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <span style={{ color: '#22c55e' }}>●</span>
+                <span>ปรับแต่งการเรนเดอร์ GPU 60fps ไม่กิน CPU ลื่นไหลเป็นพิเศษสำหรับ TikTok Live Studio และ OBS</span>
+              </div>
+            )}
             {value.supporter_shine_sweep !== 'false' && (
               <div className="goal-control-grid">
                 <label className="goal-font-control">

@@ -590,10 +590,10 @@ body.widget-overlay-body {
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
-    animation: supporter-text-shine-glide 3.8s cubic-bezier(0.22, 1, 0.36, 1) infinite;
+    animation: supporter-text-shine-glide 3.8s cubic-bezier(0.25, 1, 0.5, 1) infinite;
     animation-delay: var(--text-shine-delay, 0s);
     transform: translateZ(0);
-    will-change: background-position, filter;
+    will-change: background-position;
 }
 
 /* Crystal Theme (Default) - ประกายเพชรคริสตัล */
@@ -601,15 +601,15 @@ body.widget-overlay-body {
 .supporter-shine-theme-crystal.supporter-shimmer-text {
     background-image: linear-gradient(
         115deg,
-        rgba(255, 255, 255, 0.65) 0%,
-        rgba(255, 255, 255, 0.65) 32%,
-        rgba(255, 255, 255, 0.95) 46%,
-        #ffffff 50%,
-        rgba(255, 255, 255, 0.95) 54%,
-        rgba(255, 255, 255, 0.65) 68%,
-        rgba(255, 255, 255, 0.65) 100%
+        rgba(255, 255, 255, 0.52) 0%,
+        rgba(255, 255, 255, 0.52) 30%,
+        rgba(255, 255, 255, 0.9) 43%,
+        #ffffff 49%,
+        #ffffff 51%,
+        rgba(255, 255, 255, 0.9) 57%,
+        rgba(255, 255, 255, 0.52) 70%,
+        rgba(255, 255, 255, 0.52) 100%
     );
-    --shine-glow: rgba(255, 255, 255, 0.95);
 }
 
 /* Gold Theme - ประกายทองพรีเมียม */
@@ -617,15 +617,15 @@ body.widget-overlay-body {
 .supporter-shine-theme-gold.supporter-shimmer-text {
     background-image: linear-gradient(
         115deg,
-        rgba(245, 158, 11, 0.7) 0%,
-        rgba(245, 158, 11, 0.7) 32%,
-        #fde68a 46%,
-        #ffffff 50%,
-        #fde68a 54%,
-        rgba(245, 158, 11, 0.7) 68%,
-        rgba(245, 158, 11, 0.7) 100%
+        rgba(245, 158, 11, 0.58) 0%,
+        rgba(245, 158, 11, 0.58) 30%,
+        rgba(254, 240, 138, 0.95) 43%,
+        #ffffff 49%,
+        #ffffff 51%,
+        rgba(254, 240, 138, 0.95) 57%,
+        rgba(245, 158, 11, 0.58) 70%,
+        rgba(245, 158, 11, 0.58) 100%
     );
-    --shine-glow: rgba(245, 158, 11, 0.95);
 }
 
 /* Cyan Theme - นีออนไซแอน */
@@ -633,33 +633,26 @@ body.widget-overlay-body {
 .supporter-shine-theme-cyan.supporter-shimmer-text {
     background-image: linear-gradient(
         115deg,
-        rgba(2, 132, 199, 0.7) 0%,
-        rgba(2, 132, 199, 0.7) 32%,
-        #67e8f9 46%,
-        #ffffff 50%,
-        #67e8f9 54%,
-        rgba(2, 132, 199, 0.7) 68%,
-        rgba(2, 132, 199, 0.7) 100%
+        rgba(2, 132, 199, 0.58) 0%,
+        rgba(2, 132, 199, 0.58) 30%,
+        rgba(103, 232, 249, 0.95) 43%,
+        #ffffff 49%,
+        #ffffff 51%,
+        rgba(103, 232, 249, 0.95) 57%,
+        rgba(2, 132, 199, 0.58) 70%,
+        rgba(2, 132, 199, 0.58) 100%
     );
-    --shine-glow: rgba(6, 182, 212, 0.95);
 }
 
 @keyframes supporter-text-shine-glide {
     0% {
         background-position: 135% 0;
-        filter: drop-shadow(0 0 0px transparent);
-    }
-    18% {
-        background-position: 50% 0;
-        filter: drop-shadow(0 0 10px var(--shine-glow, rgba(255, 255, 255, 0.95)));
     }
     36% {
         background-position: -35% 0;
-        filter: drop-shadow(0 0 0px transparent);
     }
     100% {
         background-position: -35% 0;
-        filter: drop-shadow(0 0 0px transparent);
     }
 }
 

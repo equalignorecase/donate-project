@@ -4,28 +4,28 @@ import '../widgets.css';
 
 function buildShimmerGradient(color: string, theme: string) {
   const c = (color || '#ffffff').trim();
-  let highlight = '#ffffff';
-  let beamAura = 'rgba(255, 255, 255, 0.95)';
+  let specularCore = '#ffffff';
+  let beamAura = 'rgba(255, 255, 255, 0.9)';
 
   if (theme === 'gold') {
-    highlight = '#ffffff';
+    specularCore = '#ffffff';
     beamAura = 'rgba(254, 240, 138, 0.95)';
   } else if (theme === 'cyan') {
-    highlight = '#ffffff';
+    specularCore = '#ffffff';
     beamAura = 'rgba(103, 232, 249, 0.95)';
   }
 
   let baseColor = c;
   if (c.toLowerCase() === '#ffffff' || c.toLowerCase() === '#fff') {
-    baseColor = 'rgba(255, 255, 255, 0.55)';
+    baseColor = 'rgba(255, 255, 255, 0.52)';
   } else if (c.startsWith('#') && c.length === 7) {
     const r = parseInt(c.slice(1, 3), 16);
     const g = parseInt(c.slice(3, 5), 16);
     const b = parseInt(c.slice(5, 7), 16);
-    baseColor = `rgba(${r}, ${g}, ${b}, 0.6)`;
+    baseColor = `rgba(${r}, ${g}, ${b}, 0.58)`;
   }
 
-  return `linear-gradient(115deg, ${baseColor} 0%, ${baseColor} 32%, ${beamAura} 46%, ${highlight} 50%, ${beamAura} 54%, ${baseColor} 68%, ${baseColor} 100%)`;
+  return `linear-gradient(115deg, ${baseColor} 0%, ${baseColor} 30%, ${beamAura} 43%, ${specularCore} 49%, ${specularCore} 51%, ${beamAura} 57%, ${baseColor} 70%, ${baseColor} 100%)`;
 }
 
 export default function SupporterWidget({ donors, appearance, mode }: { donors: Supporter[]; appearance: SupporterAppearance; mode: SupporterMode }) {
@@ -42,7 +42,6 @@ export default function SupporterWidget({ donors, appearance, mode }: { donors: 
   const sweepSec = 1.3;
   const totalSec = sweepSec + pauseSec;
   const pEnd = Number(((sweepSec / totalSec) * 100).toFixed(2));
-  const pGlow = Number(((sweepSec * 0.45 / totalSec) * 100).toFixed(2));
 
   const nameShimmerGradient = isShineEnabled ? buildShimmerGradient(appearance.supporter_text_color, shineTheme) : undefined;
   const amountShimmerGradient = isShineEnabled ? buildShimmerGradient(appearance.supporter_amount_color, shineTheme) : undefined;
@@ -70,19 +69,12 @@ export default function SupporterWidget({ donors, appearance, mode }: { donors: 
           @keyframes supporter-text-shine-glide {
             0% {
               background-position: 135% 0;
-              filter: drop-shadow(0 0 0px transparent);
-            }
-            ${pGlow}% {
-              background-position: 50% 0;
-              filter: drop-shadow(0 0 10px var(--shine-glow, rgba(255, 255, 255, 0.95)));
             }
             ${pEnd}% {
               background-position: -35% 0;
-              filter: drop-shadow(0 0 0px transparent);
             }
             100% {
               background-position: -35% 0;
-              filter: drop-shadow(0 0 0px transparent);
             }
           }
         `}</style>
@@ -159,7 +151,6 @@ export default function SupporterWidget({ donors, appearance, mode }: { donors: 
                       WebkitTextFillColor: 'transparent',
                       ['--text-color' as any]: appearance.supporter_text_color,
                       ['--text-shine-delay' as any]: rowShineDelay,
-                      ['--shine-glow' as any]: shineTheme === 'gold' ? 'rgba(245, 158, 11, 0.95)' : shineTheme === 'cyan' ? 'rgba(6, 182, 212, 0.95)' : 'rgba(255, 255, 255, 0.95)',
                     } : undefined}
                   >
                     {donor.name}
@@ -176,7 +167,6 @@ export default function SupporterWidget({ donors, appearance, mode }: { donors: 
                         WebkitTextFillColor: 'transparent',
                         ['--text-color' as any]: appearance.supporter_amount_color,
                         ['--text-shine-delay' as any]: amountShineDelay,
-                        ['--shine-glow' as any]: shineTheme === 'gold' ? 'rgba(245, 158, 11, 0.95)' : shineTheme === 'cyan' ? 'rgba(6, 182, 212, 0.95)' : 'rgba(255, 255, 255, 0.95)',
                       } : undefined}
                     >
                       ฿{donor.amount.toLocaleString('th-TH', { maximumFractionDigits: 2 })}
