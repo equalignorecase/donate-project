@@ -295,14 +295,14 @@ export default function SupporterAppearanceEditor({
                 <label className="goal-range-control">
                   <span>
                     หน่วงเวลาหยุดพักก่อนเริ่มรอบใหม่
-                    <strong>{value.supporter_shine_delay || '4'} วินาที</strong>
+                    <strong>{value.supporter_shine_delay || '3'} วินาที</strong>
                   </span>
                   <input
                     type="range"
-                    min={supporterRanges.supporter_shine_delay?.[0] ?? 2}
-                    max={supporterRanges.supporter_shine_delay?.[1] ?? 20}
+                    min={supporterRanges.supporter_shine_delay?.[0] ?? 1}
+                    max={supporterRanges.supporter_shine_delay?.[1] ?? 15}
                     step={1}
-                    value={value.supporter_shine_delay || '4'}
+                    value={value.supporter_shine_delay || '3'}
                     onChange={event => update('supporter_shine_delay', event.target.value)}
                   />
                 </label>

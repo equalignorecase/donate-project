@@ -596,18 +596,19 @@ body.widget-overlay-body {
     will-change: background-position, filter;
 }
 
-/* Crystal Theme (Default) - ประกายเพชรคริสตัล */
+/* Crystal Theme (Default) - ประกายเพชรคริสตัล (High Contrast Specular) */
 .supporter-shine-theme-crystal .supporter-shimmer-text,
 .supporter-shine-theme-crystal.supporter-shimmer-text {
     background-image: linear-gradient(
         115deg,
-        var(--text-color, currentColor) 0%,
-        var(--text-color, currentColor) 35%,
-        #ffffff 50%,
-        var(--text-color, currentColor) 65%,
-        var(--text-color, currentColor) 100%
+        color-mix(in srgb, var(--text-color, currentColor) 70%, transparent) 0%,
+        color-mix(in srgb, var(--text-color, currentColor) 70%, transparent) 35%,
+        #ffffff 48%,
+        #ffffff 52%,
+        color-mix(in srgb, var(--text-color, currentColor) 70%, transparent) 65%,
+        color-mix(in srgb, var(--text-color, currentColor) 70%, transparent) 100%
     );
-    --shine-glow: rgba(255, 255, 255, 0.85);
+    --shine-glow: rgba(255, 255, 255, 0.95);
 }
 
 /* Gold Theme - ประกายทองพรีเมียม */
@@ -615,15 +616,15 @@ body.widget-overlay-body {
 .supporter-shine-theme-gold.supporter-shimmer-text {
     background-image: linear-gradient(
         115deg,
-        var(--text-color, currentColor) 0%,
-        var(--text-color, currentColor) 32%,
+        color-mix(in srgb, var(--text-color, #f59e0b) 72%, transparent) 0%,
+        color-mix(in srgb, var(--text-color, #f59e0b) 72%, transparent) 34%,
         #fde68a 44%,
         #ffffff 50%,
         #fde68a 56%,
-        var(--text-color, currentColor) 68%,
-        var(--text-color, currentColor) 100%
+        color-mix(in srgb, var(--text-color, #f59e0b) 72%, transparent) 66%,
+        color-mix(in srgb, var(--text-color, #f59e0b) 72%, transparent) 100%
     );
-    --shine-glow: rgba(245, 158, 11, 0.85);
+    --shine-glow: rgba(245, 158, 11, 0.95);
 }
 
 /* Cyan Theme - นีออนไซแอน */
@@ -631,34 +632,31 @@ body.widget-overlay-body {
 .supporter-shine-theme-cyan.supporter-shimmer-text {
     background-image: linear-gradient(
         115deg,
-        var(--text-color, currentColor) 0%,
-        var(--text-color, currentColor) 32%,
+        color-mix(in srgb, var(--text-color, #0284c7) 72%, transparent) 0%,
+        color-mix(in srgb, var(--text-color, #0284c7) 72%, transparent) 34%,
         #67e8f9 44%,
         #ffffff 50%,
         #67e8f9 56%,
-        var(--text-color, currentColor) 68%,
-        var(--text-color, currentColor) 100%
+        color-mix(in srgb, var(--text-color, #0284c7) 72%, transparent) 66%,
+        color-mix(in srgb, var(--text-color, #0284c7) 72%, transparent) 100%
     );
-    --shine-glow: rgba(6, 182, 212, 0.85);
+    --shine-glow: rgba(6, 182, 212, 0.95);
 }
 
 @keyframes supporter-text-shine-glide {
     0% {
-        background-position: 135% 0;
+        background-position: 110% 0;
         filter: drop-shadow(0 0 0px transparent);
     }
-    12% {
+    18% {
         filter: drop-shadow(0 0 5px var(--shine-glow, rgba(255, 255, 255, 0.85)));
     }
-    24% {
-        filter: drop-shadow(0 0 0px transparent);
-    }
-    35% {
-        background-position: -135% 0;
+    36% {
+        background-position: -10% 0;
         filter: drop-shadow(0 0 0px transparent);
     }
     100% {
-        background-position: -135% 0;
+        background-position: -10% 0;
         filter: drop-shadow(0 0 0px transparent);
     }
 }

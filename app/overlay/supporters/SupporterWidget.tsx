@@ -12,11 +12,11 @@ export default function SupporterWidget({ donors, appearance, mode }: { donors: 
   const beamTarget = appearance.supporter_beam_target || 'top3';
   const beamTheme = appearance.supporter_beam_theme || 'podium';
 
-  const pauseSec = Math.max(2, Math.min(20, Number(appearance.supporter_shine_delay || '4')));
-  const sweepSec = 1.2;
+  const pauseSec = Math.max(1, Math.min(15, Number(appearance.supporter_shine_delay || '3')));
+  const sweepSec = 1.3;
   const totalSec = sweepSec + pauseSec;
   const pEnd = Number(((sweepSec / totalSec) * 100).toFixed(2));
-  const pGlow = Number(((sweepSec * 0.35 / totalSec) * 100).toFixed(2));
+  const pGlow = Number(((sweepSec * 0.45 / totalSec) * 100).toFixed(2));
 
   return (
     <section
@@ -40,18 +40,18 @@ export default function SupporterWidget({ donors, appearance, mode }: { donors: 
           }
           @keyframes supporter-text-shine-glide {
             0% {
-              background-position: 135% 0;
+              background-position: 110% 0;
               filter: drop-shadow(0 0 0px transparent);
             }
             ${pGlow}% {
-              filter: drop-shadow(0 0 5px var(--shine-glow, rgba(255, 255, 255, 0.85)));
+              filter: drop-shadow(0 0 6px var(--shine-glow, rgba(255, 255, 255, 0.95)));
             }
             ${pEnd}% {
-              background-position: -135% 0;
+              background-position: -10% 0;
               filter: drop-shadow(0 0 0px transparent);
             }
             100% {
-              background-position: -135% 0;
+              background-position: -10% 0;
               filter: drop-shadow(0 0 0px transparent);
             }
           }

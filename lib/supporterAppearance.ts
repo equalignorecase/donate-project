@@ -9,13 +9,13 @@ export const supporterDefaults = {
   supporter_opacity: '90', supporter_width: '600', supporter_padding: '24', supporter_radius: '20',
   supporter_title_size: '24', supporter_name_size: '20', supporter_amount_size: '20', supporter_row_gap: '8', supporter_limit: '5',
   supporter_show_bg: 'true', supporter_show_border: 'true', supporter_show_divider: 'true', supporter_show_title: 'true', supporter_show_amount: 'true', supporter_show_rank: 'true', supporter_show_rank_bg: 'true',
-  supporter_shine_sweep: 'true', supporter_shine_theme: 'crystal', supporter_shine_delay: '4',
+  supporter_shine_sweep: 'true', supporter_shine_theme: 'crystal', supporter_shine_delay: '3',
   supporter_border_beam: 'false', supporter_beam_theme: 'podium', supporter_beam_target: 'top3',
 };
 export type SupporterAppearance = typeof supporterDefaults;
 export const supporterRanges: Partial<Record<keyof SupporterAppearance, [number, number]>> = {
   supporter_opacity: [0, 100], supporter_width: [240, 1600], supporter_padding: [0, 80], supporter_radius: [0, 80],
-  supporter_title_size: [12, 64], supporter_name_size: [12, 64], supporter_amount_size: [12, 64], supporter_row_gap: [0, 40], supporter_limit: [1, 10], supporter_shine_delay: [2, 20],
+  supporter_title_size: [12, 64], supporter_name_size: [12, 64], supporter_amount_size: [12, 64], supporter_row_gap: [0, 40], supporter_limit: [1, 10], supporter_shine_delay: [1, 15],
 };
 export function validSupporterAppearance(key: keyof SupporterAppearance, value: unknown): boolean {
   if (typeof value !== 'string') return false;
