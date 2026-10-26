@@ -96,13 +96,16 @@ export const defaultAlertSettings: AlertSettings = {
   alert_tiered_rare_min: 50,
   alert_tiered_epic_min: 200,
   alert_tiered_legendary_min: 500,
+  alert_tiered_common_color: '#22c55e',
+  alert_tiered_common_from: '#22c55e',
+  alert_tiered_common_to: '#10b981',
   alert_tiered_rare_color: '#00c6ff',
   alert_tiered_rare_from: '#00c6ff',
   alert_tiered_rare_to: '#0072ff',
-  alert_tiered_epic_color: '#9333ea',
+  alert_tiered_epic_color: '#a855f7',
   alert_tiered_epic_from: '#da22ff',
   alert_tiered_epic_to: '#9733ee',
-  alert_tiered_legendary_color: '#ea580c',
+  alert_tiered_legendary_color: '#f59e0b',
   alert_tiered_legendary_from: '#f12711',
   alert_tiered_legendary_to: '#f5af19',
   alert_text_shadow: 'soft',
@@ -158,10 +161,11 @@ export function getAlertTier(amount: number, settings?: AlertSettings): AlertTie
 }
 
 export function getTierTextColor(tier: AlertTier, settings?: AlertSettings): string | null {
-  if (!settings || tier === 'common') return null;
-  if (tier === 'rare') return settings.alert_tiered_rare_color || '#0284c7';
-  if (tier === 'epic') return settings.alert_tiered_epic_color || '#9333ea';
-  if (tier === 'legendary') return settings.alert_tiered_legendary_color || '#ea580c';
+  if (!settings) return null;
+  if (tier === 'common') return settings.alert_tiered_common_color || '#22c55e';
+  if (tier === 'rare') return settings.alert_tiered_rare_color || '#00c6ff';
+  if (tier === 'epic') return settings.alert_tiered_epic_color || '#a855f7';
+  if (tier === 'legendary') return settings.alert_tiered_legendary_color || '#f59e0b';
   return null;
 }
 
@@ -201,6 +205,10 @@ function getParticleColor(index: number, tier: AlertTier, style: string): string
   }
   if (tier === 'rare') {
     const colors = ['#0ea5e9', '#38bdf8', '#06b6d4', '#10b981', '#ffffff', '#3b82f6'];
+    return colors[index % colors.length];
+  }
+  if (tier === 'common') {
+    const colors = ['#22c55e', '#10b981', '#4ade80', '#86efac', '#ffffff', '#16a34a'];
     return colors[index % colors.length];
   }
   const colors = ['#38bdf8', '#10b981', '#f59e0b', '#ec4899', '#8b5cf6', '#06b6d4'];
@@ -358,6 +366,7 @@ export default function AlertCard({
   const tier = getAlertTier(numAmount, s);
   const isTiered = s.alert_tiered_enabled !== 'false' && s.alert_tiered_enabled !== false;
   const tierColor = isTiered ? getTierTextColor(tier, s) : null;
+  const useTierSolidColor = Boolean(tierColor);
   const donorNameColor = tierColor || s.alert_name_color || '#0f172a';
   const amountColor = tierColor || s.alert_amount_color || '#059669';
 
@@ -366,8 +375,11 @@ export default function AlertCard({
   let gradientFrom = s.alert_text_gradient_from || '#ff512f';
   let gradientTo = s.alert_text_gradient_to || '#dd2476';
 
-  if (isTiered && tier !== 'common') {
-    if (tier === 'rare') {
+  if (isTiered) {
+    if (tier === 'common') {
+      gradientFrom = s.alert_tiered_common_from || s.alert_tiered_common_color || '#22c55e';
+      gradientTo = s.alert_tiered_common_to || '#10b981';
+    } else if (tier === 'rare') {
       gradientFrom = s.alert_tiered_rare_from || s.alert_tiered_rare_color || '#00c6ff';
       gradientTo = s.alert_tiered_rare_to || '#0072ff';
     } else if (tier === 'epic') {
@@ -379,10 +391,10 @@ export default function AlertCard({
     }
   }
 
-  // Active Accent Color: Gradient Start Color (when gradient enabled) > Tier Color > User Icon Color
-  const activeAccent = isGradientEnabled
-    ? gradientFrom
-    : (tierColor || s.alert_icon_color || '#0f172a');
+  // Active Accent Color: Tier Color (when tiered) > Gradient Start Color (when gradient enabled) > User Icon Color
+  const activeAccent = isTiered
+    ? (tierColor || gradientFrom)
+    : (isGradientEnabled ? gradientFrom : (s.alert_icon_color || '#0f172a'));
 
   // Beam Color logic
   const beamColorMode = s.alert_card_beam_color || 'auto';
@@ -529,10 +541,10 @@ export default function AlertCard({
           <span
             className="donator-name"
             style={{
-              color: isGradientEnabled ? undefined : donorNameColor,
+              color: useTierSolidColor || !isGradientEnabled ? donorNameColor : undefined,
               letterSpacing: `${s.alert_letter_spacing ?? 0}px`,
               ...strokeStyle,
-              ...(isGradientEnabled && !isTextShineEnabled ? {
+              ...(isGradientEnabled && !useTierSolidColor && !isTextShineEnabled ? {
                 backgroundImage: staticGradient,
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
@@ -544,7 +556,9 @@ export default function AlertCard({
             <span
               className={isTextShineEnabled ? 'supporter-shimmer-text' : undefined}
               style={isTextShineEnabled ? {
-                ...(isGradientEnabled ? {
+                ...(useTierSolidColor ? {
+                  ['--text-color' as any]: donorNameColor,
+                } : isGradientEnabled ? {
                   backgroundImage: shimmerGradient,
                   ['--shine-glow' as any]: shineGlow,
                 } : {
@@ -573,7 +587,7 @@ export default function AlertCard({
             className="alert-amount-wrap"
             style={{
               background: amountBg,
-              color: isGradientEnabled ? undefined : amountColor,
+              color: useTierSolidColor || !isGradientEnabled ? amountColor : undefined,
               border: amountBorder,
               fontSize: `${s.alert_amount_size || 22}px`,
               boxShadow: 'none',
@@ -584,17 +598,19 @@ export default function AlertCard({
             <span
               className={isTextShineEnabled ? 'supporter-shimmer-text' : undefined}
               style={{
-                color: isGradientEnabled ? undefined : amountColor,
+                color: useTierSolidColor || !isGradientEnabled ? amountColor : undefined,
                 display: 'inline-block',
                 ...strokeStyle,
-                ...(isGradientEnabled && !isTextShineEnabled ? {
+                ...(isGradientEnabled && !useTierSolidColor && !isTextShineEnabled ? {
                   backgroundImage: staticGradient,
                   WebkitBackgroundClip: 'text',
                   WebkitTextFillColor: 'transparent',
                   backgroundClip: 'text',
                 } : {}),
                 ...(isTextShineEnabled ? {
-                  ...(isGradientEnabled ? {
+                  ...(useTierSolidColor ? {
+                    ['--text-color' as any]: amountColor,
+                  } : isGradientEnabled ? {
                     backgroundImage: shimmerGradient,
                     ['--shine-glow' as any]: shineGlow,
                   } : {
@@ -605,9 +621,9 @@ export default function AlertCard({
                 } : {})
               }}
             >
-              <span className="alert-amount-val" style={{ color: 'inherit' }}>{formattedAmount}</span>
+              <span className="alert-amount-val" style={{ color: useTierSolidColor || !isGradientEnabled ? amountColor : 'inherit' }}>{formattedAmount}</span>
               {' '}
-              <span className="alert-currency" style={{ color: 'inherit', opacity: 1 }}>บาท</span>
+              <span className="alert-currency" style={{ color: useTierSolidColor || !isGradientEnabled ? amountColor : 'inherit', opacity: 1 }}>บาท</span>
             </span>
           </span>
         </div>

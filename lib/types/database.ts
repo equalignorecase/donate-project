@@ -65,6 +65,9 @@ export interface AlertSettings {
   alert_tiered_rare_min?: number | string;
   alert_tiered_epic_min?: number | string;
   alert_tiered_legendary_min?: number | string;
+  alert_tiered_common_color?: string;
+  alert_tiered_common_from?: string;
+  alert_tiered_common_to?: string;
   alert_tiered_rare_color?: string;
   alert_tiered_rare_from?: string;
   alert_tiered_rare_to?: string;

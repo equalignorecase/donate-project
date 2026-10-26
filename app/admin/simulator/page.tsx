@@ -478,9 +478,9 @@ export default function SimulatorPage() {
             <button
               type="button"
               className="simulator-btn sm"
-              style={{ padding: '3px 8px', fontSize: '11px', background: 'transparent', border: 'none', color: 'var(--text-main)' }}
+              style={{ padding: '3px 8px', fontSize: '11px', background: 'transparent', border: 'none', color: alertSettings.alert_tiered_common_color || '#22c55e' }}
               onClick={() => triggerTestAlert(20, 'สมชาย ใจดี', 'เป็นกำลังใจให้นะครับ สตรีมสนุกมาก!')}
-              title="ทดสอบระดับ Common (20 บาท - สีปกติ)"
+              title="ทดสอบระดับ Common (20 บาท - สีเขียว Common)"
             >
               🟢 20฿
             </button>

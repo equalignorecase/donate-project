@@ -11,3 +11,4 @@ data/
 *.log
 feature.txt
 .audit/
+.agents/

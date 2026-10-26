@@ -407,10 +407,20 @@ export default function CustomizerPage() {
     alert_text_gradient_from: '#ff512f',
     alert_text_gradient_to: '#dd2476',
     alert_text_gradient_angle: 135,
+    alert_tiered_enabled: 'true',
+    alert_tiered_rare_min: 50,
+    alert_tiered_epic_min: 200,
+    alert_tiered_legendary_min: 500,
+    alert_tiered_common_color: '#22c55e',
+    alert_tiered_common_from: '#22c55e',
+    alert_tiered_common_to: '#10b981',
+    alert_tiered_rare_color: '#00c6ff',
     alert_tiered_rare_from: '#00c6ff',
     alert_tiered_rare_to: '#0072ff',
+    alert_tiered_epic_color: '#a855f7',
     alert_tiered_epic_from: '#da22ff',
     alert_tiered_epic_to: '#9733ee',
+    alert_tiered_legendary_color: '#f59e0b',
     alert_tiered_legendary_from: '#f12711',
     alert_tiered_legendary_to: '#f5af19',
     alert_animation: 'slide-down',
@@ -2592,6 +2602,84 @@ export default function CustomizerPage() {
                     </div>
                   </div>
 
+                  {/* Common Tier Controls */}
+                  <div className="form-row" style={{ marginBottom: '14px' }}>
+                    <div className="form-group">
+                      <label className="form-label">ระดับทั่วไป Common</label>
+                      <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>ยอดเงินตั้งแต่เริ่มต้นจนถึงก่อน Rare</span>
+                    </div>
+                    <div className="form-group">
+                      {settings.alert_text_gradient_enabled === 'true' ? (
+                        <>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                            <label className="form-label" style={{ marginBottom: 0 }}>สีไล่ระดับ Common (Start ➔ End)</label>
+                            <span style={{
+                              display: 'inline-block',
+                              width: '32px',
+                              height: '14px',
+                              borderRadius: '4px',
+                              border: "1px solid var(--border)",
+                              background: `linear-gradient(135deg, ${settings.alert_tiered_common_from || '#22c55e'}, ${settings.alert_tiered_common_to || '#10b981'})`
+                            }} />
+                          </div>
+                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px' }}>
+                            <div className="color-input-wrap">
+                              <input
+                                type="color"
+                                value={settings.alert_tiered_common_from?.startsWith('#') ? settings.alert_tiered_common_from : '#22c55e'}
+                                onChange={(e) => {
+                                  updateField('alert_tiered_common_from', e.target.value);
+                                  updateField('alert_tiered_common_color', e.target.value);
+                                }}
+                                title="สีเริ่มต้น"
+                              />
+                              <input
+                                type="text"
+                                className="hex-input"
+                                value={settings.alert_tiered_common_from || '#22c55e'}
+                                onChange={(e) => {
+                                  updateField('alert_tiered_common_from', e.target.value);
+                                  updateField('alert_tiered_common_color', e.target.value);
+                                }}
+                              />
+                            </div>
+                            <div className="color-input-wrap">
+                              <input
+                                type="color"
+                                value={settings.alert_tiered_common_to?.startsWith('#') ? settings.alert_tiered_common_to : '#10b981'}
+                                onChange={(e) => updateField('alert_tiered_common_to', e.target.value)}
+                                title="สีปลายทาง"
+                              />
+                              <input
+                                type="text"
+                                className="hex-input"
+                                value={settings.alert_tiered_common_to || '#10b981'}
+                                onChange={(e) => updateField('alert_tiered_common_to', e.target.value)}
+                              />
+                            </div>
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          <label className="form-label">สีตัวอักษร Common</label>
+                          <div className="color-input-wrap">
+                            <input
+                              type="color"
+                              value={settings.alert_tiered_common_color?.startsWith('#') ? settings.alert_tiered_common_color : '#22c55e'}
+                              onChange={(e) => updateField('alert_tiered_common_color', e.target.value)}
+                            />
+                            <input
+                              type="text"
+                              className="hex-input"
+                              value={settings.alert_tiered_common_color || '#22c55e'}
+                              onChange={(e) => updateField('alert_tiered_common_color', e.target.value)}
+                            />
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  </div>
+
                   {/* Rare Tier Controls */}
                   <div className="form-row" style={{ marginBottom: '14px' }}>
                     <div className="form-group">
@@ -2942,6 +3030,7 @@ export default function CustomizerPage() {
                   <button
                     type="button"
                     className="test-preset-btn"
+                    style={{ borderColor: settings.alert_tiered_common_color || '#22c55e' }}
                     onClick={() => {
                       setTestName('สมชาย ใจดี');
                       setTestAmount(20);
@@ -2950,13 +3039,13 @@ export default function CustomizerPage() {
                       setTimeout(() => setIsAnimating(false), 50);
                     }}
                   >
-                    <span className="tier-dot" style={{ background: '#22c55e' }} />
+                    <span className="tier-dot" style={{ background: settings.alert_tiered_common_color || '#22c55e' }} />
                     <span>Common (20฿)</span>
                   </button>
                   <button
                     type="button"
                     className="test-preset-btn"
-                    style={{ borderColor: settings.alert_tiered_rare_color || '#0284c7' }}
+                    style={{ borderColor: settings.alert_tiered_rare_color || '#00c6ff' }}
                     onClick={() => {
                       setTestName('ฟ้าใส สดชื่น');
                       setTestAmount(100);
@@ -2965,13 +3054,13 @@ export default function CustomizerPage() {
                       setTimeout(() => setIsAnimating(false), 50);
                     }}
                   >
-                    <span className="tier-dot" style={{ background: settings.alert_tiered_rare_color || '#0284c7' }} />
+                    <span className="tier-dot" style={{ background: settings.alert_tiered_rare_color || '#00c6ff' }} />
                     <span>Rare (100฿)</span>
                   </button>
                   <button
                     type="button"
                     className="test-preset-btn"
-                    style={{ borderColor: settings.alert_tiered_epic_color || '#9333ea' }}
+                    style={{ borderColor: settings.alert_tiered_epic_color || '#a855f7' }}
                     onClick={() => {
                       setTestName('เสี่ยท็อป สายเปย์');
                       setTestAmount(300);
@@ -2980,13 +3069,13 @@ export default function CustomizerPage() {
                       setTimeout(() => setIsAnimating(false), 50);
                     }}
                   >
-                    <span className="tier-dot" style={{ background: settings.alert_tiered_epic_color || '#9333ea' }} />
+                    <span className="tier-dot" style={{ background: settings.alert_tiered_epic_color || '#a855f7' }} />
                     <span>Epic (300฿)</span>
                   </button>
                   <button
                     type="button"
                     className="test-preset-btn"
-                    style={{ borderColor: settings.alert_tiered_legendary_color || '#ea580c' }}
+                    style={{ borderColor: settings.alert_tiered_legendary_color || '#f59e0b' }}
                     onClick={() => {
                       setTestName('สุลต่าน ใจป๋า');
                       setTestAmount(1000);
@@ -2995,7 +3084,7 @@ export default function CustomizerPage() {
                       setTimeout(() => setIsAnimating(false), 50);
                     }}
                   >
-                    <span className="tier-dot" style={{ background: settings.alert_tiered_legendary_color || '#ea580c' }} />
+                    <span className="tier-dot" style={{ background: settings.alert_tiered_legendary_color || '#f59e0b' }} />
                     <span>Legendary (1,000฿)</span>
                   </button>
                 </div>

@@ -80,7 +80,23 @@ export default function OverlayPage() {
     alert_text_gradient_to: '#ff5858',
     alert_card_beam: 'false',
     alert_shine_sweep: 'true',
-    alert_shine_theme: 'crystal'
+    alert_shine_theme: 'crystal',
+    alert_tiered_enabled: 'true',
+    alert_tiered_rare_min: 50,
+    alert_tiered_epic_min: 200,
+    alert_tiered_legendary_min: 500,
+    alert_tiered_common_color: '#22c55e',
+    alert_tiered_common_from: '#22c55e',
+    alert_tiered_common_to: '#10b981',
+    alert_tiered_rare_color: '#00c6ff',
+    alert_tiered_rare_from: '#00c6ff',
+    alert_tiered_rare_to: '#0072ff',
+    alert_tiered_epic_color: '#a855f7',
+    alert_tiered_epic_from: '#da22ff',
+    alert_tiered_epic_to: '#9733ee',
+    alert_tiered_legendary_color: '#f59e0b',
+    alert_tiered_legendary_from: '#f12711',
+    alert_tiered_legendary_to: '#f5af19'
   });
 
   const queueRef = useRef<Donation[]>([]);
