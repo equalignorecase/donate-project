@@ -60,9 +60,27 @@ export default function OverlayPage() {
     alert_volume: 80,
     tts_enabled: 'true',
     tts_min_amount: 0,
-    alert_animation: 'slide-down',
+    alert_animation: 'bounce',
     alert_action_text: 'โดเนทให้',
-    alert_icon: 'gift',
+    alert_icon: 'heart',
+    alert_card_bg: 'transparent',
+    alert_border_color: 'transparent',
+    alert_border_width: 0,
+    alert_shadow_show: 'false',
+    alert_amount_bg: 'transparent',
+    alert_amount_color: '#38bdf8',
+    alert_msg_bg: 'transparent',
+    alert_msg_color: '#ffffff',
+    alert_text_stroke_enabled: 'true',
+    alert_text_stroke_color: '#000000',
+    alert_text_stroke_width: 1,
+    alert_text_gradient_enabled: 'true',
+    alert_text_gradient_preset: 'neon_pink',
+    alert_text_gradient_from: '#f857a6',
+    alert_text_gradient_to: '#ff5858',
+    alert_card_beam: 'false',
+    alert_shine_sweep: 'true',
+    alert_shine_theme: 'crystal'
   });
 
   const queueRef = useRef<Donation[]>([]);
@@ -82,6 +100,7 @@ export default function OverlayPage() {
   // Unlock audio context on user click/interaction
   const unlockAudio = () => {
     setAudioUnlocked(true);
+    setTimeout(() => setShowBanner(false), 2000);
     try {
       if (audioRef.current && audioRef.current.paused) {
         audioRef.current.play().then(() => {
@@ -112,10 +131,21 @@ export default function OverlayPage() {
     window.addEventListener('pointerdown', handleGesture);
     window.addEventListener('keydown', handleGesture);
 
+    let bannerTimer: NodeJS.Timeout | null = null;
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
-      if (params.get('obs') === '1' || params.get('clean') === '1') {
+      if (
+        params.get('obs') === '1' ||
+        params.get('clean') === '1' ||
+        params.get('stream') === '1' ||
+        params.get('tiktok') === '1' ||
+        params.get('studio') === '1'
+      ) {
         setShowBanner(false);
+      } else {
+        bannerTimer = setTimeout(() => {
+          setShowBanner(false);
+        }, 8000);
       }
     }
 
@@ -123,6 +153,7 @@ export default function OverlayPage() {
       window.removeEventListener('click', handleGesture);
       window.removeEventListener('pointerdown', handleGesture);
       window.removeEventListener('keydown', handleGesture);
+      if (bannerTimer) clearTimeout(bannerTimer);
     };
   }, []);
 
@@ -453,14 +484,31 @@ export default function OverlayPage() {
   }, []);
 
   useEffect(() => {
-    fetch('/api/admin/settings')
-      .then(res => res.json())
-      .then(res => {
-        if (res.success && res.settings) {
-          setSettings(prev => ({ ...prev, ...res.settings }));
+    const loadSettings = async () => {
+      const timestamp = Date.now();
+      try {
+        const res = await fetch(`/api/settings?_t=${timestamp}`, { cache: 'no-store' });
+        const data = await res.json();
+        if (data.success && data.settings) {
+          setSettings(prev => ({ ...prev, ...data.settings }));
+          return;
         }
-      })
-      .catch(err => console.warn('Could not load initial settings:', err));
+      } catch (e) {
+        console.warn('[Overlay] Public settings load failed, trying admin endpoint:', e);
+      }
+
+      try {
+        const resAdmin = await fetch(`/api/admin/settings?_t=${timestamp}`, { cache: 'no-store' });
+        const dataAdmin = await resAdmin.json();
+        if (dataAdmin.success && dataAdmin.settings) {
+          setSettings(prev => ({ ...prev, ...dataAdmin.settings }));
+        }
+      } catch (err) {
+        console.warn('[Overlay] Could not load settings:', err);
+      }
+    };
+
+    loadSettings();
 
     // Listen to local BroadcastChannel for zero-latency testing
     let bc: BroadcastChannel | null = null;

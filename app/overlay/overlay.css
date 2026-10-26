@@ -98,31 +98,31 @@
   /* Dynamic CSS Variables (Controlled by Settings / Customizer) */
   --alert-font: 'LINESeedSansTH', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --alert-card-width: 580px;
-  --alert-card-bg: #ffffff;
-  --alert-border-color: #e2e8f0;
-  --alert-border-width: 1.5px;
+  --alert-card-bg: transparent;
+  --alert-border-color: transparent;
+  --alert-border-width: 0px;
   --alert-border-radius: 24px;
   --alert-card-blur: 0px;
-  --alert-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.16), 0 0 0 1px rgba(15, 23, 42, 0.04);
+  --alert-shadow: none;
   --alert-shimmer: linear-gradient(90deg, #0f172a 0%, #2563eb 50%, #059669 100%);
   --alert-shimmer-height: 4px;
 
   --alert-icon-bg: #f8fafc;
-  --alert-icon-color: #0f172a;
+  --alert-icon-color: #38bdf8;
   --alert-icon-border: #e2e8f0;
 
-  --alert-name-color: #0f172a;
-  --alert-action-color: #64748b;
-  --alert-title-size: 26px;
+  --alert-name-color: #38bdf8;
+  --alert-action-color: #e2e8f0;
+  --alert-title-size: 28px;
 
-  --alert-amount-bg: #ecfdf5;
-  --alert-amount-color: #059669;
-  --alert-amount-border: #a7f3d0;
-  --alert-amount-size: 22px;
+  --alert-amount-bg: transparent;
+  --alert-amount-color: #38bdf8;
+  --alert-amount-border: transparent;
+  --alert-amount-size: 26px;
 
-  --alert-msg-bg: #f8fafc;
-  --alert-msg-color: #334155;
-  --alert-msg-border: #e2e8f0;
+  --alert-msg-bg: transparent;
+  --alert-msg-color: #ffffff;
+  --alert-msg-border: transparent;
   --alert-msg-size: 18px;
 }
 

@@ -36,10 +36,19 @@ export async function GET(request: Request) {
       });
     }
 
-    return NextResponse.json({
-      success: true,
-      settings: isAdmin ? settings : publicSettings(settings)
-    });
+    return NextResponse.json(
+      {
+        success: true,
+        settings: isAdmin ? settings : publicSettings(settings)
+      },
+      {
+        headers: {
+          'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        }
+      }
+    );
   } catch (err: any) {
     console.error('Get settings error:', err);
     return NextResponse.json(

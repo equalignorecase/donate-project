@@ -9,14 +9,15 @@ export async function GET() {
   try {
     const { data: rows, error } = await supabaseAdmin
       .from('settings')
-      .select('key, value')
-      .in('key', PUBLIC_KEYS);
+      .select('key, value');
 
     if (error) throw error;
 
     const settings: Record<string, string> = {};
     if (rows) {
       rows.forEach((r: { key: string; value: string }) => {
+        // Exclude sensitive secrets from public API
+        if (r.key === 'slipok_api_key' || r.key === 'admin_secret') return;
         settings[r.key] = r.value;
       });
     }
@@ -43,7 +44,9 @@ export async function GET() {
       },
       {
         headers: {
-          'Cache-Control': 'no-store'
+          'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0',
+          'Pragma': 'no-cache',
+          'Expires': '0'
         }
       }
     );
