@@ -114,7 +114,10 @@ export const defaultAlertSettings: AlertSettings = {
   alert_shine_sweep: 'false',
   alert_shine_theme: 'crystal',
   alert_animation: 'slide-down',
-  alert_duration: 8
+  alert_duration: 8,
+  alert_volume: 80,
+  tts_enabled: 'true',
+  tts_min_amount: 0
 };
 
 export interface TextGradientPreset {

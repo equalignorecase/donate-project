@@ -59,7 +59,7 @@ export default function OverlayPage() {
     alert_duration: 8,
     alert_volume: 80,
     tts_enabled: 'true',
-    tts_min_amount: 20,
+    tts_min_amount: 0,
     alert_animation: 'slide-down',
     alert_action_text: 'โดเนทให้',
     alert_icon: 'gift',
@@ -71,6 +71,7 @@ export default function OverlayPage() {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const ttsAudioRef = useRef<HTMLAudioElement | null>(null);
   const ttsTimeoutRef = useRef<any>(null);
+  const currentTtsTextRef = useRef<string>('');
   const alertStartTimeRef = useRef<number>(0);
   const alertDismissTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const isTtsSpeakingRef = useRef<boolean>(false);
@@ -88,7 +89,7 @@ export default function OverlayPage() {
           audioRef.current.currentTime = 0;
         }).catch(() => {});
       }
-      if (ttsAudioRef.current && ttsAudioRef.current.paused) {
+      if (ttsAudioRef.current && ttsAudioRef.current.paused && ttsAudioRef.current.src) {
         ttsAudioRef.current.play().then(() => {
           ttsAudioRef.current?.pause();
           ttsAudioRef.current.currentTime = 0;
@@ -353,6 +354,7 @@ export default function OverlayPage() {
       textToSpeak += ` ${item.message.trim()}`;
     }
     textToSpeak = prepareTtsText(textToSpeak);
+    currentTtsTextRef.current = textToSpeak;
 
     const volume = Math.min(Math.max(parseFloat(String(s.alert_volume || 80)) / 100, 0), 1);
 
@@ -370,10 +372,13 @@ export default function OverlayPage() {
 
     ttsTimeoutRef.current = setTimeout(() => {
       if (ttsAudioRef.current) {
-        ttsAudioRef.current.play().catch(err => {
-          console.warn('[Overlay TTS] Audio play blocked or failed, falling back to Web Speech:', err);
-          fallbackWebSpeech(textToSpeak, volume);
-        });
+        const playPromise = ttsAudioRef.current.play();
+        if (playPromise !== undefined) {
+          playPromise.catch(err => {
+            console.warn('[Overlay TTS] Audio play blocked or failed, falling back to Web Speech:', err);
+            fallbackWebSpeech(textToSpeak, volume);
+          });
+        }
       } else {
         fallbackWebSpeech(textToSpeak, volume);
       }
@@ -517,7 +522,11 @@ export default function OverlayPage() {
         ref={ttsAudioRef}
         preload="auto"
         onEnded={onTtsEnded}
-        onError={() => onTtsEnded()}
+        onError={() => {
+          console.warn('[Overlay TTS] Audio element error, attempting Web Speech fallback');
+          const vol = Math.min(Math.max(parseFloat(String(settingsRef.current.alert_volume || 80)) / 100, 0), 1);
+          fallbackWebSpeech(currentTtsTextRef.current, vol);
+        }}
       />
 
       {/* Browser Autoplay Notice & Local Sound Tester (Hidden in OBS via ?obs=1 or close button) */}

@@ -67,7 +67,10 @@ export async function middleware(request: NextRequest) {
   const isAuthenticated = isDirectSecret || (await hasValidSession(token));
 
   if (pathname.startsWith('/api/admin')) {
-    if (!isAuthenticated) {
+    // Allow public read of non-sensitive alert/widget settings via GET /api/admin/settings
+    // (Route handler internally filters with publicSettings() when unauthenticated)
+    const isPublicSettingsRead = pathname === '/api/admin/settings' && request.method === 'GET';
+    if (!isAuthenticated && !isPublicSettingsRead) {
       return NextResponse.json(
         { success: false, message: 'Unauthorized' },
         { status: 401 }
