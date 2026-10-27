@@ -28,7 +28,9 @@ import {
   SquareDashed,
   Upload,
   Sun,
-  Moon
+  Moon,
+  Smartphone,
+  Sparkles
 } from 'lucide-react';
 
 const ICONS: Record<string, React.ReactNode> = {
@@ -743,6 +745,12 @@ export default function CustomizerPage() {
     showToast('คัดลอก URL เรียบร้อยแล้ว!');
   };
 
+  const handleCopyTikTokUrl = () => {
+    const tiktokUrl = `${obsUrl}?tiktok=1`;
+    navigator.clipboard.writeText(tiktokUrl);
+    showToast('คัดลอกลิงก์ TikTok Live (ไร้พื้นหลัง) แล้ว!');
+  };
+
   const isCardFrameless = activeMode === 'frameless' || settings.alert_card_bg === 'transparent';
   const IconComponent = ICONS[settings.alert_icon || 'gift'] || ICONS.gift;
   const isStrokeEnabled = settings.alert_text_stroke_enabled === 'true' || settings.alert_text_stroke_enabled === true;
@@ -939,7 +947,7 @@ export default function CustomizerPage() {
                       onClick={() => handleModeToggle('frameless')}
                     >
                       <SquareDashed size={15} />
-                      <span>แบบไร้กรอบโปร่งใส (Frameless)</span>
+                      <span>แบบไร้กรอบโปร่งใส (TikTok Live / No BG)</span>
                     </button>
                   </div>
 
@@ -3226,6 +3234,54 @@ export default function CustomizerPage() {
               </div>
               <p style={{ fontSize: '11.5px', color: 'var(--text-muted)', marginTop: '8px', lineHeight: 1.4, margin: '8px 0 0 0' }}>
                 ซิงค์ค่าไปยัง OBS Studio อัตโนมัติแบบเรียลไทม์เมื่อกดบันทึก
+              </p>
+            </div>
+
+            {/* TikTok Live Studio (No BG / Frameless) Dedicated URL */}
+            <div
+              className="obs-url-card"
+              style={{
+                marginTop: '12px',
+                border: '1px solid rgba(244, 63, 94, 0.35)',
+                background: 'linear-gradient(135deg, rgba(244, 63, 94, 0.05) 0%, rgba(14, 165, 233, 0.05) 100%)'
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px', gap: '8px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', fontWeight: 700, color: 'var(--text-main)' }}>
+                  <Smartphone size={15} style={{ color: '#f43f5e' }} />
+                  <span>TikTok Live Studio (ไร้พื้นหลัง / No BG)</span>
+                </div>
+                <span
+                  style={{
+                    fontSize: '10.5px',
+                    background: 'rgba(244, 63, 94, 0.14)',
+                    color: '#f43f5e',
+                    padding: '2px 8px',
+                    borderRadius: '999px',
+                    fontWeight: 700,
+                    whiteSpace: 'nowrap',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '3px'
+                  }}
+                >
+                  <Sparkles size={11} /> TikTok Live
+                </span>
+              </div>
+              <div className="url-copy-box">
+                <code style={{ color: '#f43f5e', fontWeight: 600 }}>{obsUrl}?tiktok=1</code>
+                <button
+                  type="button"
+                  className="btn secondary sm"
+                  onClick={handleCopyTikTokUrl}
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', borderColor: 'rgba(244, 63, 94, 0.4)' }}
+                >
+                  <Copy size={13} />
+                  <span>คัดลอก</span>
+                </button>
+              </div>
+              <p style={{ fontSize: '11.5px', color: 'var(--text-muted)', marginTop: '8px', lineHeight: 1.4, margin: '8px 0 0 0' }}>
+                ⚡ ลบกรอบ/พื้นหลังการ์ดให้อัตโนมัติ 100% ตัวหนังสือลอยคมชัด เหมาะกับไลฟ์แนวตั้ง TikTok Live Studio
               </p>
             </div>
           </div>

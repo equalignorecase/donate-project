@@ -649,3 +649,28 @@ body.overlay-body {
 .alert-msg-fadein {
   animation: alert-msg-fadein 0.55s cubic-bezier(0.16, 1, 0.3, 1) 0.3s both;
 }
+
+/* ==========================================================
+   TikTok Live Studio / No-BG Overlay Mode (?tiktok=1 / ?nobg=1)
+   ========================================================== */
+body.overlay-body.tiktok-mode,
+body.overlay-body.tiktok-mode * {
+  --alert-card-bg: transparent !important;
+  --alert-card-blur: 0px !important;
+  --alert-border-width: 0px !important;
+  --alert-border-color: transparent !important;
+  --alert-shadow: none !important;
+}
+
+body.overlay-body.tiktok-mode .alert-card {
+  background: transparent !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+body.overlay-body.tiktok-mode .alert-card-beam-wrap,
+body.overlay-body.tiktok-mode .alert-shimmer {
+  display: none !important;
+}

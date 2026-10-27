@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useMemo } from 'react';
 import './overlay.css';
 import './widgets.css';
 import { supabase } from '@/lib/supabaseClient';
@@ -112,6 +112,7 @@ export default function OverlayPage() {
   const processedAlertIds = useRef<Set<string>>(new Set());
   const [audioUnlocked, setAudioUnlocked] = useState<boolean>(false);
   const [showBanner, setShowBanner] = useState<boolean>(true);
+  const [isNoBgMode, setIsNoBgMode] = useState<boolean>(false);
 
   // Unlock audio context on user click/interaction
   const unlockAudio = () => {
@@ -140,7 +141,7 @@ export default function OverlayPage() {
     } catch (e) {}
   };
 
-  // Listen to any user interaction to unlock audio
+  // Listen to any user interaction to unlock audio and check URL params for TikTok/No-BG mode
   useEffect(() => {
     const handleGesture = () => unlockAudio();
     window.addEventListener('click', handleGesture);
@@ -150,11 +151,22 @@ export default function OverlayPage() {
     let bannerTimer: NodeJS.Timeout | null = null;
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
+      const isTikTok =
+        params.get('tiktok') === '1' ||
+        params.get('nobg') === '1' ||
+        params.get('frameless') === '1' ||
+        params.get('transparent') === '1';
+
+      if (isTikTok) {
+        setIsNoBgMode(true);
+        document.body.classList.add('tiktok-mode');
+      }
+
       if (
+        isTikTok ||
         params.get('obs') === '1' ||
         params.get('clean') === '1' ||
         params.get('stream') === '1' ||
-        params.get('tiktok') === '1' ||
         params.get('studio') === '1'
       ) {
         setShowBanner(false);
@@ -177,13 +189,40 @@ export default function OverlayPage() {
     document.body.classList.add('overlay-body');
     return () => {
       document.body.classList.remove('overlay-body');
+      document.body.classList.remove('tiktok-mode');
     };
   }, []);
 
+  // Compute effective settings: Strip background, border, blur & shadow when in TikTok/No-BG mode
+  const effectiveSettings = useMemo<AlertSettings>(() => {
+    if (!isNoBgMode) return settings;
+    return {
+      ...settings,
+      alert_card_bg: 'transparent',
+      alert_card_blur: 0,
+      alert_border_color: 'transparent',
+      alert_border_width: 0,
+      alert_shadow_show: 'false',
+      alert_glow: 'false',
+      alert_shimmer_show: 'false',
+      alert_card_beam: 'false',
+      alert_icon_bg: 'transparent',
+      alert_icon_border: 'transparent',
+      alert_amount_bg: 'transparent',
+      alert_amount_border: 'transparent',
+      alert_msg_bg: 'transparent',
+      alert_msg_border: 'transparent',
+      alert_text_stroke_enabled: 'true',
+      alert_text_stroke_width: settings.alert_text_stroke_width || 1.5,
+      alert_text_stroke_color: settings.alert_text_stroke_color || '#000000',
+      alert_text_shadow: settings.alert_text_shadow === 'none' ? 'game' : (settings.alert_text_shadow || 'game')
+    };
+  }, [settings, isNoBgMode]);
+
   useEffect(() => {
-    settingsRef.current = settings;
-    applyStyles(settings);
-  }, [settings]);
+    settingsRef.current = effectiveSettings;
+    applyStyles(effectiveSettings);
+  }, [effectiveSettings]);
 
   function applyStyles(s: AlertSettings) {
     if (!s || typeof window === 'undefined') return;
@@ -664,7 +703,7 @@ export default function OverlayPage() {
 
       {currentAlert && (
         <AlertCard
-          settings={settings}
+          settings={effectiveSettings}
           alert={currentAlert}
           animState={alertAnimState}
         />
