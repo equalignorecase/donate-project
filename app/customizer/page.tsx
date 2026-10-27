@@ -1733,6 +1733,66 @@ export default function CustomizerPage() {
                     )}
                   </div>
 
+                  {/* Text Animation: Wave Pop & Count-up Punch */}
+                  <div style={{ marginTop: '20px', paddingTop: '16px', borderTop: '1px solid var(--border)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
+                      <label className="form-label" style={{ fontWeight: 700, fontSize: '13.5px', marginBottom: 0 }}>
+                        เอฟเฟกต์ตัวอักษรเคลื่อนไหว (Wave Pop &amp; Count-up)
+                      </label>
+                      {(settings.alert_text_effect_enabled === 'false' || settings.alert_text_effect_enabled === false) ? (
+                        <button
+                          type="button"
+                          className="btn-text-action"
+                          onClick={() => {
+                            updateField('alert_text_effect_enabled', 'true');
+                            setIsAnimating(true);
+                            setTimeout(() => setIsAnimating(false), 50);
+                          }}
+                        >
+                          เปิด
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          className="btn-text-action"
+                          onClick={() => updateField('alert_text_effect_enabled', 'false')}
+                        >
+                          ปิด
+                        </button>
+                      )}
+                    </div>
+
+                    <div className="form-group" style={{ marginBottom: '12px' }}>
+                      <label className="form-label">แอนิเมชันเปิดตัวของตัวหนังสือ</label>
+                      <div className="segmented-control">
+                        <button
+                          type="button"
+                          className={`segmented-btn ${(settings.alert_text_effect_enabled !== 'false' && settings.alert_text_effect_enabled !== false) ? 'active' : ''}`}
+                          onClick={() => {
+                            updateField('alert_text_effect_enabled', 'true');
+                            setIsAnimating(true);
+                            setTimeout(() => setIsAnimating(false), 50);
+                          }}
+                        >
+                          เปิดเอฟเฟกต์ (Wave &amp; Count-up)
+                        </button>
+                        <button
+                          type="button"
+                          className={`segmented-btn ${(settings.alert_text_effect_enabled === 'false' || settings.alert_text_effect_enabled === false) ? 'active' : ''}`}
+                          onClick={() => updateField('alert_text_effect_enabled', 'false')}
+                        >
+                          ปิดเอฟเฟกต์ (แสดงแบบปกติ)
+                        </button>
+                      </div>
+                    </div>
+
+                    <div style={{ fontSize: '12px', color: 'var(--text-dim)', lineHeight: 1.5, background: 'var(--accent-soft)', padding: '10px 12px', borderRadius: '8px', border: '1px solid var(--border)' }}>
+                      <div>✨ <strong>ชื่อผู้โดเนท:</strong> เด้งเป็นคลื่นทีละตัวอักษร (Wave Pop) สะดุดตา</div>
+                      <div style={{ marginTop: '4px' }}>🔢 <strong>ยอดเงิน:</strong> นับวิ่งจาก 0 ถึงยอดจริง (Count-up) พร้อมเอฟเฟกต์เด้ง Punch Pop ปิดท้าย</div>
+                      <div style={{ marginTop: '4px' }}>💬 <strong>ข้อความโดเนท:</strong> ค่อยๆ ปรากฏเลื่อนขึ้นอย่างนุ่มนวล (Smooth Fade-in)</div>
+                    </div>
+                  </div>
+
                   {/* Spacing Controls (บน ล่าง ซ้าย ขวา & ช่องไฟ) */}
                   <div style={{ marginTop: '20px', paddingTop: '16px', borderTop: '1px solid var(--border)' }}>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>

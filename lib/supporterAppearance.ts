@@ -3,7 +3,7 @@ import { goalFontOptions } from './goalAppearance';
 export const supporterModes = { recent: 'ผู้สนับสนุนล่าสุด', daily: 'อันดับผู้โดเนทวันนี้', monthly: 'อันดับผู้โดเนทเดือนนี้', allTime: 'อันดับผู้โดเนทตลอดเวลา' };
 export type SupporterMode = keyof typeof supporterModes;
 export const supporterDefaults = {
-  supporter_mode: 'daily', supporter_title: '', supporter_font: 'LINESeedSansTH', supporter_layout: 'list',
+  supporter_mode: 'daily', supporter_title: '', supporter_title_align: 'center', supporter_font: 'LINESeedSansTH', supporter_layout: 'list',
   supporter_bg_color: '#0f172a', supporter_text_color: '#ffffff', supporter_amount_color: '#67e8f9',
   supporter_border_color: '#64748b', supporter_row_color: '#1e293b', supporter_rank_color: '#fbbf24', supporter_rank_bg_color: '#334155',
   supporter_opacity: '90', supporter_width: '600', supporter_padding: '24', supporter_radius: '20',
@@ -20,6 +20,7 @@ export const supporterRanges: Partial<Record<keyof SupporterAppearance, [number,
 export function validSupporterAppearance(key: keyof SupporterAppearance, value: unknown): boolean {
   if (typeof value !== 'string') return false;
   if (key === 'supporter_title') return value.length <= 160;
+  if (key === 'supporter_title_align') return ['left', 'center', 'right'].includes(value);
   if (key === 'supporter_mode') return Object.prototype.hasOwnProperty.call(supporterModes, value);
   if (key === 'supporter_font') return goalFontOptions.some(font => font.value === value);
   if (key === 'supporter_layout') return ['list', 'cards'].includes(value);

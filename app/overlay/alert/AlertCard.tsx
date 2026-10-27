@@ -1,9 +1,25 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { AlertSettings } from '@/lib/types/database';
 import '@/app/overlay/overlay.css';
 import '@/app/overlay/widgets.css';
+
+/**
+ * Split Thai text into proper grapheme clusters so combining marks (วรรณยุกต์/สระ)
+ * do not detach from base consonants during letter-by-letter animations.
+ */
+export function splitThaiGraphemes(text: string): string[] {
+  if (typeof Intl !== 'undefined' && (Intl as any).Segmenter) {
+    try {
+      const segmenter = new (Intl as any).Segmenter('th', { granularity: 'grapheme' });
+      return Array.from(segmenter.segment(text), (s: any) => s.segment);
+    } catch (e) {}
+  }
+  const regex = /[^\u0E30-\u0E3A\u0E47-\u0E4E][\u0E30-\u0E3A\u0E47-\u0E4E]*/g;
+  const matches = text.match(regex);
+  return matches && matches.length > 0 ? matches : text.split('');
+}
 
 export const ALERT_ICONS: Record<string, React.ReactNode> = {
   gift: (
@@ -109,6 +125,7 @@ export const defaultAlertSettings: AlertSettings = {
   alert_tiered_legendary_from: '#f12711',
   alert_tiered_legendary_to: '#f5af19',
   alert_text_shadow: 'soft',
+  alert_text_effect_enabled: 'true',
   alert_text_gradient_enabled: 'true',
   alert_text_gradient_preset: 'neon_pink',
   alert_text_gradient_from: '#f857a6',
@@ -357,8 +374,63 @@ export default function AlertCard({
   const actionText = (s.alert_action_text || 'โดเนทให้').trim();
   const rawAmount = alert?.amount !== undefined ? alert.amount : 0;
   const numAmount = typeof rawAmount === 'number' ? rawAmount : (parseFloat(String(rawAmount)) || 0);
-  const formattedAmount = numAmount.toLocaleString('th-TH');
   const message = (alert?.message || '').trim();
+
+  const isTextEffectEnabled = s.alert_text_effect_enabled !== 'false' && s.alert_text_effect_enabled !== false;
+  const [displayedAmount, setDisplayedAmount] = useState<number>(() => (isTextEffectEnabled ? 0 : numAmount));
+  const [isPunching, setIsPunching] = useState<boolean>(false);
+  const [animKey, setAnimKey] = useState<number>(0);
+
+  const donorNameClusters = useMemo(() => {
+    if (!isTextEffectEnabled) return null;
+    return splitThaiGraphemes(donorName);
+  }, [donorName, isTextEffectEnabled]);
+
+  useEffect(() => {
+    if (!isTextEffectEnabled) {
+      setDisplayedAmount(numAmount);
+      setIsPunching(false);
+      return;
+    }
+
+    setAnimKey(prev => prev + 1);
+
+    if (numAmount <= 0) {
+      setDisplayedAmount(0);
+      return;
+    }
+
+    let startTimestamp: number | null = null;
+    const duration = 1200;
+    let rafId: number;
+
+    const step = (timestamp: number) => {
+      if (!startTimestamp) startTimestamp = timestamp;
+      const elapsed = timestamp - startTimestamp;
+      const progress = Math.min(elapsed / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      const currentVal = Math.round(numAmount * eased);
+      setDisplayedAmount(currentVal);
+
+      if (progress < 1) {
+        rafId = requestAnimationFrame(step);
+      } else {
+        setDisplayedAmount(numAmount);
+        setIsPunching(true);
+        setTimeout(() => setIsPunching(false), 450);
+      }
+    };
+
+    setDisplayedAmount(0);
+    rafId = requestAnimationFrame(step);
+
+    return () => {
+      cancelAnimationFrame(rafId);
+    };
+  }, [numAmount, alert?.name, animState, isTextEffectEnabled]);
+
+  const activeAmount = isTextEffectEnabled ? displayedAmount : numAmount;
+  const formattedAmount = activeAmount.toLocaleString('th-TH');
 
   const isAmountTransparent = s.alert_amount_bg === 'transparent';
   const isMsgTransparent = s.alert_msg_bg === 'transparent';
@@ -543,33 +615,69 @@ export default function AlertCard({
             style={{
               color: useTierSolidColor || !isGradientEnabled ? donorNameColor : undefined,
               letterSpacing: `${s.alert_letter_spacing ?? 0}px`,
-              ...strokeStyle,
-              ...(isGradientEnabled && !useTierSolidColor && !isTextShineEnabled ? {
-                backgroundImage: staticGradient,
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                backgroundClip: 'text',
-                display: 'inline-block'
-              } : {})
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexWrap: 'wrap'
             }}
           >
-            <span
-              className={isTextShineEnabled ? 'supporter-shimmer-text' : undefined}
-              style={isTextShineEnabled ? {
-                ...(useTierSolidColor ? {
-                  ['--text-color' as any]: donorNameColor,
-                } : isGradientEnabled ? {
-                  backgroundImage: shimmerGradient,
-                  ['--shine-glow' as any]: shineGlow,
-                } : {
-                  ['--text-color' as any]: donorNameColor,
-                }),
-                ['--text-shine-delay' as any]: '0s',
-                ...strokeStyle
-              } : undefined}
-            >
-              {donorName}
-            </span>
+            {donorNameClusters ? (
+              <span
+                key={`wave-${animKey}`}
+                className="alert-wave-container"
+                style={{ display: 'inline-flex', flexWrap: 'wrap', justifyContent: 'center' }}
+              >
+                {donorNameClusters.map((cluster, i) => (
+                  <span
+                    key={i}
+                    className="alert-char-wave"
+                    style={{
+                      animationDelay: `${i * 38}ms`,
+                      color: useTierSolidColor || !isGradientEnabled ? donorNameColor : undefined,
+                      WebkitTextFillColor: useTierSolidColor || !isGradientEnabled ? donorNameColor : undefined,
+                      ...strokeStyle,
+                      ...(isGradientEnabled && !useTierSolidColor ? {
+                        backgroundImage: staticGradient,
+                        WebkitBackgroundClip: 'text',
+                        WebkitTextFillColor: 'transparent',
+                        backgroundClip: 'text'
+                      } : {})
+                    }}
+                  >
+                    {cluster === ' ' ? '\u00A0' : cluster}
+                  </span>
+                ))}
+              </span>
+            ) : (
+              <span
+                className={isTextShineEnabled ? 'supporter-shimmer-text' : undefined}
+                style={{
+                  color: useTierSolidColor || !isGradientEnabled ? donorNameColor : undefined,
+                  ...strokeStyle,
+                  ...(isGradientEnabled && !useTierSolidColor && !isTextShineEnabled ? {
+                    backgroundImage: staticGradient,
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
+                    backgroundClip: 'text',
+                    display: 'inline-block'
+                  } : {}),
+                  ...(isTextShineEnabled ? {
+                    ...(useTierSolidColor ? {
+                      ['--text-color' as any]: donorNameColor,
+                    } : isGradientEnabled ? {
+                      backgroundImage: shimmerGradient,
+                      ['--shine-glow' as any]: shineGlow,
+                    } : {
+                      ['--text-color' as any]: donorNameColor,
+                    }),
+                    ['--text-shine-delay' as any]: '0s',
+                    ...strokeStyle
+                  } : {})
+                }}
+              >
+                {donorName}
+              </span>
+            )}
           </span>
 
           <span
@@ -595,42 +703,76 @@ export default function AlertCard({
               letterSpacing: `${s.alert_letter_spacing ?? 0}px`
             }}
           >
-            <span
-              className={isTextShineEnabled ? 'supporter-shimmer-text' : undefined}
-              style={{
-                color: useTierSolidColor || !isGradientEnabled ? amountColor : undefined,
-                display: 'inline-block',
-                ...strokeStyle,
-                ...(isGradientEnabled && !useTierSolidColor && !isTextShineEnabled ? {
-                  backgroundImage: staticGradient,
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                  backgroundClip: 'text',
-                } : {}),
-                ...(isTextShineEnabled ? {
-                  ...(useTierSolidColor ? {
-                    ['--text-color' as any]: amountColor,
-                  } : isGradientEnabled ? {
-                    backgroundImage: shimmerGradient,
-                    ['--shine-glow' as any]: shineGlow,
-                  } : {
-                    ['--text-color' as any]: amountColor,
-                  }),
-                  ['--text-shine-delay' as any]: '0.2s',
-                  ...strokeStyle
-                } : {})
-              }}
-            >
-              <span className="alert-amount-val" style={{ color: useTierSolidColor || !isGradientEnabled ? amountColor : 'inherit' }}>{formattedAmount}</span>
-              {' '}
-              <span className="alert-currency" style={{ color: useTierSolidColor || !isGradientEnabled ? amountColor : 'inherit', opacity: 1 }}>บาท</span>
-            </span>
+            {isTextEffectEnabled ? (
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                <span
+                  className={`alert-amount-val ${isPunching ? 'alert-amount-punch' : ''}`}
+                  style={{
+                    color: useTierSolidColor || !isGradientEnabled ? amountColor : undefined,
+                    WebkitTextFillColor: useTierSolidColor || !isGradientEnabled ? amountColor : undefined,
+                    display: 'inline-block',
+                    ...strokeStyle,
+                    ...(isGradientEnabled && !useTierSolidColor ? {
+                      backgroundImage: staticGradient,
+                      WebkitBackgroundClip: 'text',
+                      WebkitTextFillColor: 'transparent',
+                      backgroundClip: 'text'
+                    } : {})
+                  }}
+                >
+                  {formattedAmount}
+                </span>
+                <span
+                  className="alert-currency"
+                  style={{
+                    color: useTierSolidColor || !isGradientEnabled ? amountColor : 'inherit',
+                    WebkitTextFillColor: useTierSolidColor || !isGradientEnabled ? amountColor : 'inherit',
+                    opacity: 1,
+                    ...strokeStyle
+                  }}
+                >
+                  บาท
+                </span>
+              </span>
+            ) : (
+              <span
+                className={isTextShineEnabled ? 'supporter-shimmer-text' : undefined}
+                style={{
+                  color: useTierSolidColor || !isGradientEnabled ? amountColor : undefined,
+                  display: 'inline-block',
+                  ...strokeStyle,
+                  ...(isGradientEnabled && !useTierSolidColor && !isTextShineEnabled ? {
+                    backgroundImage: staticGradient,
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
+                    backgroundClip: 'text',
+                  } : {}),
+                  ...(isTextShineEnabled ? {
+                    ...(useTierSolidColor ? {
+                      ['--text-color' as any]: amountColor,
+                    } : isGradientEnabled ? {
+                      backgroundImage: shimmerGradient,
+                      ['--shine-glow' as any]: shineGlow,
+                    } : {
+                      ['--text-color' as any]: amountColor,
+                    }),
+                    ['--text-shine-delay' as any]: '0.2s',
+                    ...strokeStyle
+                  } : {})
+                }}
+              >
+                <span className="alert-amount-val" style={{ color: useTierSolidColor || !isGradientEnabled ? amountColor : 'inherit' }}>{formattedAmount}</span>
+                {' '}
+                <span className="alert-currency" style={{ color: useTierSolidColor || !isGradientEnabled ? amountColor : 'inherit', opacity: 1 }}>บาท</span>
+              </span>
+            )}
           </span>
         </div>
 
         {message !== '' && (
           <div
-            className="alert-message"
+            key={`msg-${animKey}`}
+            className={`alert-message ${isTextEffectEnabled ? 'alert-msg-fadein' : ''}`}
             style={{
               background: s.alert_msg_bg || '#f8fafc',
               color: s.alert_msg_color || '#334155',

@@ -80,7 +80,12 @@ export default function SupporterWidget({ donors, appearance, mode }: { donors: 
         `}</style>
       )}
       {appearance.supporter_show_title === 'true' && (
-        <h1 style={{ fontSize: `${appearance.supporter_title_size}px` }}>
+        <h1
+          style={{
+            fontSize: `${appearance.supporter_title_size}px`,
+            textAlign: (appearance.supporter_title_align as any) || 'center'
+          }}
+        >
           {appearance.supporter_title.trim() || supporterModes[mode]}
         </h1>
       )}

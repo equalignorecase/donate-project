@@ -34,6 +34,11 @@ body.widget-overlay-body {
     overflow-wrap: anywhere;
 }
 
+.supporter-widget h1 {
+    margin: 0 0 16px;
+    font-weight: 800;
+}
+
 .goal-widget * {
     font-family: inherit;
 }

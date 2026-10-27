@@ -98,6 +98,7 @@ export interface AlertSettings {
   alert_text_stroke_color?: string;
   alert_text_stroke_width?: number | string;
   alert_text_shadow?: 'none' | 'soft' | 'game' | string;
+  alert_text_effect_enabled?: string | boolean;
   alert_text_gradient_enabled?: string | boolean;
   alert_text_gradient_preset?: string;
   alert_text_gradient_from?: string;

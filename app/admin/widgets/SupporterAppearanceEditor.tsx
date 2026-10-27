@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Palette, Grid, Sliders, Trophy } from 'lucide-react';
+import { Palette, Grid, Sliders, Trophy, AlignLeft, AlignCenter, AlignRight } from 'lucide-react';
 import { goalFontOptions } from '@/lib/goalAppearance';
 import { SupporterAppearance, supporterDefaults, supporterModes, supporterRanges } from '@/lib/supporterAppearance';
 import { Supporter } from '@/lib/widgets';
@@ -168,6 +168,39 @@ export default function SupporterAppearanceEditor({
                   placeholder="เว้นว่างเพื่อใช้หัวข้อตามโหมด"
                   onChange={event => update('supporter_title', event.target.value)}
                 />
+              </label>
+
+              <label className="goal-font-control">
+                การจัดตำแหน่งหัวข้อ
+                <div className="settings-segmented" style={{ minHeight: '46px', marginTop: '8px' }}>
+                  <button
+                    type="button"
+                    className={`settings-segmented-btn ${value.supporter_title_align === 'left' ? 'active' : ''}`}
+                    onClick={() => update('supporter_title_align', 'left')}
+                    title="ชิดซ้าย"
+                  >
+                    <AlignLeft size={14} style={{ flexShrink: 0 }} />
+                    <span>ชิดซ้าย</span>
+                  </button>
+                  <button
+                    type="button"
+                    className={`settings-segmented-btn ${(value.supporter_title_align === 'center' || !value.supporter_title_align) ? 'active' : ''}`}
+                    onClick={() => update('supporter_title_align', 'center')}
+                    title="กึ่งกลาง"
+                  >
+                    <AlignCenter size={14} style={{ flexShrink: 0 }} />
+                    <span>กึ่งกลาง</span>
+                  </button>
+                  <button
+                    type="button"
+                    className={`settings-segmented-btn ${value.supporter_title_align === 'right' ? 'active' : ''}`}
+                    onClick={() => update('supporter_title_align', 'right')}
+                    title="ชิดขวา"
+                  >
+                    <AlignRight size={14} style={{ flexShrink: 0 }} />
+                    <span>ชิดขวา</span>
+                  </button>
+                </div>
               </label>
             </div>
           </fieldset>
