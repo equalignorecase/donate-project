@@ -1,0 +1,288 @@
+@import url('https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Rajdhani:wght@600;700&display=swap');
+
+.valorant-overlay-body {
+  margin: 0;
+  padding: 0;
+  background: transparent !important;
+  overflow: hidden;
+  font-family: 'Rajdhani', 'LINESeedSansTH-ExtraBold', 'Chakra Petch', system-ui, -apple-system, sans-serif;
+}
+
+.valorant-card-container {
+  display: inline-flex;
+  align-items: center;
+  position: relative;
+  box-sizing: border-box;
+  user-select: none;
+  transform-origin: top left;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.valorant-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 24px 12px 16px;
+  background: rgba(30, 41, 59, 0.95);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.3);
+  min-width: 320px;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Badge Left Section */
+.valorant-badge-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 72px;
+  height: 72px;
+}
+
+.valorant-badge-glow {
+  position: absolute;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--accent-color, #00e599) 0%, transparent 70%);
+  opacity: 0.35;
+  filter: blur(10px);
+  pointer-events: none;
+  animation: pulse-glow 3s infinite alternate ease-in-out;
+}
+
+.valorant-badge-img {
+  width: 68px;
+  height: 68px;
+  object-fit: contain;
+  position: relative;
+  z-index: 1;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.6));
+  transition: transform 0.3s ease;
+}
+
+.valorant-badge-img:hover {
+  transform: scale(1.08);
+}
+
+/* Info Section */
+.valorant-info {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+  flex-grow: 1;
+}
+
+/* Rank Name & RR */
+.valorant-rank-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: nowrap;
+}
+
+.valorant-rank-name {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  color: var(--text-color, #ffffff);
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.6);
+  white-space: nowrap;
+  line-height: 1.1;
+}
+
+.valorant-rr {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--accent-color, #38bdf8);
+  letter-spacing: 0.5px;
+  text-shadow: 0 0 10px rgba(56, 189, 248, 0.4);
+  white-space: nowrap;
+}
+
+/* Text Shimmer Sweep Animation (Unified Wave across Rank Name and RR) */
+@keyframes val-text-shine-sweep {
+  0% {
+    background-position: 140% 0;
+  }
+  38% {
+    background-position: -40% 0;
+  }
+  100% {
+    background-position: -40% 0;
+  }
+}
+
+.valorant-rank-name.val-text-shine {
+  text-shadow: none !important;
+  background-image: linear-gradient(
+    115deg,
+    rgba(255, 255, 255, 0.55) 0%,
+    rgba(255, 255, 255, 0.55) 30%,
+    rgba(255, 255, 255, 0.95) 43%,
+    #ffffff 49%,
+    #ffffff 51%,
+    rgba(255, 255, 255, 0.95) 57%,
+    rgba(255, 255, 255, 0.55) 70%,
+    rgba(255, 255, 255, 0.55) 100%
+  );
+  background-size: 260% 100%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: val-text-shine-sweep 3.5s cubic-bezier(0.25, 1, 0.5, 1) infinite;
+  display: inline-block;
+  will-change: background-position;
+}
+
+.valorant-rr.val-text-shine {
+  text-shadow: none !important;
+  background-image: linear-gradient(
+    115deg,
+    var(--accent-color, #38bdf8) 0%,
+    var(--accent-color, #38bdf8) 30%,
+    rgba(255, 255, 255, 0.95) 43%,
+    #ffffff 49%,
+    #ffffff 51%,
+    rgba(255, 255, 255, 0.95) 57%,
+    var(--accent-color, #38bdf8) 70%,
+    var(--accent-color, #38bdf8) 100%
+  );
+  background-size: 260% 100%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: val-text-shine-sweep 3.5s cubic-bezier(0.25, 1, 0.5, 1) infinite;
+  animation-delay: 0.28s;
+  display: inline-block;
+  will-change: background-position;
+}
+
+/* Win / Loss Row */
+.valorant-wl-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.85);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.valorant-wl-wins {
+  color: #4ade80;
+}
+
+.valorant-wl-losses {
+  color: #f87171;
+}
+
+.valorant-wl-divider {
+  color: rgba(255, 255, 255, 0.3);
+}
+
+/* Last Match Pill */
+.valorant-last-match-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  align-self: flex-start;
+  padding: 3px 12px;
+  border-radius: 9999px;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  margin-top: 2px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  transition: all 0.3s ease;
+}
+
+.valorant-last-match-pill.win {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: #ffffff;
+  border: 1px solid rgba(52, 211, 153, 0.4);
+}
+
+.valorant-last-match-pill.loss {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: #ffffff;
+  border: 1px solid rgba(248, 113, 113, 0.4);
+}
+
+.valorant-last-match-pill.neutral {
+  background: rgba(100, 116, 139, 0.6);
+  color: #e2e8f0;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+}
+
+/* Preset Theme Modifiers */
+.theme-classic .valorant-card {
+  background: rgba(26, 32, 44, var(--bg-opacity, 0.95));
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.theme-neon .valorant-card {
+  background: rgba(10, 10, 20, var(--bg-opacity, 0.95));
+  border: 1.5px solid #ff0055;
+  box-shadow: 0 0 20px rgba(255, 0, 85, 0.35), inset 0 0 15px rgba(0, 242, 254, 0.15);
+}
+
+.theme-glass .valorant-card {
+  background: rgba(15, 23, 42, var(--bg-opacity, 0.5));
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+}
+
+.theme-minimal .valorant-card {
+  background: rgba(0, 0, 0, var(--bg-opacity, 0.85));
+  border: none;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  padding: 8px 18px 8px 12px;
+}
+
+.valorant-card.no-background {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+/* Animations */
+@keyframes pulse-glow {
+  0% {
+    transform: scale(0.9);
+    opacity: 0.25;
+  }
+  100% {
+    transform: scale(1.15);
+    opacity: 0.45;
+  }
+}
+
+.valorant-loading-spinner {
+  display: inline-block;
+  width: 24px;
+  height: 24px;
+  border: 3px solid rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  border-top-color: #38bdf8;
+  animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+

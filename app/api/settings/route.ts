@@ -17,7 +17,7 @@ export async function GET() {
     if (rows) {
       rows.forEach((r: { key: string; value: string }) => {
         // Exclude sensitive secrets from public API
-        if (r.key === 'slipok_api_key' || r.key === 'admin_secret') return;
+        if (r.key === 'slipok_api_key' || r.key === 'admin_secret' || r.key === 'valorant_api_key') return;
         settings[r.key] = r.value;
       });
     }

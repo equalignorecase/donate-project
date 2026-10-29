@@ -55,6 +55,7 @@ export default function Sidebar({
   const isSettingsActive = pathname?.startsWith('/admin/settings') || activeTab === 'tabSettings';
   const isWidgetsActive = pathname?.startsWith('/admin/widgets') || activeTab === 'tabWidgets';
   const isTimerActive = pathname?.startsWith('/admin/timer') || activeTab === 'tabTimer';
+  const isValorantActive = pathname?.startsWith('/admin/valorant') || activeTab === 'tabValorant';
   const isBlacklistActive = pathname?.startsWith('/admin/blacklist') || activeTab === 'tabBlacklist';
   const isProfileActive = pathname?.startsWith('/admin/profile') || activeTab === 'tabProfile';
   const isCustomizerActive = pathname?.startsWith('/customizer') || activeTab === 'tabCustomizer';
@@ -188,6 +189,22 @@ export default function Sidebar({
                     <polyline points="12 6 12 12 16 14"></polyline>
                   </svg>
                   <span>ระบบจับเวลา (Timer)</span>
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/admin/valorant"
+                  className={`sidebar-link ${isValorantActive ? 'active' : ''}`}
+                  onClick={() => handleLinkClick('tabValorant')}
+                >
+                  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <line x1="6" y1="12" x2="10" y2="12"></line>
+                    <line x1="8" y1="10" x2="8" y2="14"></line>
+                    <line x1="15" y1="13" x2="15.01" y2="13"></line>
+                    <line x1="18" y1="11" x2="18.01" y2="11"></line>
+                    <rect x="2" y="6" width="20" height="12" rx="2"></rect>
+                  </svg>
+                  <span>Valorant Rank</span>
                 </Link>
               </li>
               <li>

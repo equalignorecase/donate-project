@@ -28,7 +28,7 @@ export async function GET(request: Request) {
     if (rows) {
       rows.forEach((r: any) => {
         // Mask secret keys for non-admin requests
-        if (!isAdmin && (r.key === 'slipok_api_key' || r.key === 'admin_secret')) {
+        if (!isAdmin && (r.key === 'slipok_api_key' || r.key === 'admin_secret' || r.key === 'valorant_api_key')) {
           settings[r.key] = r.value ? '********' : '';
         } else {
           settings[r.key] = r.value;
