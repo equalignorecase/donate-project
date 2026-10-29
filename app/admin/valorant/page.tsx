@@ -20,7 +20,7 @@ import {
 import { useAdmin } from '../AdminContext';
 import ValorantCard from '@/app/overlay/valorant/ValorantCard';
 import { ValorantSettings, ValorantRankData } from '@/lib/types/valorant';
-import { valorantDefaults, valorantThemes, regionOptions, readValorantSettings } from '@/lib/valorantSettings';
+import { valorantDefaults, valorantThemes, regionOptions, valorantFontOptions, readValorantSettings } from '@/lib/valorantSettings';
 import './valorant-admin.css';
 
 export default function ValorantAdminPage() {
@@ -674,6 +674,19 @@ export default function ValorantAdminPage() {
                   onChange={(e) => handleInputChange('valorant_scale', e.target.value)}
                   style={{ marginTop: '12px' }}
                 />
+              </div>
+
+              <div className="val-form-group">
+                <label className="val-label">รูปแบบฟอนต์ (Font Family)</label>
+                <select 
+                  className="val-select"
+                  value={settings.valorant_font}
+                  onChange={(e) => handleInputChange('valorant_font', e.target.value)}
+                >
+                  {valorantFontOptions.map(opt => (
+                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                  ))}
+                </select>
               </div>
             </div>
           </div>

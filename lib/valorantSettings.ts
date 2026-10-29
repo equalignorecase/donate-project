@@ -78,6 +78,13 @@ export const regionOptions = [
   { value: 'br', label: 'Brazil (BR)' },
 ];
 
+export const valorantFontOptions = [
+  { value: 'LINESeedSansTH-ExtraBold', label: 'LINE Seed Sans TH (ExtraBold - หนาคมชัด)' },
+  { value: 'LINESeedSansTH', label: 'LINE Seed Sans TH (Regular - ตัวบางเรียบ)' },
+  { value: 'Rajdhani', label: 'Rajdhani (แท็กติกอลเกมมิ่ง สไตล์ Valorant หนาคม)' },
+  { value: 'Chakra Petch', label: 'Chakra Petch (ไซเบอร์เกมเมอร์ หนาเหลี่ยม)' },
+];
+
 export function readValorantSettings(source: Record<string, any> = {}): ValorantSettings {
   const result = { ...valorantDefaults };
   for (const key of Object.keys(valorantDefaults) as (keyof ValorantSettings)[]) {

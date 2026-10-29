@@ -31,6 +31,34 @@ export default function ValorantCard({
   const opacityVal = (Number(cfg.valorant_bg_opacity || 90) / 100).toFixed(2);
   const scaleVal = (Number(cfg.valorant_scale || 100) / 100).toFixed(2);
 
+  const selectedFont = cfg.valorant_font || 'LINESeedSansTH-ExtraBold';
+  let fontFamilyCss = `'LINESeedSansTH-ExtraBold', system-ui, sans-serif`;
+  let weightBold = '800';
+  let weightMedium = '600';
+  let strokeVal = '0.35px currentColor';
+
+  if (selectedFont === 'LINESeedSansTH' || selectedFont === 'LINESeedSansTH-Regular') {
+    fontFamilyCss = `'LINESeedSansTH-Regular', 'LINESeedSansTH', system-ui, sans-serif`;
+    weightBold = '400';
+    weightMedium = '400';
+    strokeVal = 'none';
+  } else if (selectedFont === 'Rajdhani') {
+    fontFamilyCss = `'Rajdhani', 'LINESeedSansTH-ExtraBold', system-ui, sans-serif`;
+    weightBold = '700';
+    weightMedium = '600';
+    strokeVal = 'none';
+  } else if (selectedFont === 'Chakra Petch') {
+    fontFamilyCss = `'Chakra Petch', 'LINESeedSansTH-ExtraBold', system-ui, sans-serif`;
+    weightBold = '700';
+    weightMedium = '600';
+    strokeVal = 'none';
+  } else {
+    fontFamilyCss = `'LINESeedSansTH-ExtraBold', system-ui, sans-serif`;
+    weightBold = '800';
+    weightMedium = '700';
+    strokeVal = '0.35px currentColor';
+  }
+
   // Compute card style variables
   const cardStyle: React.CSSProperties = showBg ? {
     backgroundColor: cfg.valorant_bg_color || '#1e293b',
@@ -39,7 +67,7 @@ export default function ValorantCard({
     borderColor: cfg.valorant_show_border === 'true' ? cfg.valorant_border_color || 'rgba(255,255,255,0.1)' : 'transparent',
     borderWidth: cfg.valorant_show_border === 'true' ? '1px' : '0px',
     borderStyle: 'solid',
-    fontFamily: cfg.valorant_font ? `var(--font-${cfg.valorant_font}), sans-serif` : undefined,
+    fontFamily: fontFamilyCss,
   } : {
     backgroundColor: 'transparent',
     backgroundImage: 'none',
@@ -48,7 +76,7 @@ export default function ValorantCard({
     backdropFilter: 'none',
     WebkitBackdropFilter: 'none',
     padding: '4px',
-    fontFamily: cfg.valorant_font ? `var(--font-${cfg.valorant_font}), sans-serif` : undefined,
+    fontFamily: fontFamilyCss,
   };
 
   const containerStyle: React.CSSProperties = {
@@ -59,6 +87,9 @@ export default function ValorantCard({
     '--accent-color': cfg.valorant_accent_color || '#38bdf8',
     '--text-color': cfg.valorant_text_color || '#ffffff',
     '--bg-opacity': opacityVal,
+    '--val-weight-bold': weightBold,
+    '--val-weight-medium': weightMedium,
+    '--val-stroke': strokeVal,
   } as React.CSSProperties;
 
   const currentRank = data?.currenttierpatched || 'Unranked';

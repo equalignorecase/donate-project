@@ -1,4 +1,20 @@
-@import url('https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Rajdhani:wght@600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700;800&family=Rajdhani:wght@600;700;800&display=swap');
+
+@font-face {
+  font-family: 'LINESeedSansTH-ExtraBold';
+  src: url('/font/LINESeedSansTH-ExtraBold.ttf') format('truetype');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'LINESeedSansTH-Regular';
+  src: url('/font/LINESeedSansTH-Regular.ttf') format('truetype');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
 
 .valorant-overlay-body {
   margin: 0;
@@ -86,25 +102,28 @@
   align-items: baseline;
   gap: 8px;
   flex-wrap: nowrap;
+  filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.75));
 }
 
 .valorant-rank-name {
-  font-size: 22px;
-  font-weight: 700;
+  font-size: 24px;
+  font-weight: var(--val-weight-bold, 800);
   letter-spacing: 0.5px;
   color: var(--text-color, #ffffff);
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.6);
   white-space: nowrap;
   line-height: 1.1;
+  -webkit-text-stroke: var(--val-stroke, 0.35px currentColor);
 }
 
 .valorant-rr {
-  font-size: 20px;
-  font-weight: 700;
+  font-size: 21px;
+  font-weight: var(--val-weight-bold, 800);
   color: var(--accent-color, #38bdf8);
   letter-spacing: 0.5px;
   text-shadow: 0 0 10px rgba(56, 189, 248, 0.4);
   white-space: nowrap;
+  -webkit-text-stroke: var(--val-stroke, 0.35px currentColor);
 }
 
 /* Text Shimmer Sweep Animation (Unified Wave across Rank Name and RR) */
@@ -124,14 +143,14 @@
   text-shadow: none !important;
   background-image: linear-gradient(
     115deg,
-    rgba(255, 255, 255, 0.55) 0%,
-    rgba(255, 255, 255, 0.55) 30%,
+    var(--text-color, #ffffff) 0%,
+    var(--text-color, #ffffff) 32%,
     rgba(255, 255, 255, 0.95) 43%,
     #ffffff 49%,
     #ffffff 51%,
     rgba(255, 255, 255, 0.95) 57%,
-    rgba(255, 255, 255, 0.55) 70%,
-    rgba(255, 255, 255, 0.55) 100%
+    var(--text-color, #ffffff) 68%,
+    var(--text-color, #ffffff) 100%
   );
   background-size: 260% 100%;
   -webkit-background-clip: text;
