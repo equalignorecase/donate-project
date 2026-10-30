@@ -1,9 +1,21 @@
+export interface ValorantAccountProfile {
+  id: string;
+  label: string; // e.g. "ไอดีหลัก", "Smurf Solo"
+  name: string;
+  tag: string;
+  region: string;
+  session_reset_at?: string;
+  created_at?: string;
+}
+
 export interface ValorantSettings {
   valorant_name: string;
   valorant_tag: string;
   valorant_region: string;
   valorant_api_key: string;
   valorant_session_reset_at: string;
+  valorant_accounts: string; // JSON string of ValorantAccountProfile[]
+  valorant_active_account_id: string;
   
   // Toggles
   valorant_show_badge: string;

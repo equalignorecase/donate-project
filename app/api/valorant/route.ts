@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
-import { readValorantSettings } from '@/lib/valorantSettings';
-import { ValorantRankData, ValorantMatchHistoryItem, ValorantSettings } from '@/lib/types/valorant';
+import { readValorantSettings, getActiveAccount } from '@/lib/valorantSettings';
+import { ValorantRankData, ValorantMatchHistoryItem, ValorantSettings, ValorantAccountProfile } from '@/lib/types/valorant';
 
 export const dynamic = 'force-dynamic';
 
@@ -21,6 +21,7 @@ export async function GET(request: Request) {
     const testTag = searchParams.get('tag');
     const testRegion = searchParams.get('region');
     const testApiKey = searchParams.get('apiKey');
+    const accountId = searchParams.get('accountId');
 
     // 1. Fetch settings from database
     const { data: rows } = await supabaseAdmin
@@ -35,10 +36,11 @@ export async function GET(request: Request) {
     }
 
     const valorantConfig = readValorantSettings(dbSettings);
+    const targetAccount: ValorantAccountProfile = getActiveAccount(valorantConfig, accountId);
 
-    const name = (isTest && testName ? testName : valorantConfig.valorant_name).trim();
-    const tag = (isTest && testTag ? testTag : valorantConfig.valorant_tag).trim();
-    const region = (isTest && testRegion ? testRegion : valorantConfig.valorant_region).trim() || 'ap';
+    const name = (isTest && testName ? testName : targetAccount.name).trim();
+    const tag = (isTest && testTag ? testTag : targetAccount.tag).trim();
+    const region = (isTest && testRegion ? testRegion : targetAccount.region).trim() || 'ap';
     const apiKey = (isTest && testApiKey ? testApiKey : valorantConfig.valorant_api_key).trim();
 
     if (!name || !tag || !apiKey) {
@@ -46,6 +48,7 @@ export async function GET(request: Request) {
         success: false,
         notConfigured: true,
         message: 'ยังไม่ได้ตั้งค่า Riot Name, Tag หรือ HenrikDev API Key',
+        account: targetAccount,
         settings: sanitizePublicSettings(valorantConfig),
       });
     }
@@ -105,8 +108,9 @@ export async function GET(request: Request) {
     // 4. Calculate Win / Loss
     let wins = 0;
     let losses = 0;
-    const sessionResetTimestamp = valorantConfig.valorant_session_reset_at 
-      ? Date.parse(valorantConfig.valorant_session_reset_at) 
+    const effectiveReset = targetAccount.session_reset_at || valorantConfig.valorant_session_reset_at;
+    const sessionResetTimestamp = effectiveReset 
+      ? Date.parse(effectiveReset) 
       : 0;
 
     const todayBangkok = new Intl.DateTimeFormat('en-CA', { 
@@ -175,6 +179,7 @@ export async function GET(request: Request) {
     return NextResponse.json({
       success: true,
       data: rankPayload,
+      account: targetAccount,
       settings: sanitizePublicSettings(valorantConfig),
     });
   } catch (error: any) {

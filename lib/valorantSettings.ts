@@ -1,4 +1,4 @@
-import { ValorantSettings } from './types/valorant';
+import { ValorantSettings, ValorantAccountProfile } from './types/valorant';
 
 export const valorantDefaults: ValorantSettings = {
   valorant_name: '',
@@ -6,6 +6,8 @@ export const valorantDefaults: ValorantSettings = {
   valorant_region: 'ap',
   valorant_api_key: '',
   valorant_session_reset_at: '',
+  valorant_accounts: '[]',
+  valorant_active_account_id: '',
   valorant_show_badge: 'true',
   valorant_show_rank: 'true',
   valorant_show_rr: 'true',
@@ -93,5 +95,39 @@ export function readValorantSettings(source: Record<string, any> = {}): Valorant
     }
   }
   return result;
+}
+
+export function parseValorantAccounts(accountsStr?: string): ValorantAccountProfile[] {
+  if (!accountsStr || typeof accountsStr !== 'string') return [];
+  try {
+    const parsed = JSON.parse(accountsStr);
+    if (Array.isArray(parsed)) {
+      return parsed.filter(a => a && typeof a === 'object' && a.id && a.name);
+    }
+  } catch (e) {}
+  return [];
+}
+
+export function getActiveAccount(settings: ValorantSettings, targetId?: string | null): ValorantAccountProfile {
+  const accounts = parseValorantAccounts(settings.valorant_accounts);
+  if (targetId) {
+    const found = accounts.find(a => a.id === targetId);
+    if (found) return found;
+  }
+  if (settings.valorant_active_account_id) {
+    const found = accounts.find(a => a.id === settings.valorant_active_account_id);
+    if (found) return found;
+  }
+  if (accounts.length > 0) {
+    return accounts[0];
+  }
+  return {
+    id: 'default',
+    label: 'ไอดีหลัก',
+    name: settings.valorant_name || '',
+    tag: settings.valorant_tag || '',
+    region: settings.valorant_region || 'ap',
+    session_reset_at: settings.valorant_session_reset_at || '',
+  };
 }
 

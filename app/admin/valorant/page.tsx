@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState } from 'react';
 import { 
   Gamepad2, 
   ExternalLink, 
@@ -15,12 +15,26 @@ import {
   Key, 
   Flame,
   Layers,
-  Palette
+  Palette,
+  UserCheck,
+  Plus,
+  Pencil,
+  Trash2,
+  X,
+  Users
 } from 'lucide-react';
 import { useAdmin } from '../AdminContext';
 import ValorantCard from '@/app/overlay/valorant/ValorantCard';
-import { ValorantSettings, ValorantRankData } from '@/lib/types/valorant';
-import { valorantDefaults, valorantThemes, regionOptions, valorantFontOptions, readValorantSettings } from '@/lib/valorantSettings';
+import { ValorantSettings, ValorantRankData, ValorantAccountProfile } from '@/lib/types/valorant';
+import { 
+  valorantDefaults, 
+  valorantThemes, 
+  regionOptions, 
+  valorantFontOptions, 
+  readValorantSettings,
+  parseValorantAccounts,
+  getActiveAccount
+} from '@/lib/valorantSettings';
 import './valorant-admin.css';
 
 export default function ValorantAdminPage() {
@@ -28,6 +42,9 @@ export default function ValorantAdminPage() {
 
   // Settings State
   const [settings, setSettings] = useState<ValorantSettings>({ ...valorantDefaults });
+  const [accounts, setAccounts] = useState<ValorantAccountProfile[]>([]);
+  const [activeAccountId, setActiveAccountId] = useState<string>('');
+
   const [loading, setLoading] = useState<boolean>(true);
   const [saving, setSaving] = useState<boolean>(false);
   const [testing, setTesting] = useState<boolean>(false);
@@ -36,7 +53,17 @@ export default function ValorantAdminPage() {
   // Test connection feedback
   const [testResult, setTestResult] = useState<{ success: boolean; message: string } | null>(null);
 
-  // Live preview rank data (defaults to nice demo mock until connected)
+  // Modal State for Add / Edit Account
+  const [modalOpen, setModalOpen] = useState<boolean>(false);
+  const [editingAccount, setEditingAccount] = useState<ValorantAccountProfile | null>(null);
+  const [accountForm, setAccountForm] = useState({
+    label: '',
+    name: '',
+    tag: '',
+    region: 'ap'
+  });
+
+  // Live preview rank data (defaults to demo mock until connected)
   const [previewData, setPreviewData] = useState<ValorantRankData>({
     name: 'Player',
     tag: '1234',
@@ -56,6 +83,7 @@ export default function ValorantAdminPage() {
 
   const [previewBg, setPreviewBg] = useState<'checker' | 'game' | 'bright'>('game');
   const [copied, setCopied] = useState<boolean>(false);
+  const [copiedAccId, setCopiedAccId] = useState<string | null>(null);
   const [origin, setOrigin] = useState<string>('');
 
   useEffect(() => {
@@ -73,9 +101,31 @@ export default function ValorantAdminPage() {
           const loaded = readValorantSettings(data.settings);
           setSettings(loaded);
 
-          // If riot credentials already configured, fetch initial real rank
-          if (loaded.valorant_name && loaded.valorant_tag && loaded.valorant_api_key) {
-            void fetchLiveRank();
+          let parsedAccs = parseValorantAccounts(loaded.valorant_accounts);
+
+          // If no accounts yet, migrate legacy single-account into first account
+          if (parsedAccs.length === 0 && loaded.valorant_name) {
+            const initialAcc: ValorantAccountProfile = {
+              id: 'acc_main',
+              label: 'ไอดีหลัก',
+              name: loaded.valorant_name,
+              tag: loaded.valorant_tag,
+              region: loaded.valorant_region || 'ap',
+              session_reset_at: loaded.valorant_session_reset_at || '',
+              created_at: new Date().toISOString()
+            };
+            parsedAccs = [initialAcc];
+          }
+
+          setAccounts(parsedAccs);
+
+          const activeId = loaded.valorant_active_account_id || parsedAccs[0]?.id || '';
+          setActiveAccountId(activeId);
+
+          // If credentials present, fetch initial live rank
+          const activeAcc = getActiveAccount(loaded, activeId);
+          if (activeAcc.name && activeAcc.tag && loaded.valorant_api_key) {
+            void fetchLiveRank(activeAcc.id);
           }
         }
       })
@@ -87,9 +137,10 @@ export default function ValorantAdminPage() {
       });
   }, [handleUnauthorized]);
 
-  const fetchLiveRank = async () => {
+  const fetchLiveRank = async (targetAccId?: string) => {
     try {
-      const res = await fetch('/api/valorant', { cache: 'no-store' });
+      const url = targetAccId ? `/api/valorant?accountId=${encodeURIComponent(targetAccId)}` : '/api/valorant';
+      const res = await fetch(url, { cache: 'no-store' });
       const json = await res.json();
       if (json.success && json.data) {
         setPreviewData(json.data);
@@ -119,9 +170,176 @@ export default function ValorantAdminPage() {
     }
   };
 
+  // Switch Active Account in 1 Click
+  const handleSwitchActiveAccount = async (targetId: string) => {
+    const target = accounts.find(a => a.id === targetId);
+    if (!target) return;
+
+    setActiveAccountId(target.id);
+    const updatedSettings: ValorantSettings = {
+      ...settings,
+      valorant_active_account_id: target.id,
+      valorant_name: target.name,
+      valorant_tag: target.tag,
+      valorant_region: target.region,
+      valorant_session_reset_at: target.session_reset_at || '',
+    };
+    setSettings(updatedSettings);
+
+    try {
+      const res = await fetch('/api/admin/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updatedSettings),
+      });
+      if (res.ok) {
+        showToast(`สลับไปใช้งานบัญชี "${target.label}" (${target.name}#${target.tag}) สำเร็จ!`);
+        void fetchLiveRank(target.id);
+      }
+    } catch (err: any) {
+      showToast('เกิดข้อผิดพลาดในการสลับบัญชี: ' + err.message);
+    }
+  };
+
+  // Open Modal for Add
+  const handleOpenAddModal = () => {
+    setEditingAccount(null);
+    setAccountForm({
+      label: `ไอดีที่ ${accounts.length + 1}`,
+      name: '',
+      tag: '',
+      region: 'ap'
+    });
+    setModalOpen(true);
+  };
+
+  // Open Modal for Edit
+  const handleOpenEditModal = (acc: ValorantAccountProfile) => {
+    setEditingAccount(acc);
+    setAccountForm({
+      label: acc.label,
+      name: acc.name,
+      tag: acc.tag,
+      region: acc.region || 'ap'
+    });
+    setModalOpen(true);
+  };
+
+  // Save Account from Modal
+  const handleSaveAccountModal = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!accountForm.name.trim() || !accountForm.tag.trim()) {
+      showToast('กรุณากรอก Riot Nickname และ Tag ID');
+      return;
+    }
+
+    let updatedAccounts: ValorantAccountProfile[] = [];
+    let currentActiveId = activeAccountId;
+
+    if (editingAccount) {
+      updatedAccounts = accounts.map(a => {
+        if (a.id === editingAccount.id) {
+          return {
+            ...a,
+            label: accountForm.label.trim() || 'ไอดี Valorant',
+            name: accountForm.name.trim(),
+            tag: accountForm.tag.trim(),
+            region: accountForm.region
+          };
+        }
+        return a;
+      });
+    } else {
+      const newAcc: ValorantAccountProfile = {
+        id: `acc_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+        label: accountForm.label.trim() || `ไอดีที่ ${accounts.length + 1}`,
+        name: accountForm.name.trim(),
+        tag: accountForm.tag.trim(),
+        region: accountForm.region,
+        session_reset_at: '',
+        created_at: new Date().toISOString()
+      };
+      updatedAccounts = [...accounts, newAcc];
+      if (updatedAccounts.length === 1) {
+        currentActiveId = newAcc.id;
+      }
+    }
+
+    setAccounts(updatedAccounts);
+    setModalOpen(false);
+
+    // Save to settings
+    const activeAcc = updatedAccounts.find(a => a.id === currentActiveId) || updatedAccounts[0];
+    const newSettingsState: ValorantSettings = {
+      ...settings,
+      valorant_accounts: JSON.stringify(updatedAccounts),
+      valorant_active_account_id: activeAcc?.id || '',
+      valorant_name: activeAcc?.name || settings.valorant_name,
+      valorant_tag: activeAcc?.tag || settings.valorant_tag,
+      valorant_region: activeAcc?.region || settings.valorant_region,
+    };
+    setSettings(newSettingsState);
+
+    try {
+      await fetch('/api/admin/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newSettingsState),
+      });
+      showToast(editingAccount ? 'แก้ไขข้อมูลบัญชีเรียบร้อยแล้ว' : 'เพิ่มบัญชีโปรดเรียบร้อยแล้ว');
+      if (activeAcc) {
+        void fetchLiveRank(activeAcc.id);
+      }
+    } catch (e: any) {
+      showToast('เกิดข้อผิดพลาดในการบันทึก: ' + e.message);
+    }
+  };
+
+  // Delete Account
+  const handleDeleteAccount = async (accId: string) => {
+    const acc = accounts.find(a => a.id === accId);
+    if (!acc) return;
+    if (!confirm(`ต้องการลบบัญชี "${acc.label}" (${acc.name}#${acc.tag}) หรือไม่?`)) return;
+
+    const remaining = accounts.filter(a => a.id !== accId);
+    setAccounts(remaining);
+
+    let nextActiveId = activeAccountId;
+    if (activeAccountId === accId) {
+      nextActiveId = remaining[0]?.id || '';
+      setActiveAccountId(nextActiveId);
+    }
+
+    const nextActiveAcc = remaining.find(a => a.id === nextActiveId);
+    const newSettingsState: ValorantSettings = {
+      ...settings,
+      valorant_accounts: JSON.stringify(remaining),
+      valorant_active_account_id: nextActiveId,
+      valorant_name: nextActiveAcc?.name || '',
+      valorant_tag: nextActiveAcc?.tag || '',
+      valorant_region: nextActiveAcc?.region || 'ap',
+    };
+    setSettings(newSettingsState);
+
+    try {
+      await fetch('/api/admin/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newSettingsState),
+      });
+      showToast(`ลบบัญชี "${acc.label}" เรียบร้อยแล้ว`);
+      if (nextActiveAcc) {
+        void fetchLiveRank(nextActiveAcc.id);
+      }
+    } catch (e: any) {
+      showToast('เกิดข้อผิดพลาด: ' + e.message);
+    }
+  };
+
   const handleTestConnection = async () => {
-    if (!settings.valorant_name.trim() || !settings.valorant_tag.trim()) {
-      showToast('กรุณากรอก Riot Name และ Tag ก่อน');
+    const activeAcc = getActiveAccount(settings, activeAccountId);
+    if (!activeAcc.name.trim() || !activeAcc.tag.trim()) {
+      showToast('กรุณากรอก Riot Name และ Tag ของบัญชีที่ใช้งานก่อน');
       return;
     }
     if (!settings.valorant_api_key.trim()) {
@@ -135,9 +353,9 @@ export default function ValorantAdminPage() {
     try {
       const query = new URLSearchParams({
         test: 'true',
-        name: settings.valorant_name.trim(),
-        tag: settings.valorant_tag.trim(),
-        region: settings.valorant_region || 'ap',
+        name: activeAcc.name.trim(),
+        tag: activeAcc.tag.trim(),
+        region: activeAcc.region || 'ap',
         apiKey: settings.valorant_api_key.trim(),
       });
 
@@ -170,18 +388,35 @@ export default function ValorantAdminPage() {
   };
 
   const handleResetSession = async () => {
-    if (!confirm('ต้องการรีเซ็ตสถิติ Win/Loss เริ่มนับ 0/0 ใหม่สำหรับสตรีมนี้หรือไม่?')) {
+    const activeAcc = getActiveAccount(settings, activeAccountId);
+    if (!confirm(`ต้องการรีเซ็ตสถิติ Win/Loss ของบัญชี "${activeAcc.label}" (${activeAcc.name}#${activeAcc.tag}) เริ่มนับ 0/0 ใหม่หรือไม่?`)) {
       return;
     }
 
     setResettingSession(true);
     try {
-      const res = await fetch('/api/admin/valorant/reset-session', { method: 'POST' });
+      const res = await fetch('/api/admin/valorant/reset-session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ accountId: activeAcc.id })
+      });
       const json = await res.json();
       if (res.ok && json.success) {
-        setSettings(prev => ({ ...prev, valorant_session_reset_at: json.reset_at }));
+        // Update local accounts state
+        const updatedAccounts = accounts.map(a => {
+          if (a.id === activeAcc.id) {
+            return { ...a, session_reset_at: json.reset_at };
+          }
+          return a;
+        });
+        setAccounts(updatedAccounts);
+        setSettings(prev => ({ 
+          ...prev, 
+          valorant_session_reset_at: json.reset_at,
+          valorant_accounts: JSON.stringify(updatedAccounts)
+        }));
         setPreviewData(prev => ({ ...prev, wins: 0, losses: 0 }));
-        showToast('รีเซ็ตสถิติเริ่มนับใหม่เรียบร้อยแล้ว');
+        showToast(`รีเซ็ตสถิติของบัญชี "${activeAcc.label}" เริ่มนับใหม่เรียบร้อยแล้ว`);
       } else {
         showToast('รีเซ็ตไม่สำเร็จ: ' + (json.message || 'Error'));
       }
@@ -196,16 +431,26 @@ export default function ValorantAdminPage() {
     if (e) e.preventDefault();
     setSaving(true);
 
+    const activeAcc = getActiveAccount(settings, activeAccountId);
+    const payload: ValorantSettings = {
+      ...settings,
+      valorant_accounts: JSON.stringify(accounts),
+      valorant_active_account_id: activeAccountId,
+      valorant_name: activeAcc.name,
+      valorant_tag: activeAcc.tag,
+      valorant_region: activeAcc.region,
+    };
+
     try {
       const res = await fetch('/api/admin/settings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(settings),
+        body: JSON.stringify(payload),
       });
 
       const json = await res.json();
       if (res.ok && json.success) {
-        showToast('บันทึกการตั้งค่า Valorant เรียบร้อยแล้ว!');
+        showToast('บันทึกการตั้งค่า Valorant ทั้งหมดเรียบร้อยแล้ว!');
       } else {
         showToast('บันทึกไม่สำเร็จ: ' + (json.message || 'Error'));
       }
@@ -221,9 +466,19 @@ export default function ValorantAdminPage() {
   const handleCopyLink = () => {
     navigator.clipboard.writeText(obsUrl);
     setCopied(true);
-    showToast('คัดลอกลิงก์ OBS เรียบร้อยแล้ว!');
+    showToast('คัดลอกลิงก์ OBS หลักเรียบร้อยแล้ว!');
     setTimeout(() => setCopied(false), 2500);
   };
+
+  const handleCopyAccountObsLink = (accId: string) => {
+    const accUrl = `${origin}/overlay/valorant?accountId=${encodeURIComponent(accId)}`;
+    navigator.clipboard.writeText(accUrl);
+    setCopiedAccId(accId);
+    showToast('คัดลอกลิงก์ OBS เฉพาะบัญชีนี้เรียบร้อยแล้ว!');
+    setTimeout(() => setCopiedAccId(null), 2500);
+  };
+
+  const activeAcc = getActiveAccount(settings, activeAccountId);
 
   return (
     <div className="val-admin-container">
@@ -236,7 +491,7 @@ export default function ValorantAdminPage() {
           <div>
             <h1 className="val-admin-title">Valorant Rank Overlay</h1>
             <p className="val-admin-subtitle">
-              แสดงยศและสถิติการเล่นสดบน OBS (ขับเคลื่อนด้วย HenrikDev API)
+              จัดการหลายบัญชีโปรด สลับไอดีเล่นสดใน 1 คลิก พร้อมแสดงยศบน OBS แบบ Realtime
             </p>
           </div>
         </div>
@@ -256,53 +511,170 @@ export default function ValorantAdminPage() {
 
       {/* Main Grid */}
       <div className="val-admin-grid">
-        {/* Left Column: Form & Configuration */}
+        {/* Left Column: Accounts & Configuration */}
         <div className="val-main-col">
-          {/* Card 1: Account & Credentials */}
+          {/* Card 1: Multi-Account Management & Quick Switcher */}
+          <div className="val-card">
+            <div className="val-card-header">
+              <span className="val-card-title">
+                <Users size={18} color="var(--primary, #7C3AED)" />
+                บัญชีโปรด & การสลับไอดี (Favorite Accounts)
+              </span>
+
+              <button
+                type="button"
+                className="btn sm"
+                onClick={handleOpenAddModal}
+              >
+                <Plus size={14} />
+                เพิ่มบัญชีโปรด
+              </button>
+            </div>
+
+            {/* Quick Switcher Dropdown */}
+            <div className="val-quick-switcher-box">
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <UserCheck size={20} color="var(--primary, #7C3AED)" />
+                <div>
+                  <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-main)', display: 'block' }}>
+                    สลับบัญชีที่กำลังเล่นสด (Active Stream Account)
+                  </span>
+                  <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
+                    จอ OBS ทุกจอที่ใช้ URL หลักจะเปลี่ยนตามไอดีที่เลือกทันที
+                  </span>
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: '220px' }}>
+                <select
+                  className="val-select"
+                  style={{ width: '100%', fontWeight: 700, borderColor: 'var(--primary, #7C3AED)' }}
+                  value={activeAccountId}
+                  onChange={(e) => handleSwitchActiveAccount(e.target.value)}
+                  disabled={accounts.length === 0}
+                >
+                  {accounts.length === 0 ? (
+                    <option value="">ยังไม่มีบัญชีที่บันทึกไว้</option>
+                  ) : (
+                    accounts.map(acc => (
+                      <option key={acc.id} value={acc.id}>
+                        {acc.label} ({acc.name}#{acc.tag})
+                      </option>
+                    ))
+                  )}
+                </select>
+              </div>
+            </div>
+
+            {/* Accounts Table */}
+            {accounts.length > 0 ? (
+              <div className="val-accounts-table-wrap">
+                <table className="val-accounts-table">
+                  <thead>
+                    <tr>
+                      <th>ชื่อเล่นไอดี</th>
+                      <th>Riot ID</th>
+                      <th>เซิร์ฟเวอร์</th>
+                      <th>สถานะ</th>
+                      <th>OBS URL เฉพาะไอดี</th>
+                      <th style={{ textAlign: 'right' }}>จัดการ</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {accounts.map(acc => {
+                      const isActive = acc.id === activeAccountId;
+                      return (
+                        <tr key={acc.id} className={isActive ? 'active-row' : ''}>
+                          <td style={{ fontWeight: 700 }}>
+                            {acc.label}
+                          </td>
+                          <td>
+                            <code style={{ fontSize: '13px', background: 'var(--bg-subtle)', padding: '2px 6px', borderRadius: '4px' }}>
+                              {acc.name}#{acc.tag}
+                            </code>
+                          </td>
+                          <td style={{ textTransform: 'uppercase', color: 'var(--text-muted)' }}>
+                            {acc.region || 'ap'}
+                          </td>
+                          <td>
+                            {isActive ? (
+                              <span className="val-badge-active">
+                                <Check size={12} />
+                                ใช้งานอยู่ (Active)
+                              </span>
+                            ) : (
+                              <span className="val-badge-inactive">
+                                ไม่ได้ใช้งาน
+                              </span>
+                            )}
+                          </td>
+                          <td>
+                            <button
+                              type="button"
+                              className="val-btn-secondary"
+                              style={{ padding: '4px 10px', fontSize: '11px', borderRadius: '6px' }}
+                              onClick={() => handleCopyAccountObsLink(acc.id)}
+                              title="คัดลอก URL OBS สำหรับไอดีนี้โดยเฉพาะ"
+                            >
+                              {copiedAccId === acc.id ? <Check size={12} /> : <Copy size={12} />}
+                              {copiedAccId === acc.id ? 'คัดลอกแล้ว' : 'คัดลอก URL'}
+                            </button>
+                          </td>
+                          <td>
+                            <div className="val-action-btn-group" style={{ justifyContent: 'flex-end' }}>
+                              {!isActive && (
+                                <button
+                                  type="button"
+                                  className="btn sm"
+                                  style={{ padding: '4px 10px', fontSize: '12px' }}
+                                  onClick={() => handleSwitchActiveAccount(acc.id)}
+                                >
+                                  สลับใช้งาน
+                                </button>
+                              )}
+                              <button
+                                type="button"
+                                className="val-btn-secondary"
+                                style={{ padding: '5px 8px', borderRadius: '8px' }}
+                                onClick={() => handleOpenEditModal(acc)}
+                                title="แก้ไขข้อมูลบัญชี"
+                              >
+                                <Pencil size={13} />
+                              </button>
+                              <button
+                                type="button"
+                                className="val-btn-danger"
+                                style={{ padding: '5px 8px', borderRadius: '8px' }}
+                                onClick={() => handleDeleteAccount(acc.id)}
+                                title="ลบบัญชีนี้"
+                              >
+                                <Trash2 size={13} />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <div style={{ textAlign: 'center', padding: '30px 10px', color: 'var(--text-muted)' }}>
+                ยังไม่มีบัญชีโปรดที่บันทึกไว้ กดปุ่ม &quot;เพิ่มบัญชีโปรด&quot; เพื่อเริ่มต้นบันทึกไอดี
+              </div>
+            )}
+          </div>
+
+          {/* Card 2: HenrikDev API Key Configuration */}
           <div className="val-card">
             <div className="val-card-header">
               <span className="val-card-title">
                 <Key size={18} color="var(--primary, #7C3AED)" />
-                บัญชี Valorant & HenrikDev API Key
+                HenrikDev API Key (ใช้ร่วมกันทุกบัญชี)
               </span>
             </div>
 
             <div className="val-form-grid">
-              <div className="val-form-group">
-                <label className="val-label">Riot Nickname</label>
-                <input 
-                  type="text" 
-                  className="val-input"
-                  placeholder="เช่น cannabiz" 
-                  value={settings.valorant_name}
-                  onChange={(e) => handleInputChange('valorant_name', e.target.value)}
-                />
-              </div>
-
-              <div className="val-form-group">
-                <label className="val-label">Tag ID (หลังเครื่องหมาย #)</label>
-                <input 
-                  type="text" 
-                  className="val-input"
-                  placeholder="เช่น 9999 หรือ TH1" 
-                  value={settings.valorant_tag}
-                  onChange={(e) => handleInputChange('valorant_tag', e.target.value)}
-                />
-              </div>
-
-              <div className="val-form-group">
-                <label className="val-label">Region (เซิร์ฟเวอร์)</label>
-                <select 
-                  className="val-select"
-                  value={settings.valorant_region}
-                  onChange={(e) => handleInputChange('valorant_region', e.target.value)}
-                >
-                  {regionOptions.map(opt => (
-                    <option key={opt.value} value={opt.value}>{opt.label}</option>
-                  ))}
-                </select>
-              </div>
-
               <div className="val-form-group" style={{ gridColumn: '1 / -1' }}>
                 <label className="val-label">HenrikDev API Key (ขึ้นต้นด้วย HDEV-...)</label>
                 <input 
@@ -326,16 +698,16 @@ export default function ValorantAdminPage() {
                 type="button" 
                 className="val-btn-secondary"
                 onClick={handleTestConnection}
-                disabled={testing}
+                disabled={testing || accounts.length === 0}
               >
                 {testing ? <RefreshCw className="animate-spin" size={14} /> : <Sparkles size={14} color="var(--primary, #7C3AED)" />}
-                {testing ? 'กำลังทดสอบเชื่อมต่อ...' : 'ทดสอบเชื่อมต่อ (Test Connection)'}
+                {testing ? 'กำลังทดสอบเชื่อมต่อ...' : `ทดสอบเชื่อมต่อไอดีปัจจุบัน (${activeAcc.label || activeAcc.name})`}
               </button>
 
               {testResult && (
                 <div style={{ 
                   fontSize: '13px', 
-                  color: testResult.success ? '#16a34a' : '#dc2626',
+                  color: testResult.success ? 'var(--success, #167650)' : 'var(--danger, #B42345)',
                   fontWeight: 600,
                   display: 'flex',
                   alignItems: 'center',
@@ -348,17 +720,17 @@ export default function ValorantAdminPage() {
             </div>
           </div>
 
-          {/* Card 2: Win / Loss Session Control */}
+          {/* Card 3: Win / Loss Session Control */}
           <div className="val-card">
             <div className="val-card-header">
               <span className="val-card-title">
                 <Flame size={18} color="#f97316" />
-                การนับสถิติ Win / Loss ประจำสตรีม
+                การนับสถิติ Win / Loss ของบัญชีที่ใช้งาน ({activeAcc.label})
               </span>
             </div>
 
             <p style={{ fontSize: '13px', color: 'var(--text-muted, #64748b)', margin: '0 0 16px 0', lineHeight: 1.5 }}>
-              ระบบจะนับจำนวน ชนะ/แพ้ จากเกมที่แข่งในวันนี้โดยอัตโนมัติ หากเริ่มสตรีมใหม่และต้องการนับ 0/0 สามารถกดปุ่มรีเซ็ตด้านล่างได้
+              สถิติ Win/Loss ถูกแยกอิสระต่อบัญชี ระบบจะนับจากเกมที่เล่นในวันนี้ หากเริ่มสตรีมใหม่ต้องการนับ 0/0 สามารถกดปุ่มรีเซ็ตเฉพาะไอดีนี้ได้
             </p>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flexWrap: 'wrap' }}>
@@ -366,21 +738,21 @@ export default function ValorantAdminPage() {
                 type="button" 
                 className="val-btn-danger"
                 onClick={handleResetSession}
-                disabled={resettingSession}
+                disabled={resettingSession || !activeAcc.name}
               >
                 <RotateCcw size={14} />
-                {resettingSession ? 'กำลังรีเซ็ต...' : 'รีเซ็ต Session เริ่มนับ 0 Win / 0 Loss ใหม่'}
+                {resettingSession ? 'กำลังรีเซ็ต...' : `รีเซ็ต Session ของ "${activeAcc.label}" (เริ่ม 0 Win / 0 Loss)`}
               </button>
 
-              {settings.valorant_session_reset_at && (
-                <span style={{ fontSize: '12px', color: '#64748b' }}>
-                  รีเซ็ตล่าสุดเมื่อ: {new Date(settings.valorant_session_reset_at).toLocaleTimeString('th-TH')}
+              {activeAcc.session_reset_at && (
+                <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
+                  รีเซ็ตล่าสุดเมื่อ: {new Date(activeAcc.session_reset_at).toLocaleTimeString('th-TH')}
                 </span>
               )}
             </div>
           </div>
 
-          {/* Card 3: Display Toggles */}
+          {/* Card 4: Display Toggles */}
           <div className="val-card">
             <div className="val-card-header">
               <span className="val-card-title">
@@ -482,7 +854,7 @@ export default function ValorantAdminPage() {
             )}
           </div>
 
-          {/* Card 4: Appearance & Theming */}
+          {/* Card 5: Appearance & Theming */}
           <div className="val-card">
             <div className="val-card-header">
               <span className="val-card-title">
@@ -501,7 +873,7 @@ export default function ValorantAdminPage() {
               >
                 <span className="val-preset-icon">🎮</span>
                 <span className="val-preset-name">Classic Dark</span>
-                <span style={{ fontSize: '11px', color: '#64748b' }}>สไตล์ davizeragod</span>
+                <span style={{ fontSize: '11px', color: 'var(--text-dim)' }}>สไตล์ davizeragod</span>
               </button>
 
               <button 
@@ -511,7 +883,7 @@ export default function ValorantAdminPage() {
               >
                 <span className="val-preset-icon">⚡</span>
                 <span className="val-preset-name">Cyber Neon</span>
-                <span style={{ fontSize: '11px', color: '#64748b' }}>สีสันนีออนเด่นชัด</span>
+                <span style={{ fontSize: '11px', color: 'var(--text-dim)' }}>สีสันนีออนเด่นชัด</span>
               </button>
 
               <button 
@@ -521,7 +893,7 @@ export default function ValorantAdminPage() {
               >
                 <span className="val-preset-icon">💎</span>
                 <span className="val-preset-name">Glassmorphism</span>
-                <span style={{ fontSize: '11px', color: '#64748b' }}>กระจกฝ้าหรูหรา</span>
+                <span style={{ fontSize: '11px', color: 'var(--text-dim)' }}>กระจกฝ้าหรูหรา</span>
               </button>
 
               <button 
@@ -531,7 +903,7 @@ export default function ValorantAdminPage() {
               >
                 <span className="val-preset-icon">🖤</span>
                 <span className="val-preset-name">Minimalist</span>
-                <span style={{ fontSize: '11px', color: '#64748b' }}>เรียบง่ายไร้ขอบ</span>
+                <span style={{ fontSize: '11px', color: 'var(--text-dim)' }}>เรียบง่ายไร้ขอบ</span>
               </button>
             </div>
 
@@ -699,7 +1071,7 @@ export default function ValorantAdminPage() {
             <div className="val-card-header">
               <span className="val-card-title">
                 <Eye size={18} color="var(--primary, #7C3AED)" />
-                ตัวอย่างสด (Live Preview)
+                ตัวอย่างสด ({activeAcc.label || 'Live Preview'})
               </span>
 
               {/* Background switch */}
@@ -744,11 +1116,11 @@ export default function ValorantAdminPage() {
           <div className="val-obs-box">
             <span className="val-card-title" style={{ marginBottom: '8px' }}>
               <Layers size={18} color="#3b82f6" />
-              OBS Browser Source URL
+              OBS Browser Source URL (สลับตามไอดีอัตโนมัติ)
             </span>
 
             <p style={{ fontSize: '12px', color: 'var(--text-muted, #64748b)', margin: '0 0 10px 0' }}>
-              คัดลอก URL นี้ไปใส่ใน Browser Source ของโปรแกรม OBS Studio / Prism / Streamlabs
+              ใช้ URL นี้ใส่ใน OBS เพียงครั้งเดียว เมื่อคุณสลับไอดีในหน้านี้ จอ OBS จะเปลี่ยนตามทันที
             </p>
 
             <div className="val-obs-url-row">
@@ -778,14 +1150,104 @@ export default function ValorantAdminPage() {
                 เปิดดูหน้าต่าง Overlay จริง <ExternalLink size={12} />
               </a>
 
-              <span style={{ fontSize: '11px', color: '#64748b' }}>
+              <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
                 ขนาดแนะนำ: 450 x 140 px
               </span>
             </div>
           </div>
         </div>
       </div>
+
+      {/* Modal for Add / Edit Account */}
+      {modalOpen && (
+        <div className="val-modal-overlay" onClick={() => setModalOpen(false)}>
+          <div className="val-modal-card" onClick={(e) => e.stopPropagation()}>
+            <div className="val-modal-header">
+              <span className="val-modal-title">
+                <Users size={18} color="var(--primary, #7C3AED)" />
+                {editingAccount ? 'แก้ไขบัญชีโปรด' : 'เพิ่มบัญชีโปรดใหม่'}
+              </span>
+              <button
+                type="button"
+                className="val-modal-close"
+                onClick={() => setModalOpen(false)}
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveAccountModal} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+              <div className="val-form-group">
+                <label className="val-label">ชื่อเล่นไอดี (เช่น ไอดีหลัก, Smurf ไต่แรงก์, เล่นกับเพื่อน)</label>
+                <input
+                  type="text"
+                  className="val-input"
+                  placeholder="เช่น ไอดีหลัก"
+                  value={accountForm.label}
+                  onChange={(e) => setAccountForm(prev => ({ ...prev, label: e.target.value }))}
+                  required
+                />
+              </div>
+
+              <div className="val-form-grid" style={{ gridTemplateColumns: '2fr 1fr' }}>
+                <div className="val-form-group">
+                  <label className="val-label">Riot Nickname</label>
+                  <input
+                    type="text"
+                    className="val-input"
+                    placeholder="เช่น cannabiz"
+                    value={accountForm.name}
+                    onChange={(e) => setAccountForm(prev => ({ ...prev, name: e.target.value }))}
+                    required
+                  />
+                </div>
+
+                <div className="val-form-group">
+                  <label className="val-label">Tag ID (หลัง #)</label>
+                  <input
+                    type="text"
+                    className="val-input"
+                    placeholder="เช่น 9999"
+                    value={accountForm.tag}
+                    onChange={(e) => setAccountForm(prev => ({ ...prev, tag: e.target.value }))}
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="val-form-group">
+                <label className="val-label">Region (เซิร์ฟเวอร์)</label>
+                <select
+                  className="val-select"
+                  value={accountForm.region}
+                  onChange={(e) => setAccountForm(prev => ({ ...prev, region: e.target.value }))}
+                >
+                  {regionOptions.map(opt => (
+                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '10px' }}>
+                <button
+                  type="button"
+                  className="val-btn-secondary"
+                  onClick={() => setModalOpen(false)}
+                >
+                  ยกเลิก
+                </button>
+                <button
+                  type="submit"
+                  className="val-btn-primary"
+                >
+                  <Check size={16} />
+                  {editingAccount ? 'บันทึกการแก้ไข' : 'บันทึกบัญชี'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
-

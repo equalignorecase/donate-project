@@ -15,7 +15,10 @@ export default function ValorantOverlayPage() {
 
   const fetchRank = async () => {
     try {
-      const res = await fetch('/api/valorant', { cache: 'no-store' });
+      const urlParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
+      const accountId = urlParams?.get('accountId') || '';
+      const endpoint = accountId ? `/api/valorant?accountId=${encodeURIComponent(accountId)}` : '/api/valorant';
+      const res = await fetch(endpoint, { cache: 'no-store' });
       const result = await res.json();
       if (result.success && result.data) {
         setData(result.data);
