@@ -583,7 +583,7 @@ body.widget-overlay-body {
 }
 
 /* ==========================================================
-   Supporter Ranking Text Shine Sweep (ลำแสงวิ่งพาดผ่านตัวอักษร)
+   Supporter Ranking Hybrid Row Beam & Text Glow Sweep (60fps GPU)
    ========================================================== */
 
 .supporter-shimmer-text {
@@ -591,61 +591,101 @@ body.widget-overlay-body {
     max-width: 100%;
     vertical-align: baseline;
     line-height: inherit;
-    background-size: 260% 100%;
+    background-size: 250% 100%;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
-    animation: supporter-text-shine-glide 3.8s cubic-bezier(0.25, 1, 0.5, 1) infinite;
+    animation: supporter-text-shine-glide 4.65s cubic-bezier(0.25, 1, 0.5, 1) infinite;
     animation-delay: var(--text-shine-delay, 0s);
     transform: translateZ(0);
-    will-change: background-position;
+    will-change: background-position, filter;
 }
 
-/* Crystal Theme (Default) - ประกายเพชรคริสตัล */
+.supporter-row-shine-beam {
+    position: absolute;
+    top: -45%;
+    left: 0;
+    width: 26%;
+    min-width: 92px;
+    height: 190%;
+    pointer-events: none;
+    z-index: 0;
+    background: var(--shine-beam-bg, linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.75), transparent));
+    box-shadow: var(--shine-beam-shadow, 0 0 22px 4px rgba(186, 230, 253, 0.45));
+    transform: translate3d(-140%, 0, 0) skewX(-24deg);
+    opacity: 0;
+    animation: supporter-row-beam-glide 4.65s cubic-bezier(0.22, 1, 0.36, 1) infinite;
+    animation-delay: var(--row-shine-delay, 0s);
+    will-change: transform, opacity;
+}
+
+.supporter-shine-intensity-standard .supporter-row-shine-beam {
+    width: 20%;
+    min-width: 70px;
+    filter: opacity(0.45);
+}
+
+.supporter-shine-intensity-vivid .supporter-row-shine-beam {
+    width: 28%;
+    min-width: 98px;
+    filter: opacity(0.88);
+}
+
+.supporter-shine-intensity-neon .supporter-row-shine-beam {
+    width: 34%;
+    min-width: 120px;
+    filter: opacity(1) brightness(1.22);
+}
+
+/* Fallback theme gradients */
 .supporter-shine-theme-crystal .supporter-shimmer-text,
 .supporter-shine-theme-crystal.supporter-shimmer-text {
     background-image: linear-gradient(
-        115deg,
-        rgba(255, 255, 255, 0.52) 0%,
-        rgba(255, 255, 255, 0.52) 30%,
-        rgba(255, 255, 255, 0.9) 43%,
-        #ffffff 49%,
-        #ffffff 51%,
-        rgba(255, 255, 255, 0.9) 57%,
-        rgba(255, 255, 255, 0.52) 70%,
-        rgba(255, 255, 255, 0.52) 100%
+        110deg,
+        #ffffff 0%,
+        #ffffff 28%,
+        #38bdf8 38%,
+        #bae6fd 44%,
+        #ffffff 48%,
+        #ffffff 52%,
+        #bae6fd 56%,
+        #38bdf8 62%,
+        #ffffff 72%,
+        #ffffff 100%
     );
 }
 
-/* Gold Theme - ประกายทองพรีเมียม */
 .supporter-shine-theme-gold .supporter-shimmer-text,
 .supporter-shine-theme-gold.supporter-shimmer-text {
     background-image: linear-gradient(
-        115deg,
-        rgba(245, 158, 11, 0.58) 0%,
-        rgba(245, 158, 11, 0.58) 30%,
-        rgba(254, 240, 138, 0.95) 43%,
-        #ffffff 49%,
-        #ffffff 51%,
-        rgba(254, 240, 138, 0.95) 57%,
-        rgba(245, 158, 11, 0.58) 70%,
-        rgba(245, 158, 11, 0.58) 100%
+        110deg,
+        #fbbf24 0%,
+        #fbbf24 28%,
+        #f59e0b 38%,
+        #fde047 44%,
+        #ffffff 48%,
+        #ffffff 52%,
+        #fde047 56%,
+        #f59e0b 62%,
+        #fbbf24 72%,
+        #fbbf24 100%
     );
 }
 
-/* Cyan Theme - นีออนไซแอน */
 .supporter-shine-theme-cyan .supporter-shimmer-text,
 .supporter-shine-theme-cyan.supporter-shimmer-text {
     background-image: linear-gradient(
-        115deg,
-        rgba(2, 132, 199, 0.58) 0%,
-        rgba(2, 132, 199, 0.58) 30%,
-        rgba(103, 232, 249, 0.95) 43%,
-        #ffffff 49%,
-        #ffffff 51%,
-        rgba(103, 232, 249, 0.95) 57%,
-        rgba(2, 132, 199, 0.58) 70%,
-        rgba(2, 132, 199, 0.58) 100%
+        110deg,
+        #67e8f9 0%,
+        #67e8f9 28%,
+        #06b6d4 38%,
+        #a5f3fc 44%,
+        #ffffff 48%,
+        #ffffff 52%,
+        #a5f3fc 56%,
+        #06b6d4 62%,
+        #67e8f9 72%,
+        #67e8f9 100%
     );
 }
 
@@ -661,6 +701,23 @@ body.widget-overlay-body {
     }
 }
 
+@keyframes supporter-row-beam-glide {
+    0% {
+        transform: translate3d(-140%, 0, 0) skewX(-24deg);
+        opacity: 0;
+    }
+    5% {
+        opacity: 1;
+    }
+    32% {
+        opacity: 1;
+    }
+    36%, 100% {
+        transform: translate3d(520%, 0, 0) skewX(-24deg);
+        opacity: 0;
+    }
+}
+
 @media (prefers-reduced-motion: reduce) {
     .goal-fill {
         transition: none;
@@ -669,6 +726,7 @@ body.widget-overlay-body {
     .goal-bar-shine,
     .goal-bar-texture,
     .goal-bar-shine-sweep,
+    .supporter-row-shine-beam,
     .widget-card-beam-sweep {
         animation: none !important;
         background-image: none !important;

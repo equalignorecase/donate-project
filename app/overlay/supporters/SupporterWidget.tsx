@@ -2,30 +2,91 @@ import { Supporter } from '@/lib/widgets';
 import { SupporterAppearance, SupporterMode, supporterModes } from '@/lib/supporterAppearance';
 import '../widgets.css';
 
+interface ShineThemeConfig {
+  leadEdge: string;
+  core: string;
+  trailEdge: string;
+  glowPrimary: string;
+  glowSecondary: string;
+  rowBeamGradient: string;
+  rowBeamShadow: string;
+}
+
+function getShineThemeConfig(theme: string): ShineThemeConfig {
+  switch (theme) {
+    case 'gold':
+      return {
+        leadEdge: '#f59e0b',
+        core: '#ffffff',
+        trailEdge: '#fde047',
+        glowPrimary: 'rgba(250, 204, 21, 0.95)',
+        glowSecondary: 'rgba(245, 158, 11, 0.75)',
+        rowBeamGradient: 'linear-gradient(90deg, transparent 0%, rgba(245, 158, 11, 0.08) 20%, rgba(253, 224, 71, 0.38) 46%, rgba(255, 255, 255, 0.85) 50%, rgba(253, 224, 71, 0.38) 54%, rgba(245, 158, 11, 0.08) 80%, transparent 100%)',
+        rowBeamShadow: '0 0 24px 4px rgba(250, 204, 21, 0.45)',
+      };
+    case 'cyan':
+      return {
+        leadEdge: '#06b6d4',
+        core: '#ffffff',
+        trailEdge: '#67e8f9',
+        glowPrimary: 'rgba(34, 211, 238, 0.95)',
+        glowSecondary: 'rgba(6, 182, 212, 0.75)',
+        rowBeamGradient: 'linear-gradient(90deg, transparent 0%, rgba(6, 182, 212, 0.08) 20%, rgba(103, 232, 249, 0.4) 46%, rgba(255, 255, 255, 0.88) 50%, rgba(103, 232, 249, 0.4) 54%, rgba(6, 182, 212, 0.08) 80%, transparent 100%)',
+        rowBeamShadow: '0 0 24px 4px rgba(34, 211, 238, 0.45)',
+      };
+    case 'rose':
+      return {
+        leadEdge: '#ec4899',
+        core: '#ffffff',
+        trailEdge: '#f9a8d4',
+        glowPrimary: 'rgba(244, 114, 182, 0.95)',
+        glowSecondary: 'rgba(236, 72, 153, 0.75)',
+        rowBeamGradient: 'linear-gradient(90deg, transparent 0%, rgba(236, 72, 153, 0.08) 20%, rgba(249, 168, 212, 0.4) 46%, rgba(255, 255, 255, 0.88) 50%, rgba(249, 168, 212, 0.4) 54%, rgba(236, 72, 153, 0.08) 80%, transparent 100%)',
+        rowBeamShadow: '0 0 24px 4px rgba(244, 114, 182, 0.45)',
+      };
+    case 'emerald':
+      return {
+        leadEdge: '#10b981',
+        core: '#ffffff',
+        trailEdge: '#6ee7b7',
+        glowPrimary: 'rgba(52, 211, 153, 0.95)',
+        glowSecondary: 'rgba(16, 185, 129, 0.75)',
+        rowBeamGradient: 'linear-gradient(90deg, transparent 0%, rgba(16, 185, 129, 0.08) 20%, rgba(110, 231, 183, 0.4) 46%, rgba(255, 255, 255, 0.88) 50%, rgba(110, 231, 183, 0.4) 54%, rgba(16, 185, 129, 0.08) 80%, transparent 100%)',
+        rowBeamShadow: '0 0 24px 4px rgba(52, 211, 153, 0.45)',
+      };
+    case 'rainbow':
+      return {
+        leadEdge: '#f43f5e',
+        core: '#ffffff',
+        trailEdge: '#38bdf8',
+        glowPrimary: 'rgba(168, 85, 247, 0.95)',
+        glowSecondary: 'rgba(56, 189, 248, 0.8)',
+        rowBeamGradient: 'linear-gradient(90deg, transparent 0%, rgba(244, 63, 94, 0.22) 22%, rgba(250, 204, 21, 0.38) 38%, rgba(255, 255, 255, 0.9) 50%, rgba(52, 211, 153, 0.38) 62%, rgba(56, 189, 248, 0.28) 78%, transparent 100%)',
+        rowBeamShadow: '0 0 26px 5px rgba(168, 85, 247, 0.5)',
+      };
+    case 'crystal':
+    default:
+      return {
+        leadEdge: '#38bdf8',
+        core: '#ffffff',
+        trailEdge: '#bae6fd',
+        glowPrimary: 'rgba(186, 230, 253, 0.95)',
+        glowSecondary: 'rgba(56, 189, 248, 0.75)',
+        rowBeamGradient: 'linear-gradient(90deg, transparent 0%, rgba(56, 189, 248, 0.08) 20%, rgba(186, 230, 253, 0.42) 46%, rgba(255, 255, 255, 0.92) 50%, rgba(186, 230, 253, 0.42) 54%, rgba(56, 189, 248, 0.08) 80%, transparent 100%)',
+        rowBeamShadow: '0 0 24px 4px rgba(186, 230, 253, 0.48)',
+      };
+  }
+}
+
 function buildShimmerGradient(color: string, theme: string) {
-  const c = (color || '#ffffff').trim();
-  let specularCore = '#ffffff';
-  let beamAura = 'rgba(255, 255, 255, 0.9)';
+  const baseColor = (color || '#ffffff').trim();
+  const cfg = getShineThemeConfig(theme);
 
-  if (theme === 'gold') {
-    specularCore = '#ffffff';
-    beamAura = 'rgba(254, 240, 138, 0.95)';
-  } else if (theme === 'cyan') {
-    specularCore = '#ffffff';
-    beamAura = 'rgba(103, 232, 249, 0.95)';
+  if (theme === 'rainbow') {
+    return `linear-gradient(110deg, ${baseColor} 0%, ${baseColor} 26%, #fb7185 36%, #facc15 43%, #ffffff 48%, #ffffff 52%, #34d399 57%, #38bdf8 64%, ${baseColor} 74%, ${baseColor} 100%)`;
   }
 
-  let baseColor = c;
-  if (c.toLowerCase() === '#ffffff' || c.toLowerCase() === '#fff') {
-    baseColor = 'rgba(255, 255, 255, 0.52)';
-  } else if (c.startsWith('#') && c.length === 7) {
-    const r = parseInt(c.slice(1, 3), 16);
-    const g = parseInt(c.slice(3, 5), 16);
-    const b = parseInt(c.slice(5, 7), 16);
-    baseColor = `rgba(${r}, ${g}, ${b}, 0.58)`;
-  }
-
-  return `linear-gradient(115deg, ${baseColor} 0%, ${baseColor} 30%, ${beamAura} 43%, ${specularCore} 49%, ${specularCore} 51%, ${beamAura} 57%, ${baseColor} 70%, ${baseColor} 100%)`;
+  return `linear-gradient(110deg, ${baseColor} 0%, ${baseColor} 28%, ${cfg.leadEdge} 38%, ${cfg.trailEdge} 44%, ${cfg.core} 48%, ${cfg.core} 52%, ${cfg.trailEdge} 56%, ${cfg.leadEdge} 62%, ${baseColor} 72%, ${baseColor} 100%)`;
 }
 
 export default function SupporterWidget({ donors, appearance, mode }: { donors: Supporter[]; appearance: SupporterAppearance; mode: SupporterMode }) {
@@ -34,21 +95,36 @@ export default function SupporterWidget({ donors, appearance, mode }: { donors: 
   const bg = showBg ? `${appearance.supporter_bg_color}${Math.round(Number(appearance.supporter_opacity) * 2.55).toString(16).padStart(2, '0')}` : 'transparent';
   const isShineEnabled = appearance.supporter_shine_sweep !== 'false';
   const shineTheme = appearance.supporter_shine_theme || 'crystal';
+  const shineIntensity = appearance.supporter_shine_intensity || 'vivid';
   const isBeamEnabled = appearance.supporter_border_beam !== 'false' && mode !== 'recent';
   const beamTarget = appearance.supporter_beam_target || 'top3';
   const beamTheme = appearance.supporter_beam_theme || 'podium';
 
   const pauseSec = Math.max(1, Math.min(15, Number(appearance.supporter_shine_delay || '3')));
-  const sweepSec = 1.3;
-  const totalSec = sweepSec + pauseSec;
+  const sweepSec = 1.65;
+  const totalSec = Number((sweepSec + pauseSec).toFixed(2));
   const pEnd = Number(((sweepSec / totalSec) * 100).toFixed(2));
+  const pStartGlow = Number((pEnd * 0.14).toFixed(2));
+  const pPeakGlow = Number((pEnd * 0.45).toFixed(2));
+  const pFadeGlow = Number((pEnd * 0.82).toFixed(2));
 
+  const themeCfg = getShineThemeConfig(shineTheme);
   const nameShimmerGradient = isShineEnabled ? buildShimmerGradient(appearance.supporter_text_color, shineTheme) : undefined;
   const amountShimmerGradient = isShineEnabled ? buildShimmerGradient(appearance.supporter_amount_color, shineTheme) : undefined;
 
+  const idleFilter = shineIntensity === 'neon'
+    ? `drop-shadow(0 0 4px ${themeCfg.glowSecondary})`
+    : 'drop-shadow(0 0 0px rgba(255,255,255,0))';
+
+  const peakFilter = shineIntensity === 'standard'
+    ? `drop-shadow(0 0 6px ${themeCfg.glowPrimary}) brightness(1.18)`
+    : shineIntensity === 'neon'
+    ? `drop-shadow(0 0 6px #ffffff) drop-shadow(0 0 14px ${themeCfg.glowPrimary}) drop-shadow(0 0 26px ${themeCfg.glowSecondary}) brightness(1.42)`
+    : `drop-shadow(0 0 4px #ffffff) drop-shadow(0 0 11px ${themeCfg.glowPrimary}) drop-shadow(0 0 20px ${themeCfg.glowSecondary}) brightness(1.28)`;
+
   return (
     <section
-      className={`obs-widget supporter-widget supporter-layout-${appearance.supporter_layout} ${!showDivider ? 'supporter-no-divider' : ''}`}
+      className={`obs-widget supporter-widget supporter-layout-${appearance.supporter_layout} ${!showDivider ? 'supporter-no-divider' : ''} ${isShineEnabled ? `supporter-shine-intensity-${shineIntensity}` : ''}`}
       style={{
         fontFamily: `'${appearance.supporter_font}', sans-serif`,
         width: `${appearance.supporter_width}px`,
@@ -66,15 +142,50 @@ export default function SupporterWidget({ donors, appearance, mode }: { donors: 
           .supporter-shimmer-text {
             animation-duration: ${totalSec}s !important;
           }
+          .supporter-row-shine-beam {
+            animation-duration: ${totalSec}s !important;
+          }
           @keyframes supporter-text-shine-glide {
             0% {
               background-position: 135% 0;
+              filter: ${idleFilter};
+            }
+            ${pStartGlow}% {
+              filter: ${idleFilter};
+            }
+            ${pPeakGlow}% {
+              filter: ${peakFilter};
+            }
+            ${pFadeGlow}% {
+              filter: ${idleFilter};
             }
             ${pEnd}% {
               background-position: -35% 0;
+              filter: ${idleFilter};
             }
             100% {
               background-position: -35% 0;
+              filter: ${idleFilter};
+            }
+          }
+          @keyframes supporter-row-beam-glide {
+            0% {
+              transform: translate3d(-140%, 0, 0) skewX(-24deg);
+              opacity: 0;
+            }
+            ${Number((pEnd * 0.1).toFixed(2))}% {
+              opacity: 1;
+            }
+            ${Number((pEnd * 0.85).toFixed(2))}% {
+              opacity: 1;
+            }
+            ${pEnd}% {
+              transform: translate3d(520%, 0, 0) skewX(-24deg);
+              opacity: 0;
+            }
+            100% {
+              transform: translate3d(520%, 0, 0) skewX(-24deg);
+              opacity: 0;
             }
           }
         `}</style>
@@ -104,7 +215,6 @@ export default function SupporterWidget({ donors, appearance, mode }: { donors: 
               } else if (beamTheme === 'rainbow') {
                 beamClass = 'supporter-beam-row supporter-beam-rainbow';
               } else {
-                // 'podium': rank 1 gold, rank 2 silver, rank 3 bronze
                 beamClass = `supporter-beam-row supporter-beam-rank-${index + 1}`;
               }
             }
@@ -113,13 +223,13 @@ export default function SupporterWidget({ donors, appearance, mode }: { donors: 
               ? appearance.supporter_row_color
               : (hasBeam ? (appearance.supporter_row_color || '#1e293b') : 'transparent');
 
-            const rowShineDelay = `${index * 0.32}s`;
-            const amountShineDelay = `${index * 0.32 + 0.22}s`;
+            const rowShineDelay = `${(index * 0.28).toFixed(2)}s`;
+            const amountShineDelay = `${(index * 0.28 + 0.18).toFixed(2)}s`;
 
             return (
               <li
                 key={`${index}-${donor.name}`}
-                className={`${beamClass} ${isShineEnabled ? `supporter-shine-theme-${shineTheme}` : ''}`}
+                className={`${beamClass} ${isShineEnabled ? `supporter-shine-row supporter-shine-theme-${shineTheme}` : ''}`}
                 style={{
                   background: hasBeam ? undefined : rowBg,
                   borderColor: appearance.supporter_border_color,
@@ -128,6 +238,17 @@ export default function SupporterWidget({ donors, appearance, mode }: { donors: 
                   ['--row-bg' as any]: rowBg,
                 }}
               >
+                {isShineEnabled && (
+                  <span
+                    className="supporter-row-shine-beam"
+                    aria-hidden="true"
+                    style={{
+                      ['--row-shine-delay' as any]: rowShineDelay,
+                      ['--shine-beam-bg' as any]: themeCfg.rowBeamGradient,
+                      ['--shine-beam-shadow' as any]: themeCfg.rowBeamShadow,
+                    }}
+                  />
+                )}
                 {mode !== 'recent' && appearance.supporter_show_rank === 'true' && (
                   <span
                     className="supporter-rank"
@@ -188,4 +309,3 @@ export default function SupporterWidget({ donors, appearance, mode }: { donors: 
     </section>
   );
 }
-

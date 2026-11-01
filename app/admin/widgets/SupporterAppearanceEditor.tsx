@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Palette, Grid, Sliders, Trophy, AlignLeft, AlignCenter, AlignRight } from 'lucide-react';
+import { Palette, Grid, Sliders, Trophy, AlignLeft, AlignCenter, AlignRight, Sparkles, Flame, Zap } from 'lucide-react';
 import { goalFontOptions } from '@/lib/goalAppearance';
 import { SupporterAppearance, supporterDefaults, supporterModes, supporterRanges } from '@/lib/supporterAppearance';
 import { Supporter } from '@/lib/widgets';
@@ -51,6 +51,7 @@ export default function SupporterAppearanceEditor({
 }) {
   const [activeTab, setActiveTab] = useState<SupporterSubTab>('general');
   const update = (key: keyof SupporterAppearance, next: string) => onChange({ ...value, [key]: next });
+  const shineIntensity = value.supporter_shine_intensity || 'vivid';
 
   return (
     <div className="supporter-editor">
@@ -301,7 +302,7 @@ export default function SupporterAppearanceEditor({
           </fieldset>
 
           <fieldset disabled={disabled} className="goal-editor-controls">
-            <legend>ลำแสงวิ่งพาดผ่านตัวอักษร (Text Shine Sweep 60fps GPU)</legend>
+            <legend>ลำแสงวิ่งพาดผ่านแถวและตัวอักษร (Hybrid Shine &amp; Glow Sweep 60fps GPU)</legend>
             <div className="goal-toggle-grid" style={{ marginBottom: value.supporter_shine_sweep !== 'false' ? '8px' : 0 }}>
               <label>
                 <input
@@ -309,43 +310,80 @@ export default function SupporterAppearanceEditor({
                   checked={value.supporter_shine_sweep !== 'false'}
                   onChange={event => update('supporter_shine_sweep', String(event.target.checked))}
                 />
-                <span>เปิดลำแสงวิ่งพาดผ่านตัวอักษรชื่อและยอดเงิน</span>
+                <span>เปิดลำแสงพาดผ่านแถวรายชื่อ + ออร่าตัวอักษรเปล่งประกาย (Wave Cascade)</span>
               </label>
             </div>
             {value.supporter_shine_sweep !== 'false' && (
               <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '14px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <span style={{ color: '#22c55e' }}>●</span>
-                <span>ปรับแต่งการเรนเดอร์ GPU 60fps ไม่กิน CPU ลื่นไหลเป็นพิเศษสำหรับ TikTok Live Studio และ OBS</span>
+                <span>ไฮบริด GPU 60fps: แถบแสงวิ่งพาดผ่านแถวพร้อมออร่าตัวอักษรสว่างวาบ เห็นคมชัดแม้บีบอัดภาพในจอ Live มือถือ</span>
               </div>
             )}
             {value.supporter_shine_sweep !== 'false' && (
-              <div className="goal-control-grid">
-                <label className="goal-font-control">
-                  โทนสีลำแสงวิ่ง
-                  <select
-                    value={value.supporter_shine_theme || 'crystal'}
-                    onChange={event => update('supporter_shine_theme', event.target.value)}
-                  >
-                    <option value="crystal">💎 คริสตัลประกายเพชร (Crystal Diamond)</option>
-                    <option value="gold">🏆 ประกายทองพรีเมียม (Golden Glow)</option>
-                    <option value="cyan">⚡ นีออนไซแอน (Cyber Cyan)</option>
-                  </select>
-                </label>
-                <label className="goal-range-control">
-                  <span>
-                    หน่วงเวลาหยุดพักก่อนเริ่มรอบใหม่
-                    <strong>{value.supporter_shine_delay || '3'} วินาที</strong>
+              <>
+                <div style={{ marginBottom: '16px' }}>
+                  <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-main)', display: 'block', marginBottom: '8px' }}>
+                    ระดับความชัดของแสง (Shine Intensity):
                   </span>
-                  <input
-                    type="range"
-                    min={supporterRanges.supporter_shine_delay?.[0] ?? 1}
-                    max={supporterRanges.supporter_shine_delay?.[1] ?? 15}
-                    step={1}
-                    value={value.supporter_shine_delay || '3'}
-                    onChange={event => update('supporter_shine_delay', event.target.value)}
-                  />
-                </label>
-              </div>
+                  <div className="settings-segmented" style={{ minHeight: '44px' }}>
+                    <button
+                      type="button"
+                      className={`settings-segmented-btn ${shineIntensity === 'standard' ? 'active' : ''}`}
+                      onClick={() => update('supporter_shine_intensity', 'standard')}
+                    >
+                      <Sparkles size={14} style={{ flexShrink: 0 }} />
+                      <span>นุ่มนวล (Standard)</span>
+                    </button>
+                    <button
+                      type="button"
+                      className={`settings-segmented-btn ${shineIntensity === 'vivid' ? 'active' : ''}`}
+                      onClick={() => update('supporter_shine_intensity', 'vivid')}
+                    >
+                      <Flame size={14} style={{ flexShrink: 0 }} />
+                      <span>คมชัดสำหรับ Live (แนะนำ)</span>
+                    </button>
+                    <button
+                      type="button"
+                      className={`settings-segmented-btn ${shineIntensity === 'neon' ? 'active' : ''}`}
+                      onClick={() => update('supporter_shine_intensity', 'neon')}
+                    >
+                      <Zap size={14} style={{ flexShrink: 0 }} />
+                      <span>จัดเต็ม Neon Glow</span>
+                    </button>
+                  </div>
+                </div>
+
+                <div className="goal-control-grid">
+                  <label className="goal-font-control">
+                    โทนสีลำแสงวิ่งและออร่า
+                    <select
+                      value={value.supporter_shine_theme || 'crystal'}
+                      onChange={event => update('supporter_shine_theme', event.target.value)}
+                    >
+                      <option value="crystal">💎 คริสตัลประกายเพชร (Crystal Diamond)</option>
+                      <option value="gold">🏆 ประกายทองพรีเมียม (Golden Glow)</option>
+                      <option value="cyan">⚡ นีออนไซแอน (Cyber Cyan)</option>
+                      <option value="rose">🌸 โรสโกลด์พิงค์นีออน (Rose Pink)</option>
+                      <option value="emerald">🐉 มรกตไซเบอร์ (Emerald Jade)</option>
+                      <option value="rainbow">🌈 โฮโลแกรมสายรุ้ง (Holo Rainbow)</option>
+                    </select>
+                  </label>
+                  <label className="goal-range-control">
+                    <span>
+                      หน่วงเวลาหยุดพักก่อนเริ่มรอบใหม่
+                      <strong>{value.supporter_shine_delay || '3'} วินาที</strong>
+                    </span>
+                    <input
+                      type="range"
+                      min={supporterRanges.supporter_shine_delay?.[0] ?? 1}
+                      max={supporterRanges.supporter_shine_delay?.[1] ?? 15}
+                      step={1}
+                      value={value.supporter_shine_delay || '3'}
+                      onChange={event => update('supporter_shine_delay', event.target.value)}
+                    />
+                  </label>
+                </div>
+              </>
             )}
           </fieldset>
         </>
