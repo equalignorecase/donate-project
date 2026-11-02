@@ -134,6 +134,7 @@ export const defaultAlertSettings: AlertSettings = {
   alert_shine_sweep: 'true',
   alert_shine_theme: 'crystal',
   alert_animation: 'bounce',
+  alert_exit_animation: 'blur-dissolve',
   alert_duration: 8,
   alert_volume: 80,
   tts_enabled: 'true',
@@ -369,6 +370,8 @@ export default function AlertCard({
     : (animState || '');
 
   const animClass = `anim-${s.alert_animation || 'slide-down'}`;
+  const exitAnim = s.alert_exit_animation || 'blur-dissolve';
+  const exitAnimClass = exitAnim !== 'auto' ? `exit-${exitAnim}` : 'exit-auto';
 
   const donorName = (alert?.name || '').trim() || 'ผู้สนับสนุน';
   const actionText = (s.alert_action_text || 'โดเนทให้').trim();
@@ -387,6 +390,8 @@ export default function AlertCard({
   }, [donorName, isTextEffectEnabled]);
 
   useEffect(() => {
+    if (stateClass === 'hide') return;
+
     if (!isTextEffectEnabled) {
       setDisplayedAmount(numAmount);
       setIsPunching(false);
@@ -525,7 +530,7 @@ export default function AlertCard({
 
   return (
     <div
-      className={`alert-wrapper ${animClass} ${stateClass} ${className}`.trim()}
+      className={`alert-wrapper ${animClass} ${exitAnimClass} ${stateClass} ${className}`.trim()}
       style={{
         width: `${s.alert_card_width || 580}px`,
         maxWidth: '100%',

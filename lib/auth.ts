@@ -1,4 +1,4 @@
-import { verifySessionToken } from './services/userService';
+import { verifySessionToken, safeCompareSecret } from './services/userService';
 import { UserSession } from './types/database';
 
 /**
@@ -37,7 +37,7 @@ export function getAuthenticatedUser(request: Request): UserSession | null {
 
     // Fallback if Bearer token matches ADMIN_SECRET
     const adminSecret = process.env.ADMIN_SECRET;
-    if (adminSecret && bearerToken === adminSecret) {
+    if (adminSecret && safeCompareSecret(bearerToken, adminSecret)) {
       return {
         userId: '00000000-0000-0000-0000-000000000001',
         username: 'admin',
@@ -55,7 +55,7 @@ export function getAuthenticatedUser(request: Request): UserSession | null {
     if (session) return session;
 
     const adminSecret = process.env.ADMIN_SECRET;
-    if (adminSecret && customHeader === adminSecret) {
+    if (adminSecret && safeCompareSecret(customHeader, adminSecret)) {
       return {
         userId: '00000000-0000-0000-0000-000000000001',
         username: 'admin',

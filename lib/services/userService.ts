@@ -28,6 +28,16 @@ export function verifyPassword(password: string, storedHash: string): boolean {
 }
 
 /**
+ * Constant-time comparison for plaintext secret fallback
+ */
+export function safeCompareSecret(input: string, secret?: string): boolean {
+  if (!input || !secret) return false;
+  const hashA = crypto.createHash('sha256').update(input).digest();
+  const hashB = crypto.createHash('sha256').update(secret).digest();
+  return crypto.timingSafeEqual(hashA, hashB);
+}
+
+/**
  * Generate a cryptographically signed session token
  */
 export function generateSessionToken(user: { id: string; username: string; displayName?: string; role?: string }): string {
@@ -191,8 +201,8 @@ export async function authenticateUser(
   if (user.password_hash) {
     isValid = verifyPassword(password, user.password_hash);
   } else if (user.username === 'admin' && SESSION_SECRET) {
-    // Fallback comparison with ADMIN_SECRET
-    isValid = password === SESSION_SECRET;
+    // Fallback comparison with ADMIN_SECRET (constant-time)
+    isValid = safeCompareSecret(password, SESSION_SECRET);
   }
 
   if (!isValid) {
@@ -311,7 +321,7 @@ export async function updateUserProfile(
     if (user.password_hash) {
       isValid = verifyPassword(currentPassword, user.password_hash);
     } else if (user.username === 'admin' && SESSION_SECRET) {
-      isValid = currentPassword === SESSION_SECRET;
+      isValid = safeCompareSecret(currentPassword, SESSION_SECRET);
     }
 
     if (!isValid) {

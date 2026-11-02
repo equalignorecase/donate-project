@@ -426,6 +426,7 @@ export default function CustomizerPage() {
     alert_tiered_legendary_from: '#f12711',
     alert_tiered_legendary_to: '#f5af19',
     alert_animation: 'slide-down',
+    alert_exit_animation: 'blur-dissolve',
     alert_duration: 8,
     alert_sound_url: '/sounds/alert.mp3'
   });
@@ -437,6 +438,8 @@ export default function CustomizerPage() {
   const [previewBg, setPreviewBg] = useState<'overlay' | 'checker' | 'game' | 'bright'>('overlay');
   const [mobileView, setMobileView] = useState<'controls' | 'preview'>('controls');
   const [isAnimating, setIsAnimating] = useState<boolean>(false);
+  const [previewAnimState, setPreviewAnimState] = useState<string>('show');
+  const previewTimersRef = useRef<NodeJS.Timeout[]>([]);
   const [toastMessage, setToastMessage] = useState<string>('');
   const [isSaving, setIsSaving] = useState<boolean>(false);
   const [obsUrl, setObsUrl] = useState<string>('http://localhost:3000/overlay');
@@ -725,12 +728,51 @@ export default function CustomizerPage() {
     }
   };
 
-  const handleTriggerAnimation = () => {
-    if (isAnimating) return;
+  const clearPreviewTimers = () => {
+    previewTimersRef.current.forEach(t => clearTimeout(t));
+    previewTimersRef.current = [];
+  };
+
+  const triggerEntrancePreview = () => {
+    clearPreviewTimers();
+    setIsAnimating(false);
+    setPreviewAnimState('');
+    const t = setTimeout(() => {
+      setPreviewAnimState('show');
+    }, 35);
+    previewTimersRef.current.push(t);
+  };
+
+  const triggerExitPreview = () => {
+    clearPreviewTimers();
     setIsAnimating(true);
-    setTimeout(() => {
+    setPreviewAnimState('hide');
+    const t = setTimeout(() => {
+      setPreviewAnimState('idle');
       setIsAnimating(false);
-    }, 600);
+    }, 700);
+    previewTimersRef.current.push(t);
+  };
+
+  const handleTriggerAnimation = () => {
+    clearPreviewTimers();
+    setIsAnimating(true);
+    setPreviewAnimState('');
+
+    const t1 = setTimeout(() => {
+      setPreviewAnimState('show');
+    }, 35);
+
+    const t2 = setTimeout(() => {
+      setPreviewAnimState('hide');
+    }, 1850);
+
+    const t3 = setTimeout(() => {
+      setPreviewAnimState('idle');
+      setIsAnimating(false);
+    }, 2550);
+
+    previewTimersRef.current.push(t1, t2, t3);
   };
 
   const handleResetDefault = () => {
@@ -2205,11 +2247,14 @@ export default function CustomizerPage() {
 
                   <div className="form-row">
                     <div className="form-group">
-                      <label className="form-label">รูปแบบอนิเมชั่นเข้า-ออก</label>
+                      <label className="form-label">รูปแบบอนิเมชั่นขาเข้า (Entrance)</label>
                       <select
                         className="input-control"
                         value={settings.alert_animation || 'slide-down'}
-                        onChange={(e) => updateField('alert_animation', e.target.value)}
+                        onChange={(e) => {
+                          updateField('alert_animation', e.target.value);
+                          triggerEntrancePreview();
+                        }}
                       >
                         <option value="slide-down">Slide Down (เลื่อนลงมาจากด้านบน)</option>
                         <option value="bounce">Bounce Pop (เด้งดึ๋ง สดใส มีพลัง)</option>
@@ -2218,6 +2263,27 @@ export default function CustomizerPage() {
                       </select>
                     </div>
                     <div className="form-group">
+                      <label className="form-label">รูปแบบอนิเมชั่นขาออก (ตอนหายไป)</label>
+                      <select
+                        className="input-control"
+                        value={settings.alert_exit_animation || 'blur-dissolve'}
+                        onChange={(e) => {
+                          updateField('alert_exit_animation', e.target.value);
+                          triggerExitPreview();
+                        }}
+                      >
+                        <option value="blur-dissolve">Blur Dissolve (เบลอสลาย นุ่มนวลพรีเมียม)</option>
+                        <option value="fade">Smooth Fade (ค่อยๆ จางหาย คลีนสบายตา)</option>
+                        <option value="float-up">Float Up (ลอยขึ้นด้านบนพร้อมจางหาย)</option>
+                        <option value="shrink-pop">Shrink Pop (เด้งแล้วย่อวูบหายไป)</option>
+                        <option value="slide-right">Slide Out (เลื่อนออกด้านขวา)</option>
+                        <option value="auto">Auto (คู่กับอนิเมชั่นขาเข้าอัตโนมัติ)</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="form-row" style={{ marginTop: '12px' }}>
+                    <div className="form-group full-width" style={{ width: '100%' }}>
                       <label className="form-label">
                         <span>ระยะเวลาแสดงผล ({settings.alert_duration || 8} วินาที)</span>
                       </label>
@@ -2399,8 +2465,7 @@ export default function CustomizerPage() {
                             onClick={() => {
                               updateField('alert_particle_style', item.id);
                               updateField('alert_confetti_enabled', item.id !== 'none' ? 'true' : 'false');
-                              setIsAnimating(true);
-                              setTimeout(() => setIsAnimating(false), 50);
+                              triggerEntrancePreview();
                             }}
                           >
                             <div className="particle-style-icon">
@@ -3080,7 +3145,7 @@ export default function CustomizerPage() {
                   amount: testAmount !== '' && !isNaN(Number(testAmount)) ? Number(testAmount) : 0,
                   message: testMessage
                 }}
-                animState={!isAnimating}
+                animState={previewAnimState}
               />
             </div>
 
@@ -3103,8 +3168,7 @@ export default function CustomizerPage() {
                       setTestName('สมชาย ใจดี');
                       setTestAmount(20);
                       setTestMessage('สวัสดีครับ เป็นกำลังใจให้นะครับ สตรีมสนุกมาก!');
-                      setIsAnimating(true);
-                      setTimeout(() => setIsAnimating(false), 50);
+                      triggerEntrancePreview();
                     }}
                   >
                     <span className="tier-dot" style={{ background: settings.alert_tiered_common_color || '#22c55e' }} />
@@ -3118,8 +3182,7 @@ export default function CustomizerPage() {
                       setTestName('ฟ้าใส สดชื่น');
                       setTestAmount(100);
                       setTestMessage('ชอบคอนเทนต์และเสียงพูดมากครับ สู้ๆ');
-                      setIsAnimating(true);
-                      setTimeout(() => setIsAnimating(false), 50);
+                      triggerEntrancePreview();
                     }}
                   >
                     <span className="tier-dot" style={{ background: settings.alert_tiered_rare_color || '#00c6ff' }} />
@@ -3133,8 +3196,7 @@ export default function CustomizerPage() {
                       setTestName('เสี่ยท็อป สายเปย์');
                       setTestAmount(300);
                       setTestMessage('สุดยอดมากครับ เป็นกำลังใจให้พัฒนาต่อไปเรื่อยๆ');
-                      setIsAnimating(true);
-                      setTimeout(() => setIsAnimating(false), 50);
+                      triggerEntrancePreview();
                     }}
                   >
                     <span className="tier-dot" style={{ background: settings.alert_tiered_epic_color || '#a855f7' }} />
@@ -3148,8 +3210,7 @@ export default function CustomizerPage() {
                       setTestName('สุลต่าน ใจป๋า');
                       setTestAmount(1000);
                       setTestMessage('เติมพลังให้สตรีมเมอร์ สู้ๆ นะครับ!');
-                      setIsAnimating(true);
-                      setTimeout(() => setIsAnimating(false), 50);
+                      triggerEntrancePreview();
                     }}
                   >
                     <span className="tier-dot" style={{ background: settings.alert_tiered_legendary_color || '#f59e0b' }} />

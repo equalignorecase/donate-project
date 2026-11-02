@@ -1,14 +1,19 @@
 import { NextResponse } from 'next/server';
+import crypto from 'crypto';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
 import { verifySlip } from '@/lib/services/slipok';
 import { filterMessage } from '@/lib/services/blacklist';
 import { Donation } from '@/lib/types/database';
 import { MAX_SLIP_FILE_SIZE_BYTES } from '@/lib/constants';
-import { calculateTimerDelta, computeRemainingSeconds, readTimerConfig } from '@/lib/timerLogic';
+import { applyDonationToTimer } from '@/lib/timerLogic';
 
 export const dynamic = 'force-dynamic';
 
 const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+
+// In-Flight Locks to prevent race conditions when the same slip is submitted concurrently
+const inFlightSlipHashes = new Set<string>();
+const inFlightTransRefs = new Set<string>();
 
 // In-Memory IP Rate Limiter (จำกัด 6 ครั้งต่อ 2 นาทีต่อหนึ่ง IP)
 const slipRateLimitMap = new Map<string, { count: number; resetAt: number }>();
@@ -110,155 +115,164 @@ export async function POST(request: Request) {
 
     const arrayBuffer = await slipFile.arrayBuffer();
     const fileBuffer = Buffer.from(arrayBuffer);
+    const slipHash = crypto.createHash('sha256').update(fileBuffer).digest('hex');
+
+    if (inFlightSlipHashes.has(slipHash)) {
+      return NextResponse.json(
+        { success: false, message: 'กำลังตรวจสอบสลิปนี้อยู่ กรุณารอสักครู่' },
+        { status: 409 }
+      );
+    }
+    inFlightSlipHashes.add(slipHash);
 
     try {
-      verifiedData = await verifySlip({
-        fileBuffer,
-        fileName: slipFile.name || 'slip.jpg',
-        mimeType: slipFile.type || 'image/jpeg',
-        expectedAmount,
-        log: true
-      });
-    } catch (err: any) {
-      const failReason = err.message || 'การตรวจสอบสลิปล้มเหลว';
-      const slipTransRef =
-        err.details?.data?.transRef ||
-        err.details?.transRef ||
-        err.details?.slipData?.transRef ||
-        '';
-      const uniqueFailRef = `FAIL-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
-      const displayRef = `${uniqueFailRef} | ${failReason}${slipTransRef ? ` [Ref: ${slipTransRef}]` : ''}`;
+      try {
+        verifiedData = await verifySlip({
+          fileBuffer,
+          fileName: slipFile.name || 'slip.jpg',
+          mimeType: slipFile.type || 'image/jpeg',
+          expectedAmount,
+          log: true
+        });
+      } catch (err: any) {
+        const failReason = err.message || 'การตรวจสอบสลิปล้มเหลว';
+        const slipTransRef =
+          err.details?.data?.transRef ||
+          err.details?.transRef ||
+          err.details?.slipData?.transRef ||
+          '';
+        const uniqueFailRef = `FAIL-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+        const displayRef = `${uniqueFailRef} | ${failReason}${slipTransRef ? ` [Ref: ${slipTransRef}]` : ''}`;
+
+        try {
+          await supabaseAdmin.from('donations').insert([
+            {
+              name,
+              amount: expectedAmount,
+              message: cleanMessage,
+              transaction_ref: displayRef,
+              sender_name:
+                err.details?.data?.sender?.displayName ||
+                err.details?.data?.sender?.name ||
+                err.details?.slipData?.sender?.displayName ||
+                err.details?.slipData?.sender?.name ||
+                'ผู้สนับสนุนนิรนาม',
+              sender_bank:
+                err.details?.data?.sendingBank ||
+                err.details?.slipData?.sendingBank ||
+                '',
+              receiver_name:
+                err.details?.data?.receiver?.displayName ||
+                err.details?.data?.receiver?.name ||
+                err.details?.slipData?.receiver?.displayName ||
+                err.details?.slipData?.receiver?.name ||
+                '',
+              transaction_date: new Date().toISOString(),
+              status: 'failed'
+            }
+          ]);
+        } catch (logErr: any) {
+          console.warn('Could not record failed slip to database:', logErr.message);
+        }
+
+        return NextResponse.json(
+          { success: false, message: failReason, code: err.code },
+          { status: 400 }
+        );
+      }
+
+      if (inFlightTransRefs.has(verifiedData.transRef)) {
+        return NextResponse.json(
+          { success: false, message: 'สลิปนี้กำลังถูกบันทึกในระบบแล้ว (สลิปซ้ำ)' },
+          { status: 409 }
+        );
+      }
+      inFlightTransRefs.add(verifiedData.transRef);
 
       try {
-        await supabaseAdmin.from('donations').insert([
-          {
-            name,
-            amount: expectedAmount,
-            message: cleanMessage,
-            transaction_ref: displayRef,
-            sender_name:
-              err.details?.data?.sender?.displayName ||
-              err.details?.data?.sender?.name ||
-              err.details?.slipData?.sender?.displayName ||
-              err.details?.slipData?.sender?.name ||
-              'ผู้สนับสนุนนิรนาม',
-            sender_bank:
-              err.details?.data?.sendingBank ||
-              err.details?.slipData?.sendingBank ||
-              '',
-            receiver_name:
-              err.details?.data?.receiver?.displayName ||
-              err.details?.data?.receiver?.name ||
-              err.details?.slipData?.receiver?.displayName ||
-              err.details?.slipData?.receiver?.name ||
-              '',
-            transaction_date: new Date().toISOString(),
-            status: 'failed'
-          }
-        ]);
-      } catch (logErr: any) {
-        console.warn('Could not record failed slip to database:', logErr.message);
-      }
+        // Double-check duplicate transRef right before insert
+        const { data: dupCheck } = await supabaseAdmin
+          .from('donations')
+          .select('id')
+          .eq('transaction_ref', verifiedData.transRef)
+          .neq('status', 'failed')
+          .limit(1);
 
-      return NextResponse.json(
-        { success: false, message: failReason, code: err.code },
-        { status: 400 }
-      );
-    }
-
-    // 5. Insert into Supabase donations table
-    const donationRecord: Donation = {
-      name,
-      amount: verifiedData.amount,
-      message: cleanMessage,
-      transaction_ref: verifiedData.transRef,
-      sender_name: verifiedData.senderName,
-      sender_bank: verifiedData.senderBank,
-      receiver_name: verifiedData.receiverName,
-      transaction_date: verifiedData.transDate || new Date().toISOString(),
-      status: 'verified'
-    };
-
-    const { data: inserted, error: insertError } = await supabaseAdmin
-      .from('donations')
-      .insert([donationRecord])
-      .select()
-      .single();
-
-    if (insertError) {
-      console.error('Supabase insert error:', insertError);
-      return NextResponse.json(
-        { success: false, message: 'เกิดข้อผิดพลาดในการบันทึกข้อมูล: ' + insertError.message },
-        { status: 500 }
-      );
-    }
-
-    // 6. Check and update countdown timer if enabled
-    let timerEvent: any = null;
-    try {
-      const { data: timerRows } = await supabaseAdmin
-        .from('settings')
-        .select('key, value')
-        .ilike('key', 'timer_%');
-
-      if (timerRows && timerRows.length > 0) {
-        const timerSettings: Record<string, string> = {};
-        timerRows.forEach(r => { timerSettings[r.key] = r.value; });
-        const timerConfig = readTimerConfig(timerSettings);
-
-        if (timerConfig.timer_enabled && timerConfig.timer_status !== 'stopped') {
-          const { deltaSeconds, ruleMatched } = calculateTimerDelta(inserted.amount, timerConfig);
-          if (deltaSeconds !== 0) {
-            const currentSec = computeRemainingSeconds(timerConfig);
-            let newSec = Math.max(0, currentSec + deltaSeconds);
-            if (timerConfig.timer_max_cap_seconds > 0 && newSec > timerConfig.timer_max_cap_seconds) {
-              newSec = timerConfig.timer_max_cap_seconds;
-            }
-            const nowIso = new Date().toISOString();
-            await supabaseAdmin.from('settings').upsert([
-              { key: 'timer_remaining_seconds', value: String(newSec) },
-              { key: 'timer_last_updated_at', value: nowIso }
-            ], { onConflict: 'key' });
-
-            timerEvent = {
-              remaining_seconds: newSec,
-              status: timerConfig.timer_status,
-              last_updated_at: nowIso,
-              delta_seconds: deltaSeconds,
-              donor_name: inserted.name,
-              donor_amount: inserted.amount,
-              reason: ruleMatched
-            };
-          }
+        if (dupCheck && dupCheck.length > 0) {
+          return NextResponse.json(
+            { success: false, message: 'สลิปนี้เคยถูกส่งเข้าสู่ระบบแล้ว (สลิปซ้ำ)', code: 1012 },
+            { status: 400 }
+          );
         }
-      }
-    } catch (timerErr: any) {
-      console.warn('Timer update on donation error:', timerErr.message);
-    }
 
-    // 7. Broadcast event to Supabase Realtime channel for instant OBS alert
-    const channel = supabaseAdmin.channel('donation-alerts');
-    try {
-      await channel.httpSend('donation', {
-        id: inserted.id,
-        name: inserted.name,
-        amount: inserted.amount,
-        message: inserted.message
-      });
-      if (timerEvent) {
-        await channel.httpSend('timer_update', timerEvent);
+        // 5. Insert into Supabase donations table
+        const donationRecord: Donation = {
+          name,
+          amount: verifiedData.amount,
+          message: cleanMessage,
+          transaction_ref: verifiedData.transRef,
+          sender_name: verifiedData.senderName,
+          sender_bank: verifiedData.senderBank,
+          receiver_name: verifiedData.receiverName,
+          transaction_date: verifiedData.transDate || new Date().toISOString(),
+          status: 'verified'
+        };
+
+        const { data: inserted, error: insertError } = await supabaseAdmin
+          .from('donations')
+          .insert([donationRecord])
+          .select()
+          .single();
+
+        if (insertError) {
+          if (insertError.code === '23505') {
+            return NextResponse.json(
+              { success: false, message: 'สลิปนี้เคยถูกส่งเข้าสู่ระบบแล้ว (สลิปซ้ำ)', code: 1012 },
+              { status: 400 }
+            );
+          }
+          console.error('Supabase insert error:', insertError);
+          return NextResponse.json(
+            { success: false, message: 'เกิดข้อผิดพลาดในการบันทึกข้อมูล: ' + insertError.message },
+            { status: 500 }
+          );
+        }
+
+        // 6. Check and update countdown timer if enabled
+        const timerEvent = await applyDonationToTimer(supabaseAdmin, {
+          name: inserted.name,
+          amount: inserted.amount
+        });
+
+        // 7. Broadcast event to Supabase Realtime channel for instant OBS alert
+        const channel = supabaseAdmin.channel('donation-alerts');
+        try {
+          await channel.httpSend('donation', {
+            id: inserted.id,
+            name: inserted.name,
+            amount: inserted.amount,
+            message: inserted.message
+          });
+          if (timerEvent) {
+            await channel.httpSend('timer_update', timerEvent);
+          }
+        } catch (realtimeErr: any) {
+          console.warn('Realtime broadcast warning:', realtimeErr.message);
+        } finally {
+          await supabaseAdmin.removeChannel(channel).catch(() => {});
+        }
+
+        return NextResponse.json({
+          success: true,
+          message: 'การโดเนทสำเร็จและส่งการแจ้งเตือนขึ้นจอแล้ว!',
+          data: inserted
+        });
+      } finally {
+        inFlightTransRefs.delete(verifiedData.transRef);
       }
-    } catch (realtimeErr: any) {
-      console.warn('Realtime broadcast warning:', realtimeErr.message);
     } finally {
-      await supabaseAdmin.removeChannel(channel).catch(() => {});
+      inFlightSlipHashes.delete(slipHash);
     }
-
-    return NextResponse.json({
-      success: true,
-      message: 'การโดเนทสำเร็จและส่งการแจ้งเตือนขึ้นจอแล้ว!',
-      data: inserted
-    });
   } catch (err: any) {
     console.error('Verify slip fatal error:', err);
     return NextResponse.json(

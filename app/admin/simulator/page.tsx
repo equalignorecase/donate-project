@@ -24,6 +24,7 @@ import {
   defaultSceneLayout,
   getStoredLayout,
   saveStoredLayout,
+  parseSceneLayout,
   SNAP_PRESETS
 } from '@/lib/studioLayout';
 import GoalWidget from '@/app/overlay/goal/GoalWidget';
@@ -137,6 +138,11 @@ export default function SimulatorPage() {
       .then(res => {
         if (res.success && res.settings) {
           setAlertSettings(prev => ({ ...prev, ...res.settings }));
+          const remoteLayout = parseSceneLayout(res.settings.stream_studio_layout);
+          if (remoteLayout) {
+            setLayout(remoteLayout);
+            saveStoredLayout(remoteLayout);
+          }
         }
       })
       .catch(() => {});
@@ -145,6 +151,11 @@ export default function SimulatorPage() {
       .on('broadcast', { event: 'settings_updated' }, (payload: any) => {
         if (payload?.payload) {
           setAlertSettings(prev => ({ ...prev, ...payload.payload }));
+          const remoteLayout = parseSceneLayout(payload.payload.stream_studio_layout);
+          if (remoteLayout) {
+            setLayout(remoteLayout);
+            saveStoredLayout(remoteLayout);
+          }
         }
       })
       .subscribe();
@@ -155,11 +166,32 @@ export default function SimulatorPage() {
     };
   }, []);
 
+  // Sync layout to Supabase settings & local BroadcastChannel
+  const syncLayoutToServer = useCallback((next: StudioSceneLayout) => {
+    saveStoredLayout(next);
+    const serialized = JSON.stringify(next);
+    if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
+      try {
+        const bc = new BroadcastChannel('donation-alerts');
+        bc.postMessage({ type: 'settings_updated', payload: { stream_studio_layout: serialized } });
+        bc.close();
+      } catch {}
+    }
+    const adminToken = typeof window !== 'undefined' ? (localStorage.getItem('donate_admin_token') || '') : '';
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+    if (adminToken) headers['x-admin-token'] = adminToken;
+    fetch('/api/admin/settings', {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({ stream_studio_layout: serialized })
+    }).catch(() => {});
+  }, []);
+
   // Save layout helper
   const updateLayout = useCallback((next: StudioSceneLayout) => {
     setLayout(next);
-    saveStoredLayout(next);
-  }, []);
+    syncLayoutToServer(next);
+  }, [syncLayoutToServer]);
 
   // Toggle widget visibility
   const toggleWidget = (key: keyof StudioSceneLayout) => {
@@ -282,7 +314,7 @@ export default function SimulatorPage() {
         alertTimerRef.current = setTimeout(() => {
           setAlertAnimState('idle');
           alertTimerRef.current = null;
-        }, 380);
+        }, 580);
       }, Math.max(delayMs, 0));
     };
 
@@ -321,7 +353,7 @@ export default function SimulatorPage() {
       alertTimerRef.current = setTimeout(() => {
         setAlertAnimState('idle');
         alertTimerRef.current = null;
-      }, 380);
+      }, 580);
     }, 1500);
   };
 
@@ -414,14 +446,14 @@ export default function SimulatorPage() {
 
   const handlePointerUp = (e: React.PointerEvent) => {
     if (draggingWidget) {
-      saveStoredLayout(layout);
+      syncLayoutToServer(layout);
       try {
         (e.target as HTMLElement).releasePointerCapture(e.pointerId);
       } catch {}
       setDraggingWidget(null);
     }
     if (resizingWidget) {
-      saveStoredLayout(layout);
+      syncLayoutToServer(layout);
       try {
         (e.target as HTMLElement).releasePointerCapture(e.pointerId);
       } catch {}

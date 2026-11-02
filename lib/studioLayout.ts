@@ -21,12 +21,11 @@ export const defaultSceneLayout: StudioSceneLayout = {
 
 export const STORAGE_KEY = 'stream_studio_layout';
 
-export function getStoredLayout(): StudioSceneLayout {
-  if (typeof window === 'undefined') return defaultSceneLayout;
+export function parseSceneLayout(raw?: string | StudioSceneLayout | null): StudioSceneLayout | null {
+  if (!raw) return null;
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return defaultSceneLayout;
-    const parsed = JSON.parse(raw);
+    const parsed = typeof raw === 'string' ? JSON.parse(raw) : raw;
+    if (!parsed || typeof parsed !== 'object') return null;
     return {
       alert: { ...defaultSceneLayout.alert, ...(parsed.alert || {}) },
       goal: { ...defaultSceneLayout.goal, ...(parsed.goal || {}) },
@@ -34,8 +33,14 @@ export function getStoredLayout(): StudioSceneLayout {
       timer: { ...defaultSceneLayout.timer, ...(parsed.timer || {}) },
     };
   } catch {
-    return defaultSceneLayout;
+    return null;
   }
+}
+
+export function getStoredLayout(): StudioSceneLayout {
+  if (typeof window === 'undefined') return defaultSceneLayout;
+  const raw = localStorage.getItem(STORAGE_KEY);
+  return parseSceneLayout(raw) || defaultSceneLayout;
 }
 
 export function saveStoredLayout(layout: StudioSceneLayout) {

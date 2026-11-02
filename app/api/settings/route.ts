@@ -3,7 +3,11 @@ import { supabaseAdmin } from '@/lib/supabaseAdmin';
 
 export const dynamic = 'force-dynamic';
 
-const PUBLIC_KEYS = ['min_donate', 'receiver_name', 'promptpay_id'];
+const PUBLIC_KEYS = new Set(['min_donate', 'receiver_name', 'stream_studio_layout']);
+
+function isPublicSettingKey(key: string): boolean {
+  return PUBLIC_KEYS.has(key) || key.startsWith('alert_') || key.startsWith('tts_');
+}
 
 export async function GET() {
   try {
@@ -16,8 +20,7 @@ export async function GET() {
     const settings: Record<string, string> = {};
     if (rows) {
       rows.forEach((r: { key: string; value: string }) => {
-        // Exclude sensitive secrets from public API
-        if (r.key === 'slipok_api_key' || r.key === 'admin_secret' || r.key === 'valorant_api_key') return;
+        if (!isPublicSettingKey(r.key)) return;
         settings[r.key] = r.value;
       });
     }

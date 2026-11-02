@@ -5,62 +5,17 @@ import './overlay.css';
 import './widgets.css';
 import { supabase } from '@/lib/supabaseClient';
 import { Donation, AlertSettings } from '@/lib/types/database';
-import AlertCard, { getAlertTier } from './alert/AlertCard';
-import { amountToThaiWords } from '@/lib/thaiNumber';
-import { prepareTtsText } from '@/lib/tts-helper';
-
-const ICONS: Record<string, React.ReactNode> = {
-  gift: (
-    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-      <polyline points="20 12 20 22 4 22 4 12"></polyline>
-      <rect x="2" y="7" width="20" height="5"></rect>
-      <line x1="12" y1="22" x2="12" y2="7"></line>
-      <path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"></path>
-      <path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"></path>
-    </svg>
-  ),
-  heart: (
-    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
-    </svg>
-  ),
-  coin: (
-    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="12" cy="12" r="10"></circle>
-      <path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"></path>
-      <path d="M12 6v2m0 8v2"></path>
-    </svg>
-  ),
-  star: (
-    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
-    </svg>
-  ),
-  fire: (
-    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"></path>
-    </svg>
-  ),
-  trophy: (
-    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path>
-      <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"></path>
-      <path d="M4 22h16"></path>
-      <path d="M10 14.66V17c0 .55-.45 1-1 1H8v4h8v-4h-1c-.55 0-1-.45-1-1v-2.34"></path>
-      <path d="M18 2H6v7a6 6 0 0 0 12 0V2z"></path>
-    </svg>
-  )
-};
+import AlertCard from './alert/AlertCard';
+import { useAlertQueue } from './useAlertQueue';
 
 export default function OverlayPage() {
-  const [currentAlert, setCurrentAlert] = useState<Donation | null>(null);
-  const [alertAnimState, setAlertAnimState] = useState<string>('');
   const [settings, setSettings] = useState<AlertSettings>({
     alert_duration: 8,
     alert_volume: 80,
     tts_enabled: 'true',
     tts_min_amount: 0,
     alert_animation: 'bounce',
+    alert_exit_animation: 'blur-dissolve',
     alert_action_text: 'โดเนทให้',
     alert_icon: 'heart',
     alert_card_bg: 'transparent',
@@ -99,46 +54,52 @@ export default function OverlayPage() {
     alert_tiered_legendary_to: '#f5af19'
   });
 
-  const queueRef = useRef<Donation[]>([]);
-  const isPlayingRef = useRef<boolean>(false);
-  const settingsRef = useRef<AlertSettings>(settings);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
-  const ttsAudioRef = useRef<HTMLAudioElement | null>(null);
-  const ttsTimeoutRef = useRef<any>(null);
-  const currentTtsTextRef = useRef<string>('');
-  const alertStartTimeRef = useRef<number>(0);
-  const alertDismissTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const isTtsSpeakingRef = useRef<boolean>(false);
-  const processedAlertIds = useRef<Set<string>>(new Set());
-  const [audioUnlocked, setAudioUnlocked] = useState<boolean>(false);
   const [showBanner, setShowBanner] = useState<boolean>(true);
   const [isNoBgMode, setIsNoBgMode] = useState<boolean>(false);
 
+  // Compute effective settings: Strip background, border, blur & shadow when in TikTok/No-BG mode
+  const effectiveSettings = useMemo<AlertSettings>(() => {
+    if (!isNoBgMode) return settings;
+    return {
+      ...settings,
+      alert_card_bg: 'transparent',
+      alert_card_blur: 0,
+      alert_border_color: 'transparent',
+      alert_border_width: 0,
+      alert_shadow_show: 'false',
+      alert_glow: 'false',
+      alert_shimmer_show: 'false',
+      alert_card_beam: 'false',
+      alert_icon_bg: 'transparent',
+      alert_icon_border: 'transparent',
+      alert_amount_bg: 'transparent',
+      alert_amount_border: 'transparent',
+      alert_msg_bg: 'transparent',
+      alert_msg_border: 'transparent',
+      alert_text_stroke_enabled: 'true',
+      alert_text_stroke_width: settings.alert_text_stroke_width || 1.5,
+      alert_text_stroke_color: settings.alert_text_stroke_color || '#000000',
+      alert_text_shadow: settings.alert_text_shadow === 'none' ? 'game' : (settings.alert_text_shadow || 'game')
+    };
+  }, [settings, isNoBgMode]);
+
+  const {
+    currentAlert,
+    alertAnimState,
+    audioUnlocked,
+    audioRef,
+    ttsAudioRef,
+    unlockAudio: baseUnlockAudio,
+    enqueueDonation,
+    dismissAlert,
+    onTtsEnded,
+    handleTtsAudioError
+  } = useAlertQueue(effectiveSettings);
+
   // Unlock audio context on user click/interaction
   const unlockAudio = () => {
-    setAudioUnlocked(true);
+    baseUnlockAudio();
     setTimeout(() => setShowBanner(false), 2000);
-    try {
-      if (audioRef.current && audioRef.current.paused) {
-        audioRef.current.play().then(() => {
-          audioRef.current?.pause();
-          audioRef.current.currentTime = 0;
-        }).catch(() => {});
-      }
-      if (ttsAudioRef.current && ttsAudioRef.current.paused && ttsAudioRef.current.src) {
-        ttsAudioRef.current.play().then(() => {
-          ttsAudioRef.current?.pause();
-          ttsAudioRef.current.currentTime = 0;
-        }).catch(() => {});
-      }
-      const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
-      if (AudioCtx) {
-        const ctx = new AudioCtx();
-        if (ctx.state === 'suspended') {
-          ctx.resume().catch(() => {});
-        }
-      }
-    } catch (e) {}
   };
 
   // Listen to any user interaction to unlock audio and check URL params for TikTok/No-BG mode
@@ -193,34 +154,7 @@ export default function OverlayPage() {
     };
   }, []);
 
-  // Compute effective settings: Strip background, border, blur & shadow when in TikTok/No-BG mode
-  const effectiveSettings = useMemo<AlertSettings>(() => {
-    if (!isNoBgMode) return settings;
-    return {
-      ...settings,
-      alert_card_bg: 'transparent',
-      alert_card_blur: 0,
-      alert_border_color: 'transparent',
-      alert_border_width: 0,
-      alert_shadow_show: 'false',
-      alert_glow: 'false',
-      alert_shimmer_show: 'false',
-      alert_card_beam: 'false',
-      alert_icon_bg: 'transparent',
-      alert_icon_border: 'transparent',
-      alert_amount_bg: 'transparent',
-      alert_amount_border: 'transparent',
-      alert_msg_bg: 'transparent',
-      alert_msg_border: 'transparent',
-      alert_text_stroke_enabled: 'true',
-      alert_text_stroke_width: settings.alert_text_stroke_width || 1.5,
-      alert_text_stroke_color: settings.alert_text_stroke_color || '#000000',
-      alert_text_shadow: settings.alert_text_shadow === 'none' ? 'game' : (settings.alert_text_shadow || 'game')
-    };
-  }, [settings, isNoBgMode]);
-
   useEffect(() => {
-    settingsRef.current = effectiveSettings;
     applyStyles(effectiveSettings);
   }, [effectiveSettings]);
 
@@ -289,234 +223,9 @@ export default function OverlayPage() {
     if (s.alert_msg_size) root.style.setProperty('--alert-msg-size', `${s.alert_msg_size}px`);
   }
 
-  function playSynthesizedChime(volumePercent: number) {
-    try {
-      const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
-      if (!AudioCtx) return;
-      const ctx = new AudioCtx();
-      if (ctx.state === 'suspended') ctx.resume();
-
-      const masterGain = ctx.createGain();
-      masterGain.gain.setValueAtTime((volumePercent / 100) * 0.4, ctx.currentTime);
-      masterGain.connect(ctx.destination);
-
-      const notes = [523.25, 659.25, 783.99, 1046.50];
-      notes.forEach((freq, index) => {
-        const osc = ctx.createOscillator();
-        const noteGain = ctx.createGain();
-
-        osc.type = 'triangle';
-        osc.frequency.setValueAtTime(freq, ctx.currentTime);
-
-        const startTime = ctx.currentTime + (index * 0.08);
-        const duration = 0.6;
-
-        noteGain.gain.setValueAtTime(0, startTime);
-        noteGain.gain.linearRampToValueAtTime(0.8, startTime + 0.02);
-        noteGain.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
-
-        osc.connect(noteGain);
-        noteGain.connect(masterGain);
-
-        osc.start(startTime);
-        osc.stop(startTime + duration);
-      });
-    } catch (e) {
-      console.warn('Audio synthesis warning:', e);
-    }
-  }
-
-  function playAlertSound() {
-    const s = settingsRef.current;
-    const vol = parseFloat(String(s.alert_volume || 80));
-    const soundUrl = (s.alert_sound_url || '/sounds/alert.mp3').trim();
-    if (audioRef.current) {
-      if (audioRef.current.src !== soundUrl && !audioRef.current.src.endsWith(soundUrl)) {
-        audioRef.current.src = soundUrl;
-      }
-      audioRef.current.volume = Math.min(Math.max(vol / 100, 0), 1);
-      audioRef.current.currentTime = 0;
-      audioRef.current.play().catch(() => {
-        playSynthesizedChime(vol);
-      });
-    } else {
-      playSynthesizedChime(vol);
-    }
-  }
-
-  function dismissAlert() {
-    if (alertDismissTimeoutRef.current) {
-      clearTimeout(alertDismissTimeoutRef.current);
-      alertDismissTimeoutRef.current = null;
-    }
-    // Cut off any remaining audio to ensure alert card and sound stop together
-    if (ttsAudioRef.current) {
-      try {
-        ttsAudioRef.current.pause();
-        ttsAudioRef.current.currentTime = 0;
-      } catch (e) {}
-    }
-    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-      try {
-        window.speechSynthesis.cancel();
-      } catch (e) {}
-    }
-    isTtsSpeakingRef.current = false;
-
-    setAlertAnimState('hide');
-    setTimeout(() => {
-      setAlertAnimState('');
-      setCurrentAlert(null);
-      isPlayingRef.current = false;
-      processQueue();
-    }, 500);
-  }
-
-  function scheduleAlertDismiss(delayMs: number) {
-    if (alertDismissTimeoutRef.current) {
-      clearTimeout(alertDismissTimeoutRef.current);
-    }
-    alertDismissTimeoutRef.current = setTimeout(() => {
-      dismissAlert();
-    }, Math.max(delayMs, 0));
-  }
-
-  function onTtsEnded() {
-    if (!isPlayingRef.current) return;
-    isTtsSpeakingRef.current = false;
-    const minDurationMs = parseFloat(String(settingsRef.current.alert_duration || 8)) * 1000;
-    const elapsed = Date.now() - alertStartTimeRef.current;
-    // Keep showing card for 1.5s after TTS finishes speaking, or until minDurationMs is met
-    const remainingTime = Math.max(1500, minDurationMs - elapsed);
-    console.log(`[Overlay] TTS finished speaking. Remaining display time: ${remainingTime}ms`);
-    scheduleAlertDismiss(remainingTime);
-  }
-
-  function fallbackWebSpeech(textToSpeak: string, volume: number) {
-    if (!('speechSynthesis' in window)) {
-      onTtsEnded();
-      return;
-    }
-    try {
-      window.speechSynthesis.cancel();
-      const utterance = new SpeechSynthesisUtterance(textToSpeak);
-      utterance.lang = 'th-TH';
-      utterance.rate = 1.0;
-      utterance.pitch = 1.0;
-      utterance.volume = volume;
-
-      const voices = window.speechSynthesis.getVoices();
-      const thaiVoice = voices.find(v => v.lang.startsWith('th'));
-      if (thaiVoice) utterance.voice = thaiVoice;
-
-      utterance.onend = () => {
-        onTtsEnded();
-      };
-      utterance.onerror = (e) => {
-        console.warn('Web Speech utterance error:', e);
-        onTtsEnded();
-      };
-
-      window.speechSynthesis.speak(utterance);
-    } catch (e) {
-      console.warn('Web Speech error:', e);
-      onTtsEnded();
-    }
-  }
-
-  function speakDonation(item: Donation): boolean {
-    const s = settingsRef.current;
-    if (s.tts_enabled !== 'true' && s.tts_enabled !== true) return false;
-
-    const minAmt = parseFloat(String(s.tts_min_amount || 0));
-    const itemAmt = parseFloat(String(item.amount || 0));
-    if (itemAmt < minAmt) return false;
-
-    const donorName = item.name?.trim() || 'Anonymous';
-    const actionText = (s.alert_action_text || 'โดเนทให้').trim();
-    const thaiAmount = amountToThaiWords(itemAmt);
-    let textToSpeak = `${donorName} ${actionText} ${thaiAmount}`;
-    if (item.message && item.message.trim() !== '') {
-      textToSpeak += ` ${item.message.trim()}`;
-    }
-    textToSpeak = prepareTtsText(textToSpeak);
-    currentTtsTextRef.current = textToSpeak;
-
-    const volume = Math.min(Math.max(parseFloat(String(s.alert_volume || 80)) / 100, 0), 1);
-
-    if (ttsTimeoutRef.current) {
-      clearTimeout(ttsTimeoutRef.current);
-    }
-
-    const url = `/api/tts?text=${encodeURIComponent(textToSpeak)}`;
-    
-    if (ttsAudioRef.current) {
-      ttsAudioRef.current.src = url;
-      ttsAudioRef.current.volume = volume;
-      ttsAudioRef.current.load();
-    }
-
-    ttsTimeoutRef.current = setTimeout(() => {
-      if (ttsAudioRef.current) {
-        const playPromise = ttsAudioRef.current.play();
-        if (playPromise !== undefined) {
-          playPromise.catch(err => {
-            console.warn('[Overlay TTS] Audio play blocked or failed, falling back to Web Speech:', err);
-            fallbackWebSpeech(textToSpeak, volume);
-          });
-        }
-      } else {
-        fallbackWebSpeech(textToSpeak, volume);
-      }
-    }, 1200);
-
-    return true;
-  }
-
-  function processQueue() {
-    if (isPlayingRef.current || queueRef.current.length === 0) return;
-
-    isPlayingRef.current = true;
-    alertStartTimeRef.current = Date.now();
-    const item = queueRef.current.shift()!;
-    setCurrentAlert(item);
-
-    playAlertSound();
-    const willSpeak = speakDonation(item);
-
-    setAlertAnimState('show');
-
-    const minDurationMs = parseFloat(String(settingsRef.current.alert_duration || 8)) * 1000;
-
-    if (!willSpeak) {
-      scheduleAlertDismiss(minDurationMs);
-    } else {
-      isTtsSpeakingRef.current = true;
-      // Safety guard: dismiss if audio hangs longer than 35s
-      scheduleAlertDismiss(Math.max(minDurationMs, 35000));
-    }
-  }
-
-  function handleIncomingDonation(data: Donation) {
-    if (!data) return;
-    const id = String(data.id || `alert-${data.name}-${data.amount}-${Date.now()}`);
-    if (processedAlertIds.current.has(id)) {
-      return;
-    }
-    processedAlertIds.current.add(id);
-    if (processedAlertIds.current.size > 200) {
-      const first = processedAlertIds.current.values().next().value;
-      if (first) processedAlertIds.current.delete(first);
-    }
-
-    console.log('[OBS Overlay] Queued donation alert:', data);
-    queueRef.current.push({ ...data, id });
-    processQueue();
-  }
-
   const triggerLocalTest = () => {
     unlockAudio();
-    handleIncomingDonation({
+    enqueueDonation({
       id: 'test-direct-' + Date.now(),
       name: 'ผู้สนับสนุนใจดี',
       amount: 1000,
@@ -571,10 +280,11 @@ export default function OverlayPage() {
       bc = new BroadcastChannel('donation-alerts');
       bc.onmessage = (event) => {
         if (event.data?.type === 'donation' && event.data?.payload) {
-          console.log('[OBS Overlay] Received via BroadcastChannel:', event.data.payload);
-          handleIncomingDonation(event.data.payload);
+          enqueueDonation(event.data.payload);
         } else if (event.data?.type === 'settings_updated' && event.data?.payload) {
           setSettings(prev => ({ ...prev, ...event.data.payload }));
+        } else if (event.data?.type === 'skip_alert') {
+          dismissAlert();
         }
       };
     }
@@ -583,29 +293,23 @@ export default function OverlayPage() {
 
     channel
       .on('broadcast', { event: 'donation' }, (payload: any) => {
-        if (payload.payload) handleIncomingDonation(payload.payload);
+        if (payload.payload) enqueueDonation(payload.payload);
       })
       .on('broadcast', { event: 'settings_updated' }, (payload: any) => {
         if (payload.payload) {
-          console.log('[OBS Overlay] Settings updated live:', payload.payload);
           setSettings(prev => ({ ...prev, ...payload.payload }));
         }
       })
-      .subscribe((status: string) => {
-        console.log('[OBS Overlay] Supabase Realtime connection status:', status);
-      });
+      .on('broadcast', { event: 'skip_alert' }, () => {
+        dismissAlert();
+      })
+      .subscribe();
 
     return () => {
       supabase.removeChannel(channel);
       if (bc) bc.close();
-      if (ttsTimeoutRef.current) clearTimeout(ttsTimeoutRef.current);
-      if (alertDismissTimeoutRef.current) clearTimeout(alertDismissTimeoutRef.current);
     };
-  }, []);
-
-  const animClass = `anim-${settings.alert_animation || 'slide-down'}`;
-  const iconKey = settings.alert_icon || 'gift';
-  const IconComponent = ICONS[iconKey] || ICONS.gift;
+  }, [enqueueDonation, dismissAlert]);
 
   return (
     <div style={{
@@ -625,11 +329,7 @@ export default function OverlayPage() {
         ref={ttsAudioRef}
         preload="auto"
         onEnded={onTtsEnded}
-        onError={() => {
-          console.warn('[Overlay TTS] Audio element error, attempting Web Speech fallback');
-          const vol = Math.min(Math.max(parseFloat(String(settingsRef.current.alert_volume || 80)) / 100, 0), 1);
-          fallbackWebSpeech(currentTtsTextRef.current, vol);
-        }}
+        onError={handleTtsAudioError}
       />
 
       {/* Browser Autoplay Notice & Local Sound Tester (Hidden in OBS via ?obs=1 or close button) */}

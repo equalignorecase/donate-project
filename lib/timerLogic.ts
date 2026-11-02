@@ -242,3 +242,74 @@ export function readTimerConfig(settings: Record<string, string>): TimerConfig {
     timer_appearance: readTimerAppearance(settings)
   };
 }
+
+let timerMutexPromise: Promise<any> = Promise.resolve();
+
+export async function applyDonationToTimer(
+  dbClient: any,
+  donor: { name: string; amount: number }
+): Promise<{
+  remaining_seconds: number;
+  status: TimerStatus;
+  last_updated_at: string;
+  delta_seconds: number;
+  donor_name: string;
+  donor_amount: number;
+  reason: string;
+} | null> {
+  const task = async () => {
+    try {
+      const { data: timerRows } = await dbClient
+        .from('settings')
+        .select('key, value')
+        .ilike('key', 'timer_%');
+
+      if (!timerRows || timerRows.length === 0) return null;
+
+      const timerSettings: Record<string, string> = {};
+      timerRows.forEach((r: { key: string; value: string }) => {
+        timerSettings[r.key] = r.value;
+      });
+      const timerConfig = readTimerConfig(timerSettings);
+
+      if (!timerConfig.timer_enabled || timerConfig.timer_status === 'stopped') {
+        return null;
+      }
+
+      const { deltaSeconds, ruleMatched } = calculateTimerDelta(donor.amount, timerConfig);
+      if (deltaSeconds === 0) return null;
+
+      const currentSec = computeRemainingSeconds(timerConfig);
+      let newSec = Math.max(0, currentSec + deltaSeconds);
+      if (timerConfig.timer_max_cap_seconds > 0 && newSec > timerConfig.timer_max_cap_seconds) {
+        newSec = timerConfig.timer_max_cap_seconds;
+      }
+
+      const nowIso = new Date().toISOString();
+      await dbClient.from('settings').upsert(
+        [
+          { key: 'timer_remaining_seconds', value: String(newSec) },
+          { key: 'timer_last_updated_at', value: nowIso }
+        ],
+        { onConflict: 'key' }
+      );
+
+      return {
+        remaining_seconds: newSec,
+        status: timerConfig.timer_status,
+        last_updated_at: nowIso,
+        delta_seconds: deltaSeconds,
+        donor_name: donor.name,
+        donor_amount: donor.amount,
+        reason: ruleMatched
+      };
+    } catch (err: any) {
+      console.warn('Timer update on donation error:', err?.message || err);
+      return null;
+    }
+  };
+
+  const next = timerMutexPromise.then(task, task);
+  timerMutexPromise = next.catch(() => null);
+  return next;
+}

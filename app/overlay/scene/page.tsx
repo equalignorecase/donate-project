@@ -1,23 +1,24 @@
 'use client';
 
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import { Donation, AlertSettings } from '@/lib/types/database';
 import {
   StudioSceneLayout,
   defaultSceneLayout,
-  getStoredLayout
+  getStoredLayout,
+  saveStoredLayout,
+  parseSceneLayout
 } from '@/lib/studioLayout';
 import GoalWidget from '@/app/overlay/goal/GoalWidget';
 import SupporterWidget from '@/app/overlay/supporters/SupporterWidget';
 import TimerCard from '@/app/overlay/timer/TimerCard';
-import AlertCard, { defaultAlertSettings, getAlertTier } from '@/app/overlay/alert/AlertCard';
+import AlertCard, { defaultAlertSettings } from '@/app/overlay/alert/AlertCard';
 import { goalAppearanceDefaults, GoalAppearance } from '@/lib/goalAppearance';
 import { supporterDefaults, SupporterAppearance } from '@/lib/supporterAppearance';
 import { defaultTimerAppearance, TimerAppearance, TimerStatus } from '@/lib/timerTypes';
 import { Supporter } from '@/lib/widgets';
-import { amountToThaiWords } from '@/lib/thaiNumber';
-import { prepareTtsText } from '@/lib/tts-helper';
+import { useAlertQueue } from '@/app/overlay/useAlertQueue';
 import '@/app/overlay/overlay.css';
 import '@/app/overlay/widgets.css';
 import '@/app/overlay/timer/timer.css';
@@ -41,39 +42,17 @@ export default function OverlayScenePage() {
 
   // Alert Box State
   const [alertSettings, setAlertSettings] = useState<AlertSettings>(defaultAlertSettings);
-  const [currentAlert, setCurrentAlert] = useState<Donation | null>(null);
-  const [alertAnimState, setAlertAnimState] = useState<string>('');
-  const queueRef = useRef<Donation[]>([]);
-  const isPlayingRef = useRef<boolean>(false);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
-  const ttsAudioRef = useRef<HTMLAudioElement | null>(null);
-  const ttsTimeoutRef = useRef<any>(null);
-  const alertStartTimeRef = useRef<number>(0);
-  const alertDismissTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const processedAlertIds = useRef<Set<string>>(new Set());
-
-  // Unlock audio context on user interaction
-  const unlockAudio = () => {
-    try {
-      if (audioRef.current && audioRef.current.paused) {
-        audioRef.current.play().then(() => {
-          audioRef.current?.pause();
-          audioRef.current.currentTime = 0;
-        }).catch(() => {});
-      }
-      if (ttsAudioRef.current && ttsAudioRef.current.paused) {
-        ttsAudioRef.current.play().then(() => {
-          ttsAudioRef.current?.pause();
-          ttsAudioRef.current.currentTime = 0;
-        }).catch(() => {});
-      }
-      const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
-      if (AudioCtx) {
-        const ctx = new AudioCtx();
-        if (ctx.state === 'suspended') ctx.resume().catch(() => {});
-      }
-    } catch (e) {}
-  };
+  const {
+    currentAlert,
+    alertAnimState,
+    audioRef,
+    ttsAudioRef,
+    unlockAudio,
+    enqueueDonation,
+    dismissAlert,
+    onTtsEnded,
+    handleTtsAudioError
+  } = useAlertQueue(alertSettings);
 
   // Load layout from localStorage
   useEffect(() => {
@@ -131,10 +110,15 @@ export default function OverlayScenePage() {
     } catch {}
 
     try {
-      const aRes = await fetch('/api/admin/settings', { cache: 'no-store' });
+      const aRes = await fetch('/api/settings', { cache: 'no-store' });
       const aData = await aRes.json();
       if (aData.success && aData.settings) {
         setAlertSettings(prev => ({ ...prev, ...aData.settings }));
+        const remoteLayout = parseSceneLayout(aData.settings.stream_studio_layout);
+        if (remoteLayout) {
+          setLayout(remoteLayout);
+          saveStoredLayout(remoteLayout);
+        }
       }
     } catch {}
   };
@@ -145,128 +129,9 @@ export default function OverlayScenePage() {
     return () => clearInterval(interval);
   }, []);
 
-  function dismissAlert() {
-    if (alertDismissTimeoutRef.current) {
-      clearTimeout(alertDismissTimeoutRef.current);
-      alertDismissTimeoutRef.current = null;
-    }
-    if (ttsAudioRef.current) {
-      try {
-        ttsAudioRef.current.pause();
-        ttsAudioRef.current.currentTime = 0;
-      } catch (e) {}
-    }
-    setAlertAnimState('hide');
-    setTimeout(() => {
-      setAlertAnimState('');
-      setCurrentAlert(null);
-      isPlayingRef.current = false;
-      processQueue();
-    }, 500);
-  }
-
-  function scheduleAlertDismiss(delayMs: number) {
-    if (alertDismissTimeoutRef.current) {
-      clearTimeout(alertDismissTimeoutRef.current);
-    }
-    alertDismissTimeoutRef.current = setTimeout(() => {
-      dismissAlert();
-    }, Math.max(delayMs, 0));
-  }
-
-  function onTtsEnded() {
-    if (!isPlayingRef.current) return;
-    const minDurationMs = Math.max(3, Number(alertSettings.alert_duration) || 8) * 1000;
-    const elapsed = Date.now() - alertStartTimeRef.current;
-    const remainingTime = Math.max(1500, minDurationMs - elapsed);
-    scheduleAlertDismiss(remainingTime);
-  }
-
-  function speakDonation(item: Donation): boolean {
-    const s = alertSettings;
-    if (s.tts_enabled !== 'true' && s.tts_enabled !== true) return false;
-
-    const minAmt = parseFloat(String(s.tts_min_amount || 0));
-    const itemAmt = parseFloat(String(item.amount || 0));
-    if (itemAmt < minAmt) return false;
-
-    const donorName = item.name?.trim() || 'Anonymous';
-    const actionText = (s.alert_action_text || 'โดเนทให้').trim();
-    const thaiAmount = amountToThaiWords(itemAmt);
-    let textToSpeak = `${donorName} ${actionText} ${thaiAmount}`;
-    if (item.message && item.message.trim() !== '') {
-      textToSpeak += ` ${item.message.trim()}`;
-    }
-    textToSpeak = prepareTtsText(textToSpeak);
-    const volume = Math.min(Math.max(parseFloat(String(s.alert_volume || 80)) / 100, 0), 1);
-
-    if (ttsTimeoutRef.current) {
-      clearTimeout(ttsTimeoutRef.current);
-    }
-
-    const url = `/api/tts?text=${encodeURIComponent(textToSpeak)}`;
-    if (ttsAudioRef.current) {
-      ttsAudioRef.current.src = url;
-      ttsAudioRef.current.volume = volume;
-      ttsAudioRef.current.load();
-    }
-
-    ttsTimeoutRef.current = setTimeout(() => {
-      if (ttsAudioRef.current) {
-        ttsAudioRef.current.play().catch(() => {
-          onTtsEnded();
-        });
-      } else {
-        onTtsEnded();
-      }
-    }, 1200);
-
-    return true;
-  }
-
-  // Alert queue processing
-  function processQueue() {
-    if (isPlayingRef.current || queueRef.current.length === 0) return;
-    isPlayingRef.current = true;
-    alertStartTimeRef.current = Date.now();
-    const item = queueRef.current.shift()!;
-    setCurrentAlert(item);
-
-    if (audioRef.current) {
-      const soundUrl = (alertSettings.alert_sound_url || '/sounds/alert.mp3').trim();
-      if (audioRef.current.src !== soundUrl && !audioRef.current.src.endsWith(soundUrl)) {
-        audioRef.current.src = soundUrl;
-      }
-      const vol = Math.min(Math.max((Number(alertSettings.alert_volume ?? 80)) / 100, 0), 1);
-      audioRef.current.volume = vol;
-      audioRef.current.currentTime = 0;
-      audioRef.current.play().catch(() => {});
-    }
-
-    const willSpeak = speakDonation(item);
-
-    setAlertAnimState('show');
-
-    const minDurationMs = Math.max(3, Number(alertSettings.alert_duration) || 8) * 1000;
-    if (!willSpeak) {
-      scheduleAlertDismiss(minDurationMs);
-    } else {
-      scheduleAlertDismiss(Math.max(minDurationMs, 35000));
-    }
-  }
-
   function handleIncomingDonation(payload: Donation) {
     if (!payload) return;
-    const id = String(payload.id || `scene-alert-${Date.now()}`);
-    if (processedAlertIds.current.has(id)) return;
-    processedAlertIds.current.add(id);
-    if (processedAlertIds.current.size > 200) {
-      const first = processedAlertIds.current.values().next().value;
-      if (first) processedAlertIds.current.delete(first);
-    }
-
-    queueRef.current.push({ ...payload, id });
-    processQueue();
+    enqueueDonation(payload);
     void refreshWidgets();
   }
 
@@ -280,7 +145,14 @@ export default function OverlayScenePage() {
           handleIncomingDonation(event.data.payload);
         } else if (event.data?.type === 'settings_updated' && event.data?.payload) {
           setAlertSettings(prev => ({ ...prev, ...event.data.payload }));
+          const remoteLayout = parseSceneLayout(event.data.payload.stream_studio_layout);
+          if (remoteLayout) {
+            setLayout(remoteLayout);
+            saveStoredLayout(remoteLayout);
+          }
           void refreshWidgets();
+        } else if (event.data?.type === 'skip_alert') {
+          dismissAlert();
         }
       };
     }
@@ -294,18 +166,24 @@ export default function OverlayScenePage() {
       .on('broadcast', { event: 'settings_updated' }, (payload: any) => {
         if (payload?.payload) {
           setAlertSettings(prev => ({ ...prev, ...payload.payload }));
+          const remoteLayout = parseSceneLayout(payload.payload.stream_studio_layout);
+          if (remoteLayout) {
+            setLayout(remoteLayout);
+            saveStoredLayout(remoteLayout);
+          }
         }
         void refreshWidgets();
+      })
+      .on('broadcast', { event: 'skip_alert' }, () => {
+        dismissAlert();
       })
       .subscribe();
 
     return () => {
       void supabase.removeChannel(channel);
       if (bc) bc.close();
-      if (ttsTimeoutRef.current) clearTimeout(ttsTimeoutRef.current);
-      if (alertDismissTimeoutRef.current) clearTimeout(alertDismissTimeoutRef.current);
     };
-  }, []);
+  }, [enqueueDonation, dismissAlert]);
 
   return (
     <div
@@ -324,7 +202,7 @@ export default function OverlayScenePage() {
         ref={ttsAudioRef}
         preload="auto"
         onEnded={onTtsEnded}
-        onError={() => onTtsEnded()}
+        onError={handleTtsAudioError}
       />
 
       {/* 1. Alert Box */}

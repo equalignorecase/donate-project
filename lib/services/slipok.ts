@@ -226,6 +226,22 @@ export async function verifySlip({
     }
   }
 
+  // 2.5 Optional Slip Age Check (if slip_max_age_minutes > 0 in settings)
+  const maxAgeMinRaw = await getSettingValue('slip_max_age_minutes', process.env.SLIP_MAX_AGE_MINUTES || '0');
+  const maxAgeMinutes = parseInt(maxAgeMinRaw, 10) || 0;
+  if (maxAgeMinutes > 0 && slipData.transTimestamp) {
+    const slipTimeMs = Date.parse(slipData.transTimestamp);
+    if (Number.isFinite(slipTimeMs)) {
+      const ageMinutes = (Date.now() - slipTimeMs) / 60000;
+      if (ageMinutes > maxAgeMinutes) {
+        const err: any = new Error(`สลิปนี้โอนเกินเวลาที่กำหนด (${maxAgeMinutes} นาที) กรุณาใช้สลิปที่เพิ่งโอนใหม่`);
+        err.code = 1011;
+        err.details = { transRef, slipData };
+        throw err;
+      }
+    }
+  }
+
   // 3. Check Receiver (Supports both PromptPay and Bank Accounts)
   const expectedReceiverName = await getSettingValue('receiver_name', process.env.RECEIVER_NAME || '');
   const expectedReceiverAccount = await getSettingValue('receiver_account', process.env.RECEIVER_ACCOUNT || '');

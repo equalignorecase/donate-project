@@ -115,6 +115,7 @@ export interface AlertSettings {
   alert_msg_border?: string;
   alert_msg_size?: number | string;
   alert_animation?: string;
+  alert_exit_animation?: 'auto' | 'fade' | 'blur-dissolve' | 'float-up' | 'shrink-pop' | 'slide-right' | string;
   alert_duration?: number | string;
   alert_volume?: number | string;
   alert_sound_url?: string;

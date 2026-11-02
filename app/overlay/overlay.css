@@ -188,7 +188,7 @@ body.overlay-body {
 }
 
 .alert-wrapper.anim-slide-down.hide {
-  animation: alert-slide-down-out 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: alert-slide-down-out 0.55s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
 /* Animation 2: Bounce Pop */
@@ -226,7 +226,7 @@ body.overlay-body {
 }
 
 .alert-wrapper.anim-bounce.hide {
-  animation: alert-bounce-out 0.35s ease-in forwards;
+  animation: alert-bounce-out 0.55s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
 /* Animation 3: Zoom Fade */
@@ -257,7 +257,7 @@ body.overlay-body {
 }
 
 .alert-wrapper.anim-zoom.hide {
-  animation: alert-zoom-out 0.35s ease-in forwards;
+  animation: alert-zoom-out 0.55s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
 /* Animation 4: Slide Left */
@@ -288,7 +288,99 @@ body.overlay-body {
 }
 
 .alert-wrapper.anim-slide-left.hide {
-  animation: alert-slide-left-out 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: alert-slide-left-out 0.55s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+/* ==========================================================
+   Dedicated Exit Animations (alert_exit_animation)
+   ========================================================== */
+
+/* Exit 1: Smooth Fade Out */
+@keyframes alert-exit-fade {
+  0% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.98);
+  }
+}
+
+.alert-wrapper.exit-fade.hide {
+  animation: alert-exit-fade 0.55s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+/* Exit 2: Blur Dissolve (Default) */
+@keyframes alert-exit-blur-dissolve {
+  0% {
+    opacity: 1;
+    filter: blur(0px);
+    transform: translateY(0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    filter: blur(14px);
+    transform: translateY(-6px) scale(1.04);
+  }
+}
+
+.alert-wrapper.exit-blur-dissolve.hide {
+  animation: alert-exit-blur-dissolve 0.55s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+/* Exit 3: Float Up */
+@keyframes alert-exit-float-up {
+  0% {
+    opacity: 1;
+    filter: blur(0px);
+    transform: translateY(0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    filter: blur(4px);
+    transform: translateY(-48px) scale(0.95);
+  }
+}
+
+.alert-wrapper.exit-float-up.hide {
+  animation: alert-exit-float-up 0.55s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+/* Exit 4: Shrink Pop */
+@keyframes alert-exit-shrink-pop {
+  0% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  28% {
+    opacity: 1;
+    transform: scale(1.06);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.35);
+  }
+}
+
+.alert-wrapper.exit-shrink-pop.hide {
+  animation: alert-exit-shrink-pop 0.55s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+/* Exit 5: Slide Out Right */
+@keyframes alert-exit-slide-right {
+  0% {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(90px) scale(0.95);
+  }
+}
+
+.alert-wrapper.exit-slide-right.hide {
+  animation: alert-exit-slide-right 0.55s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
 /* Idle / Preview State (for Studio Simulator and Customizer) */
