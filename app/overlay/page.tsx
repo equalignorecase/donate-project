@@ -92,6 +92,7 @@ export default function OverlayPage() {
     unlockAudio: baseUnlockAudio,
     enqueueDonation,
     dismissAlert,
+    setQueuePaused,
     onTtsEnded,
     handleTtsAudioError
   } = useAlertQueue(effectiveSettings);
@@ -285,6 +286,10 @@ export default function OverlayPage() {
           setSettings(prev => ({ ...prev, ...event.data.payload }));
         } else if (event.data?.type === 'skip_alert') {
           dismissAlert();
+        } else if (event.data?.type === 'pause_queue') {
+          setQueuePaused(true);
+        } else if (event.data?.type === 'resume_queue') {
+          setQueuePaused(false);
         }
       };
     }
@@ -303,13 +308,19 @@ export default function OverlayPage() {
       .on('broadcast', { event: 'skip_alert' }, () => {
         dismissAlert();
       })
+      .on('broadcast', { event: 'pause_queue' }, () => {
+        setQueuePaused(true);
+      })
+      .on('broadcast', { event: 'resume_queue' }, () => {
+        setQueuePaused(false);
+      })
       .subscribe();
 
     return () => {
       supabase.removeChannel(channel);
       if (bc) bc.close();
     };
-  }, [enqueueDonation, dismissAlert]);
+  }, [enqueueDonation, dismissAlert, setQueuePaused]);
 
   return (
     <div style={{

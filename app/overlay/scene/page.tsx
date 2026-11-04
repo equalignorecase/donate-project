@@ -50,6 +50,7 @@ export default function OverlayScenePage() {
     unlockAudio,
     enqueueDonation,
     dismissAlert,
+    setQueuePaused,
     onTtsEnded,
     handleTtsAudioError
   } = useAlertQueue(alertSettings);
@@ -153,6 +154,10 @@ export default function OverlayScenePage() {
           void refreshWidgets();
         } else if (event.data?.type === 'skip_alert') {
           dismissAlert();
+        } else if (event.data?.type === 'pause_queue') {
+          setQueuePaused(true);
+        } else if (event.data?.type === 'resume_queue') {
+          setQueuePaused(false);
         }
       };
     }
@@ -177,13 +182,19 @@ export default function OverlayScenePage() {
       .on('broadcast', { event: 'skip_alert' }, () => {
         dismissAlert();
       })
+      .on('broadcast', { event: 'pause_queue' }, () => {
+        setQueuePaused(true);
+      })
+      .on('broadcast', { event: 'resume_queue' }, () => {
+        setQueuePaused(false);
+      })
       .subscribe();
 
     return () => {
       void supabase.removeChannel(channel);
       if (bc) bc.close();
     };
-  }, [enqueueDonation, dismissAlert]);
+  }, [enqueueDonation, dismissAlert, setQueuePaused]);
 
   return (
     <div

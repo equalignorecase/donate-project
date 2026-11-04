@@ -49,6 +49,7 @@ export function useAlertQueue(settings: AlertSettings) {
 
   const queueRef = useRef<Donation[]>([]);
   const isPlayingRef = useRef<boolean>(false);
+  const isQueuePausedRef = useRef<boolean>(false);
   const settingsRef = useRef<AlertSettings>(settings);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const ttsAudioRef = useRef<HTMLAudioElement | null>(null);
@@ -247,7 +248,7 @@ export function useAlertQueue(settings: AlertSettings) {
   );
 
   const processQueue = useCallback(() => {
-    if (isPlayingRef.current || queueRef.current.length === 0) return;
+    if (isQueuePausedRef.current || isPlayingRef.current || queueRef.current.length === 0) return;
 
     isPlayingRef.current = true;
     alertStartTimeRef.current = Date.now();
@@ -292,6 +293,16 @@ export function useAlertQueue(settings: AlertSettings) {
     [processQueue]
   );
 
+  const setQueuePaused = useCallback(
+    (paused: boolean) => {
+      isQueuePausedRef.current = paused;
+      if (!paused) {
+        processQueue();
+      }
+    },
+    [processQueue]
+  );
+
   const handleTtsAudioError = useCallback(() => {
     const vol = Math.min(Math.max(parseFloat(String(settingsRef.current.alert_volume ?? 80)) / 100, 0), 1);
     fallbackWebSpeech(currentTtsTextRef.current, vol);
@@ -313,6 +324,7 @@ export function useAlertQueue(settings: AlertSettings) {
     unlockAudio,
     enqueueDonation,
     dismissAlert,
+    setQueuePaused,
     onTtsEnded,
     handleTtsAudioError
   };

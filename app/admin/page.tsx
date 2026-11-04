@@ -1,8 +1,10 @@
 'use client';
 
-import React, { useState, useEffect, useMemo, Suspense } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, Suspense } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { SkipForward, Pause, Play, Send } from 'lucide-react';
+import { supabase } from '@/lib/supabaseClient';
 import { Donation } from '@/lib/types/database';
 import { StatCard, StatCardSkeleton, Skeleton } from '@/app/components';
 import { useAdmin } from './AdminContext';
@@ -12,15 +14,23 @@ function AdminOverviewContent() {
   const searchParams = useSearchParams();
   const { showToast, handleUnauthorized, refreshCounts } = useAdmin();
 
-  const [stats, setStats] = useState<{ count: number; totalAmount: number; todayCount: number; todayAmount: number }>({
+  const [stats, setStats] = useState<{
+    count: number;
+    totalAmount: number;
+    todayCount: number;
+    todayAmount: number;
+    topDonator?: string;
+  }>({
     count: 0,
     totalAmount: 0,
     todayCount: 0,
-    todayAmount: 0
+    todayAmount: 0,
+    topDonator: '-'
   });
   const [quota, setQuota] = useState<any>(null);
   const [recentDonations, setRecentDonations] = useState<Donation[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isQueuePaused, setIsQueuePaused] = useState<boolean>(false);
 
   const [testName, setTestName] = useState<string>('Naaa ผู้สนับสนุนตัวอย่าง');
   const [testAmount, setTestAmount] = useState<string>('50');
@@ -38,8 +48,8 @@ function AdminOverviewContent() {
     }
   }, [searchParams, router]);
 
-  const fetchData = async () => {
-    setIsLoading(true);
+  const fetchData = useCallback(async (silent = false) => {
+    if (!silent) setIsLoading(true);
     try {
       const sRes = await fetch('/api/admin/stats', { headers: { 'Content-Type': 'application/json' } });
       if (sRes.status === 401) {
@@ -60,18 +70,46 @@ function AdminOverviewContent() {
     } catch (err) {
       console.error('Error fetching admin dashboard data:', err);
     } finally {
-      setIsLoading(false);
+      if (!silent) setIsLoading(false);
     }
-  };
+  }, [handleUnauthorized]);
 
   useEffect(() => {
-    fetchData();
-  }, []);
+    void fetchData();
+
+    let bc: BroadcastChannel | null = null;
+    if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
+      bc = new BroadcastChannel('donation-alerts');
+      bc.onmessage = (event) => {
+        if (event.data?.type === 'donation' && !event.data?.payload?.isTest) {
+          void fetchData(true);
+          refreshCounts();
+        }
+      };
+    }
+
+    const channel = supabase
+      .channel('admin-overview-live')
+      .on('broadcast', { event: 'donation' }, (payload: any) => {
+        if (!payload?.payload?.isTest) {
+          void fetchData(true);
+          refreshCounts();
+        }
+      })
+      .subscribe();
+
+    return () => {
+      void supabase.removeChannel(channel);
+      if (bc) bc.close();
+    };
+  }, [fetchData, refreshCounts]);
 
   const topDonator = useMemo(() => {
-    if (!recentDonations.length) return '-';
+    if (stats.topDonator && stats.topDonator !== '-') return stats.topDonator;
+    const verifiedList = recentDonations.filter(d => d.status !== 'failed' && d.status !== 'pending');
+    if (!verifiedList.length) return '-';
     const donatorTotals: Record<string, number> = {};
-    recentDonations.forEach(d => {
+    verifiedList.forEach(d => {
       const name = (d.name || 'Anonymous').trim();
       donatorTotals[name] = (donatorTotals[name] || 0) + (parseFloat(String(d.amount)) || 0);
     });
@@ -84,7 +122,37 @@ function AdminOverviewContent() {
       }
     }
     return top;
-  }, [recentDonations]);
+  }, [stats.topDonator, recentDonations]);
+
+  const handleAlertControl = async (action: 'skip_alert' | 'pause_queue' | 'resume_queue') => {
+    try {
+      if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
+        try {
+          const bc = new BroadcastChannel('donation-alerts');
+          bc.postMessage({ type: action });
+          bc.close();
+        } catch {}
+      }
+
+      const res = await fetch('/api/admin/alert-control', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action })
+      });
+      if (res.status === 401) {
+        handleUnauthorized();
+        return;
+      }
+      const data = await res.json();
+      if (data.success) {
+        if (action === 'pause_queue') setIsQueuePaused(true);
+        if (action === 'resume_queue') setIsQueuePaused(false);
+        showToast(data.message);
+      }
+    } catch (e: any) {
+      alert('เกิดข้อผิดพลาด: ' + e.message);
+    }
+  };
 
   const handleSendTestAlert = async () => {
     try {
@@ -201,6 +269,64 @@ function AdminOverviewContent() {
           </>
         )}
       </div>
+      {/* Live Stream Alert Control Bar */}
+      <div className="panel" style={{ marginBottom: '20px', padding: '16px 20px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
+          <div>
+            <div style={{ fontWeight: 700, fontSize: '15px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{
+                width: '9px',
+                height: '9px',
+                borderRadius: '50%',
+                background: isQueuePaused ? '#f59e0b' : '#22c55e',
+                display: 'inline-block'
+              }} />
+              <span>ควบคุมการแจ้งเตือนสดบนจอ OBS (Live Alert Controls)</span>
+            </div>
+            <div style={{ fontSize: '12.5px', color: 'var(--text-muted)', marginTop: '2px' }}>
+              {isQueuePaused
+                ? 'สถานะคิว: พักการแสดง Alert ชั่วคราว (รายการใหม่จะถูกเก็บเข้าคิวรอไว้)'
+                : 'สถานะคิว: พร้อมแสดงผลปกติ (สั่งข้ามเสียงอ่าน TTS หรือยิงทดสอบได้ทันที)'}
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
+            <button
+              type="button"
+              className="btn secondary sm"
+              onClick={() => handleAlertControl('skip_alert')}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+              title="ข้ามการ์ดแจ้งเตือนที่กำลังแสดงและตัดเสียงอ่าน TTS ทันที"
+            >
+              <SkipForward size={14} />
+              <span>ข้าม Alert / หยุด TTS</span>
+            </button>
+
+            <button
+              type="button"
+              className={`btn sm ${isQueuePaused ? 'primary' : 'secondary'}`}
+              onClick={() => handleAlertControl(isQueuePaused ? 'resume_queue' : 'pause_queue')}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+              title={isQueuePaused ? 'กลับมาเล่นคิวแจ้งเตือนที่ค้างอยู่ต่อ' : 'พักการเด้งแจ้งเตือนชั่วคราว'}
+            >
+              {isQueuePaused ? <Play size={14} /> : <Pause size={14} />}
+              <span>{isQueuePaused ? 'เล่นคิว Alert ต่อ' : 'พักคิว Alert'}</span>
+            </button>
+
+            <button
+              type="button"
+              className="btn primary sm"
+              onClick={handleSendTestAlert}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+              title="ส่งแจ้งเตือนจำลองไปยังหน้าจอ OBS ทันที"
+            >
+              <Send size={14} />
+              <span>ส่ง Test Alert (50฿)</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
       {/* Recent Donations Preview */}
       <div className="panel">
         <div className="panel-header">
@@ -259,21 +385,31 @@ function AdminOverviewContent() {
               </thead>
               <tbody>
                 {recentDonations.map((item) => (
-                  <tr key={item.id}>
+                  <tr key={item.id} style={item.status === 'failed' ? { background: 'var(--danger-soft)' } : {}}>
                     <td style={{ whiteSpace: 'nowrap', fontSize: '12px', color: 'var(--text-muted)' }}>
                       {item.created_at ? new Date(item.created_at).toLocaleString('th-TH', { timeZone: 'Asia/Bangkok' }) : '-'}
                     </td>
                     <td style={{ fontWeight: 600 }}>{item.name || 'ไม่ระบุชื่อ'}</td>
-                    <td style={{ fontWeight: 700, color: 'var(--success)' }}>
-                      ฿{(parseFloat(String(item.amount)) || 0).toLocaleString('th-TH', { minimumFractionDigits: 2 })}
+                    <td style={{ fontWeight: 700, color: item.status === 'failed' ? 'var(--text-dim)' : 'var(--success)' }}>
+                      {item.status === 'failed' ? (
+                        <span style={{ textDecoration: 'line-through', opacity: 0.65 }}>
+                          ฿{(parseFloat(String(item.amount)) || 0).toLocaleString('th-TH', { minimumFractionDigits: 2 })}
+                        </span>
+                      ) : (
+                        `฿${(parseFloat(String(item.amount)) || 0).toLocaleString('th-TH', { minimumFractionDigits: 2 })}`
+                      )}
                     </td>
                     <td style={{ maxWidth: '280px', wordBreak: 'break-word', color: 'var(--text-muted)' }}>
                       {item.message || '-'}
                     </td>
                     <td>
-                      <span className={`badge ${item.status === 'pending' ? 'pending' : 'verified'}`}>
-                        {item.status === 'pending' ? 'รอตรวจสอบ' : 'Verified'}
-                      </span>
+                      {item.status === 'failed' ? (
+                        <span className="badge failed">ไม่ผ่าน</span>
+                      ) : item.status === 'pending' ? (
+                        <span className="badge pending">รอตรวจสอบ</span>
+                      ) : (
+                        <span className="badge verified">สำเร็จ</span>
+                      )}
                     </td>
                   </tr>
                 ))}

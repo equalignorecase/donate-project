@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { createPortal } from 'react-dom';
-import { Plus, Trash2, Edit3, RefreshCw, X, AlertTriangle, MoreHorizontal, Play } from 'lucide-react';
+import { Plus, Trash2, Edit3, RefreshCw, X, AlertTriangle, MoreHorizontal, Play, Download, SkipForward } from 'lucide-react';
+import { supabase } from '@/lib/supabaseClient';
 import { Donation } from '@/lib/types/database';
 import { Skeleton } from '@/app/components';
 import { useAdmin } from '../AdminContext';
@@ -88,8 +89,8 @@ export default function AdminDonationsPage() {
     };
   }, [isAnyModalOpen, isSubmitting]);
 
-  const fetchDonations = async () => {
-    setIsLoading(true);
+  const fetchDonations = useCallback(async (silent = false) => {
+    if (!silent) setIsLoading(true);
     try {
       const res = await fetch('/api/admin/donations?limit=500', {
         headers: { 'Content-Type': 'application/json' }
@@ -106,13 +107,64 @@ export default function AdminDonationsPage() {
     } catch (err) {
       console.error('Error fetching donations:', err);
     } finally {
-      setIsLoading(false);
+      if (!silent) setIsLoading(false);
     }
-  };
+  }, [handleUnauthorized, refreshCounts]);
 
   useEffect(() => {
-    fetchDonations();
-  }, []);
+    void fetchDonations();
+
+    let bc: BroadcastChannel | null = null;
+    if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
+      bc = new BroadcastChannel('donation-alerts');
+      bc.onmessage = (event) => {
+        if (event.data?.type === 'donation' && !event.data?.payload?.isTest) {
+          void fetchDonations(true);
+        }
+      };
+    }
+
+    const channel = supabase
+      .channel('admin-donations-live')
+      .on('broadcast', { event: 'donation' }, (payload: any) => {
+        if (!payload?.payload?.isTest) {
+          void fetchDonations(true);
+        }
+      })
+      .subscribe();
+
+    return () => {
+      void supabase.removeChannel(channel);
+      if (bc) bc.close();
+    };
+  }, [fetchDonations]);
+
+  const handleSkipCurrentAlert = async () => {
+    try {
+      if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
+        try {
+          const bc = new BroadcastChannel('donation-alerts');
+          bc.postMessage({ type: 'skip_alert' });
+          bc.close();
+        } catch {}
+      }
+      const res = await fetch('/api/admin/alert-control', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'skip_alert' })
+      });
+      if (res.status === 401) {
+        handleUnauthorized();
+        return;
+      }
+      const data = await res.json();
+      if (data.success) {
+        showToast(data.message);
+      }
+    } catch (e: any) {
+      alert('เกิดข้อผิดพลาด: ' + e.message);
+    }
+  };
 
   const handleReplayAlert = async (item: Donation) => {
     if (item.status === 'failed') return;
@@ -410,6 +462,45 @@ export default function AdminDonationsPage() {
     return raw.replace(/^FAIL-[a-zA-Z0-9_-]+\s*[:|]\s*/i, '').trim() || raw;
   };
 
+  const handleExportCSV = () => {
+    if (filteredDonations.length === 0) {
+      showToast('ไม่มีรายการโดเนทสำหรับส่งออก');
+      return;
+    }
+
+    const escapeCsv = (val: any) => {
+      const str = String(val ?? '').replace(/\r?\n/g, ' ');
+      return `"${str.replace(/"/g, '""')}"`;
+    };
+
+    const headers = ['วัน-เวลา', 'ชื่อผู้สนับสนุน', 'ยอดเงิน (บาท)', 'ข้อความ', 'ช่องทาง/ธนาคาร', 'รหัสอ้างอิง/สลิป', 'สถานะ'];
+    const rows = filteredDonations.map((item) => [
+      item.created_at ? new Date(item.created_at).toLocaleString('th-TH', { timeZone: 'Asia/Bangkok' }) : '-',
+      item.name || 'ไม่ระบุชื่อ',
+      parseFloat(String(item.amount)) || 0,
+      item.message || '',
+      item.sender_bank || 'PROMPTPAY',
+      formatSlipRef(item.transaction_ref || item.trans_ref || item.slip_url),
+      item.status === 'failed' ? 'ไม่ผ่าน' : item.status === 'pending' ? 'รอตรวจสอบ' : 'สำเร็จ'
+    ]);
+
+    const csvContent =
+      '\uFEFF' +
+      [headers.map(escapeCsv).join(','), ...rows.map((r) => r.map(escapeCsv).join(','))].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `donations_${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+
+    showToast(`ดาวน์โหลดไฟล์ CSV (${filteredDonations.length} รายการ) เรียบร้อยแล้ว`);
+  };
+
   return (
     <div className="panel">
       <div className="panel-header" style={{ flexWrap: 'wrap', gap: '12px' }}>
@@ -434,6 +525,29 @@ export default function AdminDonationsPage() {
             เพิ่มรายการโดเนท
           </button>
 
+          <button
+            type="button"
+            className="btn secondary sm"
+            onClick={handleSkipCurrentAlert}
+            style={{ display: 'flex', alignItems: 'center', gap: '5px' }}
+            title="ข้าม Alert ที่กำลังแสดงและหยุดเสียงอ่าน TTS บนจอ OBS ทันที"
+          >
+            <SkipForward size={14} />
+            ข้าม Alert / หยุด TTS
+          </button>
+
+          <button
+            type="button"
+            className="btn secondary sm"
+            onClick={handleExportCSV}
+            disabled={filteredDonations.length === 0}
+            style={{ display: 'flex', alignItems: 'center', gap: '5px' }}
+            title="ดาวน์โหลดรายการตามตัวกรองเป็นไฟล์ CSV (เปิดใน Excel ได้)"
+          >
+            <Download size={14} />
+            ส่งออก CSV
+          </button>
+
           {failedCount > 0 && (
             <button
               type="button"
@@ -447,7 +561,7 @@ export default function AdminDonationsPage() {
             </button>
           )}
 
-          <button type="button" className="btn secondary sm" onClick={fetchDonations} disabled={isLoading} style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+          <button type="button" className="btn secondary sm" onClick={() => void fetchDonations()} disabled={isLoading} style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
             <RefreshCw size={14} className={isLoading ? 'animate-spin' : ''} />
             {isLoading ? 'กำลังโหลด...' : 'รีเฟรชตาราง'}
           </button>

@@ -14,7 +14,7 @@ export async function GET(request: Request) {
   try {
     const { data: totalDonations, error: totalErr } = await supabaseAdmin
       .from('donations')
-      .select('amount, created_at')
+      .select('name, amount, created_at')
       .eq('status', 'verified');
 
     if (totalErr) throw totalErr;
@@ -23,6 +23,21 @@ export async function GET(request: Request) {
     const totalAmount = totalDonations
       ? totalDonations.reduce((sum: number, d: any) => sum + (parseFloat(d.amount) || 0), 0)
       : 0;
+
+    // Compute all-time top donator from verified donations
+    const donatorTotals: Record<string, number> = {};
+    (totalDonations || []).forEach((d: any) => {
+      const donorName = (d.name || 'ผู้สนับสนุนนิรนาม').trim() || 'ผู้สนับสนุนนิรนาม';
+      donatorTotals[donorName] = (donatorTotals[donorName] || 0) + (parseFloat(d.amount) || 0);
+    });
+    let topDonator = '-';
+    let maxDonated = 0;
+    for (const [donorName, sumAmt] of Object.entries(donatorTotals)) {
+      if (sumAmt > maxDonated) {
+        maxDonated = sumAmt;
+        topDonator = `${donorName} (฿${sumAmt.toLocaleString('th-TH', { maximumFractionDigits: 2 })})`;
+      }
+    }
 
     // Today stats (using Bangkok timezone GMT+7)
     const now = new Date();
@@ -51,7 +66,8 @@ export async function GET(request: Request) {
         count,
         totalAmount,
         todayCount,
-        todayAmount
+        todayAmount,
+        topDonator
       },
       quota: quotaInfo
     });
