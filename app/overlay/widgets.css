@@ -1286,3 +1286,271 @@ body.widget-overlay-body {
   font-weight: 800;
   font-family: monospace;
 }
+
+
+/* ==========================================================
+   Goal 100% Overcharge & Supernova Celebration FX
+   ========================================================== */
+
+/* Overcharged Widget State */
+.goal-widget.goal-overcharged {
+  position: relative;
+  animation: overcharge-vibe 3s infinite ease-in-out;
+}
+
+@keyframes overcharge-vibe {
+  0% { transform: scale(1); filter: drop-shadow(0 0 10px rgba(59, 130, 246, 0.4)); }
+  50% { transform: scale(1.012); filter: drop-shadow(0 0 24px rgba(234, 179, 8, 0.7)); }
+  100% { transform: scale(1); filter: drop-shadow(0 0 10px rgba(59, 130, 246, 0.4)); }
+}
+
+/* Supernova Blast Celebration Overlay - Pure 360° Rays & Shockwaves (No Banner/Card) */
+.goal-supernova-blast {
+  position: absolute;
+  inset: -140px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  z-index: 999;
+  overflow: visible;
+}
+
+.supernova-core {
+  position: absolute;
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #ffffff 0%, var(--blast-color, #60a5fa) 45%, transparent 75%);
+  box-shadow: 0 0 90px var(--blast-glow, rgba(96, 165, 250, 0.9)), 0 0 160px var(--blast-glow-dim, rgba(96, 165, 250, 0.4));
+  animation: supernova-core-flash 1.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes supernova-core-flash {
+  0% { transform: scale(0.1); opacity: 0; }
+  12% { transform: scale(3.5); opacity: 1; filter: blur(2px); }
+  45% { transform: scale(5.8); opacity: 0.85; filter: blur(10px); }
+  100% { transform: scale(8.5); opacity: 0; filter: blur(28px); }
+}
+
+.supernova-ring {
+  position: absolute;
+  width: 160px;
+  height: 160px;
+  border-radius: 50%;
+  border: 4px solid #ffffff;
+  box-shadow: 0 0 50px var(--blast-glow, #3b82f6), inset 0 0 25px var(--blast-glow, #3b82f6);
+  animation: supernova-shockwave 1.9s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.supernova-ring.ring-secondary {
+  animation: supernova-shockwave 2.2s cubic-bezier(0.16, 1, 0.3, 1) 0.18s forwards;
+  border-color: var(--blast-color, #60a5fa);
+  opacity: 0;
+}
+
+@keyframes supernova-shockwave {
+  0% { transform: scale(0.1); opacity: 0; border-width: 14px; }
+  15% { transform: scale(2.4); opacity: 1; border-width: 6px; }
+  75% { transform: scale(6); opacity: 0.6; border-width: 2px; }
+  100% { transform: scale(8.8); opacity: 0; border-width: 1px; }
+}
+
+.supernova-rays {
+  position: absolute;
+  width: 130%;
+  height: 130%;
+  background: radial-gradient(circle, #ffffff 0%, var(--blast-color, #60a5fa) 35%, transparent 70%);
+  clip-path: polygon(
+    50% 0%, 54% 42%, 100% 50%, 54% 58%,
+    50% 100%, 46% 58%, 0% 50%, 46% 42%
+  );
+  filter: drop-shadow(0 0 32px var(--blast-glow, rgba(96, 165, 250, 0.95)));
+  animation: supernova-rays-spin 2.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.supernova-rays.rays-secondary {
+  animation: supernova-rays-spin-secondary 2.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  opacity: 0.85;
+}
+
+@keyframes supernova-rays-spin {
+  0% { transform: scale(0.1) rotate(0deg); opacity: 0; }
+  18% { transform: scale(3.5) rotate(35deg); opacity: 1; }
+  100% { transform: scale(6) rotate(160deg); opacity: 0; }
+}
+
+@keyframes supernova-rays-spin-secondary {
+  0% { transform: scale(0.1) rotate(45deg); opacity: 0; }
+  18% { transform: scale(3.5) rotate(80deg); opacity: 0.85; }
+  100% { transform: scale(6) rotate(205deg); opacity: 0; }
+}
+
+.supernova-sparks {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  pointer-events: none;
+}
+
+.supernova-sparks .spark {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow: 0 0 12px var(--blast-color, #60a5fa), 0 0 24px #ffffff;
+  opacity: 0;
+  animation: spark-fly 1.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.supernova-sparks .s-0  { --dist: 220px; --deg: 0deg; }
+.supernova-sparks .s-1  { --dist: 250px; --deg: 22.5deg; }
+.supernova-sparks .s-2  { --dist: 200px; --deg: 45deg; }
+.supernova-sparks .s-3  { --dist: 270px; --deg: 67.5deg; }
+.supernova-sparks .s-4  { --dist: 230px; --deg: 90deg; }
+.supernova-sparks .s-5  { --dist: 260px; --deg: 112.5deg; }
+.supernova-sparks .s-6  { --dist: 210px; --deg: 135deg; }
+.supernova-sparks .s-7  { --dist: 280px; --deg: 157.5deg; }
+.supernova-sparks .s-8  { --dist: 220px; --deg: 180deg; }
+.supernova-sparks .s-9  { --dist: 250px; --deg: 202.5deg; }
+.supernova-sparks .s-10 { --dist: 200px; --deg: 225deg; }
+.supernova-sparks .s-11 { --dist: 270px; --deg: 247.5deg; }
+.supernova-sparks .s-12 { --dist: 230px; --deg: 270deg; }
+.supernova-sparks .s-13 { --dist: 260px; --deg: 292.5deg; }
+.supernova-sparks .s-14 { --dist: 210px; --deg: 315deg; }
+.supernova-sparks .s-15 { --dist: 280px; --deg: 337.5deg; }
+
+@keyframes spark-fly {
+  0% {
+    transform: rotate(var(--deg)) translateY(0) scale(1.6);
+    opacity: 0;
+  }
+  15% {
+    opacity: 1;
+  }
+  80% {
+    opacity: 0.8;
+  }
+  100% {
+    transform: rotate(var(--deg)) translateY(calc(-1 * var(--dist))) scale(0.2);
+    opacity: 0;
+  }
+}
+
+/* ==========================================================
+   Shape-Specific Overcharge Visuals (percent >= 100)
+   ========================================================== */
+
+/* 1. Bar: Electric Lightning Arcs */
+.goal-bar-overcharge-electric {
+  position: absolute;
+  inset: -4px -6px;
+  pointer-events: none;
+  z-index: 15;
+}
+
+.goal-bar-overcharge-electric .arc-top,
+.goal-bar-overcharge-electric .arc-bottom {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, #67e8f9, #ffffff, #67e8f9, transparent);
+  filter: drop-shadow(0 0 6px #00f2fe);
+  animation: arc-spark 0.4s infinite alternate;
+}
+
+.goal-bar-overcharge-electric .arc-top { top: 0; }
+.goal-bar-overcharge-electric .arc-bottom { bottom: 0; }
+
+@keyframes arc-spark {
+  0% { opacity: 0.3; transform: scaleX(0.95); }
+  100% { opacity: 1; transform: scaleX(1.02); }
+}
+
+/* 2. Circle: Solar Corona Flares */
+.goal-circle-corona {
+  position: absolute;
+  inset: -12px;
+  border-radius: 50%;
+  border: 3px dashed #fbbf24;
+  box-shadow: 0 0 24px rgba(245, 158, 11, 0.8), inset 0 0 16px rgba(254, 240, 138, 0.5);
+  animation: corona-spin 6s linear infinite;
+  pointer-events: none;
+}
+
+@keyframes corona-spin {
+  0% { transform: rotate(0deg) scale(0.98); }
+  50% { transform: rotate(180deg) scale(1.04); }
+  100% { transform: rotate(360deg) scale(0.98); }
+}
+
+/* 3. Battery: Electric Terminal Sparks */
+.goal-battery-overcharge-sparks {
+  position: absolute;
+  top: 50%;
+  right: -14px;
+  transform: translateY(-50%);
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow: 0 0 18px #00f2fe, 0 0 30px #38bdf8;
+  animation: battery-spark-flash 0.3s infinite alternate;
+  pointer-events: none;
+}
+
+@keyframes battery-spark-flash {
+  0% { transform: translateY(-50%) scale(0.6); opacity: 0.4; }
+  100% { transform: translateY(-50%) scale(1.5); opacity: 1; filter: drop-shadow(0 0 8px #ffffff); }
+}
+
+/* 4. Orb: Boiling Mana Storm */
+.goal-orb-overcharge-storm {
+  position: absolute;
+  inset: -6px;
+  border-radius: 50%;
+  border: 2px solid rgba(192, 132, 252, 0.8);
+  box-shadow: 0 0 30px #c084fc, inset 0 0 20px #9333ea;
+  animation: orb-storm-whirl 2s linear infinite;
+  pointer-events: none;
+}
+
+@keyframes orb-storm-whirl {
+  0% { transform: rotate(0deg); filter: hue-rotate(0deg); }
+  100% { transform: rotate(360deg); filter: hue-rotate(90deg); }
+}
+
+/* 5. Pill: Overcharge Neon Halo */
+.goal-pill-overcharge-glow {
+  position: absolute;
+  inset: -3px;
+  border-radius: 9999px;
+  border: 2px solid #67e8f9;
+  box-shadow: 0 0 20px rgba(103, 232, 249, 0.7), inset 0 0 10px rgba(255, 255, 255, 0.4);
+  animation: pill-glow-pulse 1.5s infinite ease-in-out alternate;
+  pointer-events: none;
+}
+
+@keyframes pill-glow-pulse {
+  0% { opacity: 0.5; transform: scale(0.99); }
+  100% { opacity: 1; transform: scale(1.02); }
+}
+
+/* 6. Pixel Hearts: Golden Fire Flame */
+.goal-hearts-overcharge-flame {
+  position: absolute;
+  inset: -8px;
+  border-radius: 14px;
+  box-shadow: 0 0 24px rgba(251, 191, 36, 0.7), inset 0 0 12px rgba(244, 63, 94, 0.4);
+  animation: hearts-fire-pulse 1s infinite alternate;
+  pointer-events: none;
+}
+
+@keyframes hearts-fire-pulse {
+  0% { opacity: 0.6; }
+  100% { opacity: 1; }
+}

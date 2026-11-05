@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Target, Trophy, ExternalLink, Eye, RotateCcw, Sparkles } from 'lucide-react';
+import { Target, Trophy, ExternalLink, Eye, RotateCcw, Sparkles, Zap } from 'lucide-react';
 import { useAdmin } from '../AdminContext';
 import { GoalAppearance, goalAppearanceDefaults, readGoalAppearance } from '@/lib/goalAppearance';
 import { SupporterAppearance, supporterDefaults, readSupporterAppearance, SupporterMode, supporterModes } from '@/lib/supporterAppearance';
@@ -11,6 +11,8 @@ import SupporterAppearanceEditor from './SupporterAppearanceEditor';
 import GoalWidget from '@/app/overlay/goal/GoalWidget';
 import SupporterWidget from '@/app/overlay/supporters/SupporterWidget';
 import { WidgetData } from '@/lib/widgets';
+import { playGoalFanfare } from '@/lib/goalAudio';
+import { supabase } from '@/lib/supabaseClient';
 import '@/app/overlay/widgets.css';
 import './widgets-admin.css';
 
@@ -31,6 +33,7 @@ export default function WidgetsAdmin() {
   const [savedSupporters, setSavedSupporters] = useState<SupporterAppearance>({ ...supporterDefaults });
   const [widgetData, setWidgetData] = useState<WidgetData | null>(null);
   const [previewBg, setPreviewBg] = useState<'checker' | 'game' | 'bright'>('checker');
+  const [previewPercentOverride, setPreviewPercentOverride] = useState<number | null>(null);
 
   useEffect(() => {
     setOrigin(window.location.origin);
@@ -94,8 +97,25 @@ export default function WidgetsAdmin() {
 
   const goalTargetNumber = Number(target) > 0 ? Number(target) : 15000;
   const realCurrent = widgetData?.goal.current ?? 0;
-  const isGoalSample = realCurrent <= 0;
-  const goalCurrentDisplay = isGoalSample ? Math.round(goalTargetNumber * 0.5) : realCurrent;
+  const isGoalSample = realCurrent <= 0 && previewPercentOverride === null;
+  const goalCurrentDisplay = previewPercentOverride !== null
+    ? Math.round((goalTargetNumber * previewPercentOverride) / 100)
+    : (isGoalSample ? Math.round(goalTargetNumber * 0.5) : realCurrent);
+
+  const triggerLivePreviewBlast = () => {
+    if (appearance.goal_overcharge_sound !== 'false') {
+      playGoalFanfare();
+    }
+    try {
+      supabase.channel('goal-overcharge-events').send({
+        type: 'broadcast',
+        event: 'test_burst',
+        payload: { timestamp: Date.now() }
+      }).catch(() => {});
+    } catch {
+      // ignore
+    }
+  };
 
   const activeMode: SupporterMode = (supporters.supporter_mode === 'recent' || supporters.supporter_mode === 'daily' || supporters.supporter_mode === 'monthly' || supporters.supporter_mode === 'allTime') ? supporters.supporter_mode : 'allTime';
   const realDonors = widgetData ? (widgetData[activeMode] || []) : [];
@@ -319,6 +339,65 @@ export default function WidgetsAdmin() {
                   </div>
                 </div>
 
+                {/* Quick Simulation Bar for Goal */}
+                {section === 'goal' && (
+                  <div className="preview-sim-bar">
+                    <div className="preview-sim-presets">
+                      <button
+                        type="button"
+                        className={`preview-sim-pill ${previewPercentOverride === 50 || (previewPercentOverride === null && isGoalSample) ? 'active' : ''}`}
+                        onClick={() => setPreviewPercentOverride(50)}
+                        title="จำลอง 50%"
+                      >
+                        50%
+                      </button>
+                      <button
+                        type="button"
+                        className={`preview-sim-pill ${previewPercentOverride === 75 ? 'active' : ''}`}
+                        onClick={() => setPreviewPercentOverride(75)}
+                        title="จำลอง 75%"
+                      >
+                        75%
+                      </button>
+                      <button
+                        type="button"
+                        className={`preview-sim-pill preview-sim-100 ${previewPercentOverride === 100 ? 'active' : ''}`}
+                        onClick={() => setPreviewPercentOverride(100)}
+                        title="ครบเป้าหมาย 100% (จุดชนวนระเบิด Supernova และเปิด Overcharge)"
+                      >
+                        🎉 100%
+                      </button>
+                      <button
+                        type="button"
+                        className={`preview-sim-pill preview-sim-overcharge ${previewPercentOverride === 120 ? 'active' : ''}`}
+                        onClick={() => setPreviewPercentOverride(120)}
+                        title="ยอดเกิน 120% (แสดงพลังงาน Overcharge เต็มพิกัด)"
+                      >
+                        ⚡ 120%
+                      </button>
+                      {realCurrent > 0 && (
+                        <button
+                          type="button"
+                          className={`preview-sim-pill ${previewPercentOverride === null ? 'active' : ''}`}
+                          onClick={() => setPreviewPercentOverride(null)}
+                          title="กลับมาใช้ยอดจริงจากระบบ"
+                        >
+                          ยอดจริง
+                        </button>
+                      )}
+                    </div>
+                    <button
+                      type="button"
+                      className="preview-blast-trigger-btn"
+                      onClick={triggerLivePreviewBlast}
+                      title="ยิงระเบิด Supernova Blast ทันที (พร้อมเสียง Fanfare ชัยชนะ)"
+                    >
+                      <Zap size={12} />
+                      <span>ยิงระเบิด</span>
+                    </button>
+                  </div>
+                )}
+
                 <div className={`widget-preview-frame bg-${previewBg}`}>
                   <div className="widget-preview-content">
                     {section === 'goal' && (
@@ -332,10 +411,28 @@ export default function WidgetsAdmin() {
                   </div>
                 </div>
 
-                {isGoalSample && (
+                {previewPercentOverride !== null ? (
+                  <div className="preview-sample-notice preview-notice-sim">
+                    <Zap size={13} style={{ color: '#f59e0b' }} />
+                    <span>จำลอง {previewPercentOverride}% (฿{goalCurrentDisplay.toLocaleString()})</span>
+                    <button
+                      type="button"
+                      className="preview-reset-override-btn"
+                      onClick={() => setPreviewPercentOverride(null)}
+                      title="คืนค่ายอดจริง"
+                    >
+                      รีเซ็ต
+                    </button>
+                  </div>
+                ) : isGoalSample ? (
                   <div className="preview-sample-notice">
                     <Sparkles size={13} style={{ color: 'var(--accent)' }} />
-                    <span>จำลองยอด 50% เพื่อให้เห็นสีหลอดและเอฟเฟกต์สด</span>
+                    <span>จำลองยอด 50% อัตโนมัติ (ยังไม่มีผู้โดเนทจริง)</span>
+                  </div>
+                ) : (
+                  <div className="preview-sample-notice preview-notice-real">
+                    <span className="preview-live-dot" />
+                    <span>ยอดจริง: ฿{realCurrent.toLocaleString()} / ฿{goalTargetNumber.toLocaleString()} ({((realCurrent / goalTargetNumber) * 100).toFixed(0)}%)</span>
                   </div>
                 )}
               </div>

@@ -72,6 +72,8 @@ export const goalAppearanceDefaults = {
   goal_duration_size: '13',
   goal_duration_radius: '9999',
   goal_duration_show_icon: 'true',
+  goal_overcharge_enabled: 'true',
+  goal_overcharge_sound: 'true',
 };
 
 export type GoalAppearance = typeof goalAppearanceDefaults;

@@ -34,6 +34,8 @@ import {
   formatGoalDuration
 } from '@/lib/goalAppearance';
 import { applyGoalPreset, goalPresets } from '@/lib/goalPresets';
+import { playGoalFanfare } from '@/lib/goalAudio';
+import { supabase } from '@/lib/supabaseClient';
 import GoalWidget from '@/app/overlay/goal/GoalWidget';
 import './goal-editor-premium.css';
 
@@ -118,6 +120,19 @@ export default function GoalAppearanceEditor({
 
   const toggleBoolean = (key: keyof GoalAppearance) => {
     update(key, value[key] === 'true' ? 'false' : 'true');
+  };
+
+  const testOverchargeBurst = () => {
+    if (value.goal_overcharge_sound !== 'false') {
+      playGoalFanfare();
+    }
+    try {
+      supabase.channel('goal-overcharge-events').send({
+        type: 'broadcast',
+        event: 'test_burst',
+        payload: { timestamp: Date.now() }
+      }).catch(() => {});
+    } catch (e) {}
   };
 
   return (
@@ -364,6 +379,76 @@ export default function GoalAppearanceEditor({
             </div>
             <div className="goal-switch-track">
               <div className="goal-switch-thumb" />
+            </div>
+          </div>
+        </div>
+
+        {/* Goal 100% Overcharge Section */}
+        <div style={{ marginTop: '20px', borderTop: '1px solid var(--border)', paddingTop: '18px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px', flexWrap: 'wrap', gap: '10px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div style={{ width: '28px', height: '28px', borderRadius: '8px', background: 'rgba(234, 179, 8, 0.15)', color: '#fbbf24', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Zap size={16} />
+              </div>
+              <div>
+                <strong style={{ fontSize: '14px', color: 'var(--text-main)' }}>เอฟเฟกต์หลอดแตกเมื่อครบ 100% (Goal Overcharge)</strong>
+                <p style={{ margin: 0, fontSize: '12px', color: 'var(--text-muted)' }}>ระเบิดแสง Supernova วาบสว่างทั่วจอ พร้อมสายฟ้า/ไฟลุกตามทรงเมื่อยอดเกิน 100%</p>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              className="goal-reset-btn"
+              style={{
+                background: 'linear-gradient(135deg, rgba(234, 179, 8, 0.2), rgba(245, 158, 11, 0.2))',
+                borderColor: '#fbbf24',
+                color: '#fbbf24',
+                cursor: 'pointer',
+                fontWeight: 700
+              }}
+              onClick={testOverchargeBurst}
+              title="ยิงเอฟเฟกต์ Supernova ทดสอบทันที"
+            >
+              <Zap size={14} />
+              <span>⚡ ทดสอบเอฟเฟกต์ 100%</span>
+            </button>
+          </div>
+
+          <div className="goal-effects-row">
+            <div
+              className={`goal-switch-card${value.goal_overcharge_enabled !== 'false' ? ' active' : ''}`}
+              onClick={() => !disabled && toggleBoolean('goal_overcharge_enabled')}
+              role="switch"
+              aria-checked={value.goal_overcharge_enabled !== 'false'}
+            >
+              <div className="goal-switch-info">
+                <Sparkles size={18} color={value.goal_overcharge_enabled !== 'false' ? 'var(--accent)' : 'var(--text-muted)'} />
+                <div>
+                  <div className="goal-switch-title">เปิดเอฟเฟกต์หลอดแตก (Overcharge Visuals)</div>
+                  <div className="goal-switch-desc">ระเบิดแสง Supernova + สายฟ้า/ออร่าไฟลุกเตือนสถานะเมื่อยอดเกิน 100%</div>
+                </div>
+              </div>
+              <div className="goal-switch-track">
+                <div className="goal-switch-thumb" />
+              </div>
+            </div>
+
+            <div
+              className={`goal-switch-card${value.goal_overcharge_sound !== 'false' ? ' active' : ''}`}
+              onClick={() => !disabled && toggleBoolean('goal_overcharge_sound')}
+              role="switch"
+              aria-checked={value.goal_overcharge_sound !== 'false'}
+            >
+              <div className="goal-switch-info">
+                <Activity size={18} color={value.goal_overcharge_sound !== 'false' ? 'var(--accent)' : 'var(--text-muted)'} />
+                <div>
+                  <div className="goal-switch-title">เสียงดนตรีฉลองชัยชนะ (Victory Fanfare)</div>
+                  <div className="goal-switch-desc">สังเคราะห์เสียง Brass Fanfare ชัยชนะผ่าน Web Audio API สดๆ เมื่อแตะ 100%</div>
+                </div>
+              </div>
+              <div className="goal-switch-track">
+                <div className="goal-switch-thumb" />
+              </div>
             </div>
           </div>
         </div>

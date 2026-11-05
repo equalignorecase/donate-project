@@ -1,5 +1,10 @@
+'use client';
+
+import React, { useState, useEffect, useRef } from 'react';
 import { GoalAppearance, goalAppearanceDefaults, formatGoalDuration } from '@/lib/goalAppearance';
 import { Clock } from 'lucide-react';
+import { playGoalFanfare } from '@/lib/goalAudio';
+import { supabase } from '@/lib/supabaseClient';
 import '../widgets.css';
 
 function hexToRgba(hex: string, alpha: number): string {
@@ -30,7 +35,9 @@ export default function GoalWidget({
   appearance?: GoalAppearance 
 }) {
   const safeTarget = Number.isFinite(target) && target > 0 ? target : 15000;
-  const percent = Math.min(100, Math.max(0, (current / safeTarget) * 100));
+  const fillPercent = Math.min(100, Math.max(0, (current / safeTarget) * 100));
+  const displayPercent = Math.max(0, (current / safeTarget) * 100);
+  const percent = fillPercent;
   const money = (value: number) => value.toLocaleString('th-TH', { maximumFractionDigits: 0 });
   const effectivePattern = appearance.goal_bar_pattern || (appearance.goal_bar_style === 'striped' ? 'stripes' : 'none');
   const patternOpacity = Math.max(0, Math.min(100, Number(appearance.goal_bar_pattern_opacity ?? 80))) / 100;
@@ -58,6 +65,36 @@ export default function GoalWidget({
     ? `linear-gradient(90deg, ${barStart}, ${barEnd})`
     : barStart;
   const isTextInside = appearance.goal_text_inside !== 'false';
+  const isOverchargeEnabled = appearance.goal_overcharge_enabled !== 'false';
+  const isSoundEnabled = appearance.goal_overcharge_sound !== 'false';
+  const isOvercharged = isOverchargeEnabled && displayPercent >= 100;
+  const [showSupernova, setShowSupernova] = useState(false);
+  const prevPercentRef = useRef(displayPercent);
+
+  const triggerBurst = () => {
+    setShowSupernova(true);
+    if (isSoundEnabled) playGoalFanfare();
+    setTimeout(() => setShowSupernova(false), 3200);
+  };
+
+  useEffect(() => {
+    if (displayPercent >= 100 && prevPercentRef.current < 100 && isOverchargeEnabled) {
+      triggerBurst();
+    }
+    prevPercentRef.current = displayPercent;
+  }, [displayPercent, isOverchargeEnabled, isSoundEnabled]);
+
+  useEffect(() => {
+    const channel = supabase.channel('goal-overcharge-events')
+      .on('broadcast', { event: 'test_burst' }, () => {
+        triggerBurst();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [isSoundEnabled]);
   const isShowDuration = appearance.goal_show_duration === 'true';
   const durationText = isShowDuration ? formatGoalDuration(appearance.goal_end_date, appearance.goal_duration_text) : '';
   const durationStyle = appearance.goal_duration_style || 'glass';
@@ -140,6 +177,7 @@ export default function GoalWidget({
 
     return (
       <div className="goal-circle-wrapper" style={{ minHeight: `${size}px` }}>
+        {isOvercharged && <div className="goal-circle-corona" aria-hidden="true" />}
         <svg
           className="goal-circle-svg"
           width={size}
@@ -179,7 +217,7 @@ export default function GoalWidget({
         </svg>
         <div className="goal-circle-center" style={{ width: `${r * 1.6}px` }}>
           <span className="goal-circle-pct" style={{ color: appearance.goal_accent_color, fontSize: `${Math.round(size * 0.16)}px` }}>
-            {percent.toFixed(0)}%
+            {displayPercent.toFixed(0)}%
           </span>
           <span className="goal-circle-amounts" style={{ fontSize: `${Math.max(11, Math.round(size * 0.08))}px` }}>
             <strong>฿{money(current)}</strong>
@@ -224,11 +262,12 @@ export default function GoalWidget({
             })}
           </div>
           <div className="goal-battery-terminal" style={{ borderColor: appearance.goal_border_color || '#64748b' }} />
+          {isOvercharged && <div className="goal-battery-overcharge-sparks" aria-hidden="true" />}
         </div>
 
         <div className="goal-battery-meta" style={{ fontSize: `${appearance.goal_amount_size ?? 14}px` }}>
           <span><strong>฿{money(current)}</strong> / ฿{money(safeTarget)}</span>
-          <span className="goal-battery-pct" style={{ color: appearance.goal_accent_color }}>{percent.toFixed(0)}%</span>
+          <span className="goal-battery-pct" style={{ color: appearance.goal_accent_color }}>{displayPercent.toFixed(0)}%</span>
         </div>
       </div>
     );
@@ -268,11 +307,12 @@ export default function GoalWidget({
 
           {/* Ornate Frame Accents */}
           <div className="goal-orb-ring-outer" style={{ borderColor: hexToRgba(barStart, 0.5) }} />
+          {isOvercharged && <div className="goal-orb-overcharge-storm" aria-hidden="true" />}
 
           {/* Center Info Overlay */}
           <div className="goal-orb-center">
             <span className="goal-orb-pct" style={{ color: appearance.goal_accent_color, fontSize: `${Math.round(size * 0.16)}px` }}>
-              {percent.toFixed(0)}%
+              {displayPercent.toFixed(0)}%
             </span>
             <span className="goal-orb-current" style={{ fontSize: `${Math.max(12, Math.round(size * 0.08))}px` }}>
               ฿{money(current)}
@@ -336,9 +376,10 @@ export default function GoalWidget({
 
           {/* Right: Percent Badge */}
           <div className="goal-pill-pct-badge" style={{ color: appearance.goal_accent_color }}>
-            <span>{percent.toFixed(0)}</span>
+            <span>{displayPercent.toFixed(0)}</span>
             <small>%</small>
           </div>
+          {isOvercharged && <div className="goal-pill-overcharge-glow" aria-hidden="true" />}
         </div>
       </div>
     );
@@ -348,6 +389,7 @@ export default function GoalWidget({
     const totalHearts = 5;
     return (
       <div className="goal-hearts-wrapper">
+        {isOvercharged && <div className="goal-hearts-overcharge-flame" aria-hidden="true" />}
         <div className="goal-hearts-row">
           {Array.from({ length: totalHearts }).map((_, i) => {
             const heartPct = (percent - i * 20) / 20;
@@ -393,7 +435,7 @@ export default function GoalWidget({
             <span>฿{money(safeTarget)}</span>
           </div>
           <span className="goal-hearts-pct" style={{ color: appearance.goal_accent_color }}>
-            [{percent.toFixed(0)}%]
+            [{displayPercent.toFixed(0)}%]
           </span>
         </div>
       </div>
@@ -430,6 +472,12 @@ export default function GoalWidget({
             )}
 
             <div className={`goal-rail${isHUD ? ' goal-hud-frame' : ''}${isMilestone ? ' goal-milestone-rail' : ''}`} style={{ filter: isHUD && appearance.goal_bar_shine === 'true' ? `drop-shadow(0 0 5px ${hexToRgba(barStart, 0.4)})` : undefined }}>
+              {isOvercharged && (
+                <div className="goal-bar-overcharge-electric" aria-hidden="true">
+                  <span className="arc-top" />
+                  <span className="arc-bottom" />
+                </div>
+              )}
               <div
                 className={`goal-track goal-track-${appearance.goal_bar_style}${appearance.goal_bar_animated === 'true' ? ' goal-track-animated' : ''}${percent >= 100 ? ' goal-track-complete' : ''}`} 
                 style={{ 
@@ -509,7 +557,7 @@ export default function GoalWidget({
                       </span>
                     )}
                     {appearance.goal_show_percent !== 'false' && (
-                      <span className="goal-bar-pct">({percent.toFixed(0)}%)</span>
+                      <span className="goal-bar-pct">({displayPercent.toFixed(0)}%)</span>
                     )}
                   </div>
                 )}
@@ -520,20 +568,20 @@ export default function GoalWidget({
             {!isTextInside && isFlat && !isFloating && (appearance.goal_show_amount === 'true' || appearance.goal_show_percent === 'true') && (
               <div className="goal-compact-meta" style={{ fontSize: `${appearance.goal_amount_size}px` }}>
                 {appearance.goal_show_amount === 'true' && <div className="goal-values"><strong>฿{money(current)}</strong><span>/ ฿{money(safeTarget)}</span></div>}
-                {appearance.goal_show_percent === 'true' && !isHUD && <span style={{ color: appearance.goal_accent_color }}>{percent.toFixed(1)}%{current >= safeTarget ? ' · ถึงเป้าหมายแล้ว!' : ''}</span>}
+                {appearance.goal_show_percent === 'true' && !isHUD && <span style={{ color: appearance.goal_accent_color }}>{displayPercent.toFixed(1)}%{displayPercent >= 100 ? ' · ถึงเป้าหมายแล้ว!' : ''}</span>}
               </div>
             )}
 
             {!isTextInside && isFloating && (appearance.goal_show_amount === 'true' || appearance.goal_show_percent === 'true') && (
               <div className="goal-floating-meta" style={{ fontSize: `${appearance.goal_amount_size}px` }}>
-                {appearance.goal_show_percent === 'true' && <span style={{ color: appearance.goal_accent_color }}>{percent.toFixed(1)}%</span>}
+                {appearance.goal_show_percent === 'true' && <span style={{ color: appearance.goal_accent_color }}>{displayPercent.toFixed(1)}%</span>}
                 {appearance.goal_show_amount === 'true' && <span className="goal-floating-target">เป้าหมาย ฿{money(safeTarget)}</span>}
               </div>
             )}
 
             {!isTextInside && !isFlat && appearance.goal_show_percent === 'true' && (
               <div className="goal-percent" style={{ color: appearance.goal_accent_color }}>
-                {percent.toFixed(1)}%{current >= safeTarget ? ' · ถึงเป้าหมายแล้ว!' : ''}
+                {displayPercent.toFixed(1)}%{displayPercent >= 100 ? ' · ถึงเป้าหมายแล้ว!' : ''}
               </div>
             )}
           </>
@@ -543,7 +591,7 @@ export default function GoalWidget({
 
   return (
     <section 
-      className={`obs-widget goal-widget goal-shape-${shape}${isCardTransparent ? ' goal-widget-no-bg' : ''}`} 
+      className={`obs-widget goal-widget goal-shape-${shape}${isOvercharged ? ' goal-overcharged' : ''}${isCardTransparent ? ' goal-widget-no-bg' : ''}`} 
       style={{ 
         fontFamily: `'${appearance.goal_font}', sans-serif`, 
         width: `${appearance.goal_width}px`, 
@@ -557,6 +605,31 @@ export default function GoalWidget({
         boxShadow: isCardTransparent ? 'none' : undefined,
       }}
     >
+      {/* Supernova 100% Celebration Blast Overlay - Pure Rays & Shockwave */}
+      {showSupernova && (
+        <div 
+          className="goal-supernova-blast" 
+          aria-hidden="true"
+          style={{
+            '--blast-color': barStart,
+            '--blast-end': barEnd,
+            '--blast-glow': hexToRgba(barStart, 0.85),
+            '--blast-glow-dim': hexToRgba(barStart, 0.25)
+          } as React.CSSProperties}
+        >
+          <div className="supernova-core" />
+          <div className="supernova-ring" />
+          <div className="supernova-ring ring-secondary" />
+          <div className="supernova-rays" />
+          <div className="supernova-rays rays-secondary" />
+          <div className="supernova-sparks">
+            {Array.from({ length: 16 }).map((_, i) => (
+              <span key={i} className={`spark s-${i}`} />
+            ))}
+          </div>
+        </div>
+      )}
+
       <h1 
         className={`goal-title${isHUD ? ' goal-title-hud' : ''}`}
         style={{ 
@@ -573,7 +646,7 @@ export default function GoalWidget({
       >
         <span>{title}</span>
         {durationPosition === 'inline' && renderDurationBadge(true)}
-        {isHUD && !isTextInside && appearance.goal_show_percent === 'true' && <span className="goal-hud-percent" style={{ color: appearance.goal_accent_color }}>{percent.toFixed(1)}%</span>}
+        {isHUD && !isTextInside && appearance.goal_show_percent === 'true' && <span className="goal-hud-percent" style={{ color: appearance.goal_accent_color }}>{displayPercent.toFixed(1)}%</span>}
       </h1>
 
       {isShowDuration && durationText && durationPosition === 'top' && (
