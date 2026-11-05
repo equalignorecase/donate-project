@@ -840,3 +840,449 @@ body.widget-overlay-body {
         opacity: 0;
     }
 }
+
+
+/* ==========================================================
+   Goal Widget Custom Shapes: Circle, Battery, Jar, Boba, Thermometer
+   ========================================================== */
+
+/* 1. Circle / Radial Gauge */
+.goal-circle-wrapper {
+  display: flex;
+  position: relative;
+  align-items: center;
+  justify-content: center;
+  margin: 10px auto;
+}
+
+.goal-circle-svg {
+  overflow: visible;
+}
+
+.goal-circle-track {
+  opacity: 0.8;
+}
+
+.goal-circle-fill {
+  transition: stroke-dashoffset 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.goal-circle-center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  pointer-events: none;
+}
+
+.goal-circle-pct {
+  font-weight: 800;
+  line-height: 1.1;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.9);
+}
+
+.goal-circle-amounts {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 1.2;
+  margin-top: 4px;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.9);
+}
+
+.goal-circle-target {
+  opacity: 0.75;
+  font-size: 0.9em;
+}
+
+/* 2. Cyber Battery */
+.goal-battery-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}
+
+.goal-battery-housing {
+  display: flex;
+  align-items: center;
+  padding: 6px;
+  border-radius: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.25);
+  position: relative;
+  box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.8), 0 4px 14px rgba(0, 0, 0, 0.5);
+}
+
+.goal-battery-segments {
+  display: flex;
+  gap: 4px;
+  flex: 1;
+  height: 100%;
+  padding-right: 6px;
+}
+
+.goal-battery-cell {
+  flex: 1;
+  height: 100%;
+  border-radius: 4px;
+  transition: all 0.3s ease;
+}
+
+.goal-battery-cell.filled {
+  opacity: 1;
+}
+
+.goal-battery-cell.head {
+  animation: battery-pulse 1.2s infinite alternate ease-in-out;
+}
+
+@keyframes battery-pulse {
+  0% { filter: brightness(1) drop-shadow(0 0 2px currentColor); }
+  100% { filter: brightness(1.4) drop-shadow(0 0 10px currentColor); }
+}
+
+.goal-battery-terminal {
+  width: 8px;
+  height: 40%;
+  border-radius: 0 4px 4px 0;
+  border: 2px solid rgba(255, 255, 255, 0.25);
+  border-left: none;
+  background: rgba(255, 255, 255, 0.15);
+  margin-right: -12px;
+}
+
+.goal-battery-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: 700;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.9);
+}
+
+/* ==========================================================
+   3. RPG Mana / Health Orb
+   ========================================================== */
+.goal-orb-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 10px 0;
+  position: relative;
+}
+
+.goal-orb-socket {
+  position: relative;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+}
+
+.goal-orb-ring-outer {
+  position: absolute;
+  inset: -6px;
+  border-radius: 50%;
+  border: 3px solid rgba(255, 255, 255, 0.4);
+  pointer-events: none;
+  box-shadow: 0 0 16px rgba(0, 0, 0, 0.7);
+}
+
+.goal-orb-fluid-tank {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  overflow: hidden;
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+.goal-orb-liquid {
+  width: 100%;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  transition: height 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex;
+  justify-content: center;
+}
+
+.goal-orb-wave {
+  position: absolute;
+  top: -8px;
+  left: 0;
+  width: 200%;
+  height: 16px;
+  background: inherit;
+  border-radius: 40%;
+  animation: orb-liquid-swirl 3.5s linear infinite;
+  opacity: 0.85;
+}
+
+@keyframes orb-liquid-swirl {
+  0% { transform: translateX(0) rotate(0deg); }
+  50% { transform: translateX(-25%) rotate(180deg); }
+  100% { transform: translateX(-50%) rotate(360deg); }
+}
+
+.goal-orb-highlight {
+  position: absolute;
+  top: 10%;
+  left: 14%;
+  width: 32%;
+  height: 22%;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.5) 0%, transparent 80%);
+  transform: rotate(-35deg);
+  pointer-events: none;
+}
+
+.goal-orb-rim-glare {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  box-shadow: inset 0 -12px 20px rgba(0, 0, 0, 0.8), inset 0 8px 16px rgba(255, 255, 255, 0.25);
+  pointer-events: none;
+}
+
+.goal-orb-center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  pointer-events: none;
+  z-index: 5;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.95);
+}
+
+.goal-orb-pct {
+  font-weight: 800;
+  line-height: 1.1;
+}
+
+.goal-orb-current {
+  font-weight: 700;
+  margin-top: 2px;
+}
+
+.goal-orb-target {
+  opacity: 0.8;
+}
+
+.goal-orb-sparkle {
+  position: absolute;
+  font-size: 13px;
+  color: #ffffff;
+  animation: orb-sparkle-float 2.5s infinite ease-in-out alternate;
+}
+
+.goal-orb-sparkle.s1 { left: 25%; bottom: 30%; animation-delay: 0.2s; }
+.goal-orb-sparkle.s2 { right: 28%; bottom: 50%; animation-delay: 0.9s; }
+.goal-orb-sparkle.s3 { left: 50%; bottom: 70%; animation-delay: 1.5s; }
+
+@keyframes orb-sparkle-float {
+  0% { transform: translateY(0) scale(0.8); opacity: 0.4; }
+  100% { transform: translateY(-8px) scale(1.2); opacity: 1; }
+}
+
+/* ==========================================================
+   4. Dynamic Pill (Dynamic Island Minimal)
+   ========================================================== */
+.goal-pill-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 8px 0;
+  width: 100%;
+}
+
+.goal-pill-container {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  max-width: 440px;
+  border-radius: 9999px;
+  border: 1.5px solid rgba(255, 255, 255, 0.18);
+  padding: 10px 18px 10px 14px;
+  box-sizing: border-box;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.goal-pill-status {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.goal-pill-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+  animation: pill-pulse 1.8s infinite ease-in-out;
+}
+
+@keyframes pill-pulse {
+  0% { transform: scale(0.9); opacity: 0.7; }
+  50% { transform: scale(1.2); opacity: 1; }
+  100% { transform: scale(0.9); opacity: 0.7; }
+}
+
+.goal-pill-content {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+  min-width: 0;
+}
+
+.goal-pill-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.goal-pill-title {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  opacity: 0.75;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.goal-pill-amounts {
+  display: flex;
+  align-items: baseline;
+  gap: 3px;
+  white-space: nowrap;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.8);
+}
+
+.goal-pill-sep {
+  opacity: 0.45;
+  font-size: 0.85em;
+  margin: 0 1px;
+}
+
+.goal-pill-target {
+  opacity: 0.7;
+  font-size: 0.9em;
+}
+
+.goal-pill-rail {
+  width: 100%;
+  height: 6px;
+  border-radius: 9999px;
+  overflow: hidden;
+  position: relative;
+}
+
+.goal-pill-bar {
+  height: 100%;
+  border-radius: 9999px;
+  transition: width 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.goal-pill-pct-badge {
+  display: flex;
+  align-items: baseline;
+  font-weight: 800;
+  font-size: 18px;
+  letter-spacing: -0.5px;
+  line-height: 1;
+  flex-shrink: 0;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8);
+}
+
+.goal-pill-pct-badge small {
+  font-size: 11px;
+  margin-left: 2px;
+  opacity: 0.85;
+}
+
+/* ==========================================================
+   5. Pixel Hearts 8-Bit (Zelda / Minecraft style)
+   ========================================================== */
+.goal-hearts-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+}
+
+.goal-hearts-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.goal-pixel-heart {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s ease;
+}
+
+.goal-pixel-heart.beating {
+  animation: heart-beat 1.2s infinite ease-in-out;
+}
+
+@keyframes heart-beat {
+  0% { transform: scale(1); }
+  25% { transform: scale(1.15); }
+  40% { transform: scale(1); }
+  60% { transform: scale(1.1); }
+  100% { transform: scale(1); }
+}
+
+.goal-pixel-heart-svg {
+  image-rendering: pixelated;
+  overflow: visible;
+}
+
+.goal-hearts-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  max-width: 320px;
+  font-family: inherit;
+  font-weight: 700;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.9);
+}
+
+.goal-hearts-amounts {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.goal-hearts-sep {
+  opacity: 0.6;
+}
+
+.goal-hearts-pct {
+  font-weight: 800;
+  font-family: monospace;
+}

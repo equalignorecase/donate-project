@@ -142,6 +142,7 @@ export default function AdminLayout({
     if (pathname?.startsWith('/admin/analytics')) return 'สถิติเชิงลึก & แดชบอร์ด (Analytics)';
     if (pathname?.startsWith('/admin/donations')) return 'ประวัติการโดเนท';
     if (pathname?.startsWith('/admin/settings')) return 'ตั้งค่าระบบ & OBS';
+    if (pathname?.startsWith('/admin/widgets/templates')) return 'คลังดีไซน์เป้าหมายโดเนท (Goal Gallery)';
     if (pathname?.startsWith('/admin/widgets')) return 'วิดเจ็ต OBS & เป้าหมาย';
     if (pathname?.startsWith('/admin/simulator')) return 'จำลองจอไลฟ์สตรีม (Live Studio Simulator)';
     if (pathname?.startsWith('/admin/timer')) return 'ระบบจับเวลา & Subathon (Timer)';

@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { Target, Trophy, ExternalLink, Eye, RotateCcw, Sparkles } from 'lucide-react';
 import { useAdmin } from '../AdminContext';
 import { GoalAppearance, goalAppearanceDefaults, readGoalAppearance } from '@/lib/goalAppearance';
@@ -155,6 +156,24 @@ export default function WidgetsAdmin() {
         </div>
 
         <div className="widget-tabs" role="tablist" aria-label="เลือกวิดเจ็ต" style={{ margin: 0 }}>
+          <Link
+            href="/admin/widgets/templates"
+            className="widget-tab"
+            style={{
+              textDecoration: 'none',
+              background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(168, 85, 247, 0.15))',
+              borderColor: 'var(--primary)',
+              color: 'var(--text-main)',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px'
+            }}
+            title="เปิดคลังดีไซน์กว่า 17+ แบบ"
+          >
+            <Sparkles size={16} color="var(--accent)" />
+            <span>คลังเทมเพลตดีไซน์</span>
+            <span style={{ fontSize: '10px', background: 'var(--primary)', color: '#fff', padding: '1px 6px', borderRadius: '10px', fontWeight: 800 }}>17+</span>
+          </Link>
           <button
             id="goal-tab"
             role="tab"

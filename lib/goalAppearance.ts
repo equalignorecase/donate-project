@@ -3,6 +3,17 @@ export const goalFontOptions = [
   { value: 'LINESeedSansTH-ExtraBold', label: 'LINE Seed Sans TH (ExtraBold หนาพิเศษ)' },
 ];
 
+export const goalShapeOptions = [
+  { value: 'bar', label: 'หลอดแนวนอน', sub: 'Horizontal Bar' },
+  { value: 'circle', label: 'วงแหวน Donut', sub: 'Radial Gauge' },
+  { value: 'battery', label: 'แบตเตอรี่ไซเบอร์', sub: 'Cyber Battery' },
+  { value: 'orb', label: 'ลูกแก้ว RPG', sub: 'Mana / Health Orb' },
+  { value: 'pill', label: 'แคปซูลมินิมอล', sub: 'Dynamic Pill' },
+  { value: 'pixel_hearts', label: 'หัวใจพิกเซล 8-Bit', sub: 'Pixel Hearts' },
+] as const;
+
+export type GoalShape = typeof goalShapeOptions[number]['value'];
+
 export const goalPatternOptions = [
   { value: 'none', label: 'เรียบเนียน (Clean Smooth)' },
   { value: 'micro-dots', label: 'ไมโครดอท (Micro Dot Matrix)' },
@@ -20,6 +31,7 @@ export const goalPatternOptions = [
 export type GoalBarPattern = typeof goalPatternOptions[number]['value'];
 
 export const goalAppearanceDefaults = {
+  goal_shape: 'bar',
   goal_show_border: 'false',
   goal_bar_style: 'minimal',
   goal_bar_pattern: 'none',
@@ -95,6 +107,7 @@ export const goalAppearanceRanges: Partial<Record<keyof GoalAppearance, [number,
 
 export function validGoalAppearance(key: keyof GoalAppearance, value: unknown): boolean {
   if (typeof value !== 'string') return false;
+  if (key === 'goal_shape') return goalShapeOptions.some(s => s.value === value);
   if (key === 'goal_bar_style') return ['glass', 'neon', 'striped', 'minimal', 'slim', 'segmented', 'hud', 'milestone', 'floating'].includes(value);
   if (key === 'goal_bar_pattern') return goalPatternOptions.some(p => p.value === value);
   if (key === 'goal_font') return goalFontOptions.some(font => font.value === value);

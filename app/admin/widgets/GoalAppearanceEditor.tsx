@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import Link from 'next/link';
 import {
   Target,
   RotateCcw,
@@ -15,10 +16,18 @@ import {
   Grid,
   Clock,
   Calendar,
-  ArrowRight
+  ArrowRight,
+  Shapes,
+  CircleDot,
+  BatteryCharging,
+  Flame,
+  Pill,
+  Heart
 } from 'lucide-react';
 import {
   GoalAppearance,
+  GoalShape,
+  goalShapeOptions,
   goalAppearanceDefaults,
   goalAppearanceRanges,
   goalFontOptions,
@@ -82,7 +91,16 @@ const styleOptions = [
   { style: 'floating', label: 'Floating Label', desc: 'ป้ายยอดเงินตามปลายหลอด', icon: ArrowRight },
 ] as const;
 
-type GoalSubTab = 'style' | 'colors' | 'sizes' | 'typography';
+const shapeOptions = [
+  { shape: 'bar', label: 'หลอดแนวนอน', sub: 'Horizontal Bar', desc: 'หลอดยาวคลาสสิก ปรับแต่งได้ละเอียด', icon: Sliders },
+  { shape: 'circle', label: 'วงแหวน Donut', sub: 'Radial Gauge', desc: 'วงกลมมินิมอล ประหยัดพื้นที่ แปะข้างกล้องได้', icon: CircleDot },
+  { shape: 'battery', label: 'แบตเตอรี่ไซเบอร์', sub: 'Cyber Battery', desc: 'แท่งพลังงาน LED เรืองแสง สไตล์สตรีมเมอร์เกมเมอร์', icon: BatteryCharging },
+  { shape: 'orb', label: 'ลูกแก้ว RPG', sub: 'Mana / Health Orb', desc: 'ลูกแก้วพลังงานเวทมนตร์สไตล์ Diablo เรืองแสงสวยงาม', icon: Flame },
+  { shape: 'pill', label: 'แคปซูลมินิมอล', sub: 'Dynamic Pill', desc: 'แคปซูลสไตล์ Dynamic Island เรียบหรู คลีน ไม่กินที่บนจอ', icon: Pill },
+  { shape: 'pixel_hearts', label: 'หัวใจพิกเซล 8-Bit', sub: 'Pixel Hearts', desc: 'แถวหัวใจพิกเซลสไตล์เกม Zelda / Minecraft ย้อนยุค', icon: Heart },
+] as const;
+
+type GoalSubTab = 'shape' | 'style' | 'colors' | 'sizes' | 'typography';
 
 export default function GoalAppearanceEditor({
   value,
@@ -91,7 +109,7 @@ export default function GoalAppearanceEditor({
   title,
   target,
 }: GoalAppearanceEditorProps) {
-  const [activeTab, setActiveTab] = useState<GoalSubTab>('style');
+  const [activeTab, setActiveTab] = useState<GoalSubTab>('shape');
   const previewTarget = Number.isFinite(target) && target > 0 ? target : 15000;
 
   const update = (key: keyof GoalAppearance, next: string) => {
@@ -114,20 +132,39 @@ export default function GoalAppearanceEditor({
           <h2>รูปแบบหลอดเป้าหมาย</h2>
           <p>เลือกแบบ ดูตัวอย่าง แล้วบันทึกเพื่อใช้ใน OBS</p>
         </div>
-        <button
-          type="button"
-          className="goal-reset-btn"
-          disabled={disabled}
-          onClick={() => onChange({ ...goalAppearanceDefaults })}
-          title="คืนค่ารูปแบบเริ่มต้น"
-        >
-          <RotateCcw size={14} />
-          <span>รีเซ็ตค่าเริ่มต้น</span>
-        </button>
+        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+          <Link
+            href="/admin/widgets/templates"
+            className="goal-reset-btn"
+            style={{ textDecoration: 'none', background: 'var(--primary)', color: '#ffffff', borderColor: 'var(--primary)' }}
+            title="เปิดคลังดีไซน์กว่า 17+ แบบ"
+          >
+            <Sparkles size={14} />
+            <span>คลังดีไซน์ 17+ แบบ</span>
+          </Link>
+          <button
+            type="button"
+            className="goal-reset-btn"
+            disabled={disabled}
+            onClick={() => onChange({ ...goalAppearanceDefaults })}
+            title="คืนค่ารูปแบบเริ่มต้น"
+          >
+            <RotateCcw size={14} />
+            <span>รีเซ็ตค่าเริ่มต้น</span>
+          </button>
+        </div>
       </div>
 
       {/* Segmented Sub-Tabs */}
       <div className="editor-subtabs">
+        <button
+          type="button"
+          className={`editor-subtab-btn ${activeTab === 'shape' ? 'active' : ''}`}
+          onClick={() => setActiveTab('shape')}
+        >
+          <Shapes size={15} />
+          <span>รูปทรง (Shape)</span>
+        </button>
         <button
           type="button"
           className={`editor-subtab-btn ${activeTab === 'style' ? 'active' : ''}`}
@@ -161,6 +198,59 @@ export default function GoalAppearanceEditor({
           <span>ฟอนต์ &amp; ระยะเวลา</span>
         </button>
       </div>
+
+      {/* Section 0: เลือกรูปทรง (Shape) */}
+      {activeTab === 'shape' && (
+        <section className="goal-section-card">
+          <div className="goal-section-header">
+            <div className="goal-section-icon icon-purple">
+              <Shapes size={18} />
+            </div>
+            <div>
+              <h3>เลือกรูปทรงเป้าหมาย (Shape Design)</h3>
+              <p>เลือกดีไซน์ที่ไม่ใช่แค่หลอดยาว ดูพรีวิวสดด้านล่างแล้วกดเลือกได้ทันที</p>
+            </div>
+          </div>
+
+          <div className="goal-shape-grid" role="group" aria-label="เลือกรูปทรงเป้าหมาย">
+            {shapeOptions.map(({ shape, label, sub, desc, icon: IconComponent }) => {
+              const isSelected = (value.goal_shape || 'bar') === shape;
+              return (
+                <button
+                  type="button"
+                  className={`goal-shape-card${isSelected ? ' selected' : ''}`}
+                  key={shape}
+                  aria-pressed={isSelected}
+                  disabled={disabled}
+                  onClick={() => update('goal_shape', shape)}
+                >
+                  <div className="goal-shape-header">
+                    <div className="goal-shape-icon-badge">
+                      <IconComponent size={20} />
+                    </div>
+                    <div className="goal-shape-info">
+                      <strong>{label}</strong>
+                      <span className="goal-shape-sub">{sub}</span>
+                    </div>
+                    {isSelected ? <span className="goal-style-badge">ACTIVE</span> : null}
+                  </div>
+
+                  <div className="goal-shape-live-preview" aria-hidden="true">
+                    <GoalWidget
+                      title={title.trim() || 'เป้าหมายโดเนท'}
+                      current={previewTarget * 0.65}
+                      target={previewTarget}
+                      appearance={{ ...value, goal_shape: shape, goal_show_duration: 'false' }}
+                    />
+                  </div>
+
+                  <p className="goal-shape-desc">{desc}</p>
+                </button>
+              );
+            })}
+          </div>
+        </section>
+      )}
 
       {/* Section 1: รูปแบบหลอด & เอฟเฟกต์แสงวาว */}
       {activeTab === 'style' && (
