@@ -6,6 +6,7 @@ import './widgets.css';
 import { supabase } from '@/lib/supabaseClient';
 import { Donation, AlertSettings } from '@/lib/types/database';
 import AlertCard from './alert/AlertCard';
+import MediaSharePlayer from './MediaSharePlayer';
 import { useAlertQueue } from './useAlertQueue';
 
 export default function OverlayPage() {
@@ -85,6 +86,7 @@ export default function OverlayPage() {
 
   const {
     currentAlert,
+    activeMedia,
     alertAnimState,
     audioUnlocked,
     audioRef,
@@ -92,6 +94,7 @@ export default function OverlayPage() {
     unlockAudio: baseUnlockAudio,
     enqueueDonation,
     dismissAlert,
+    onMediaEnded,
     setQueuePaused,
     onTtsEnded,
     handleTtsAudioError
@@ -417,6 +420,13 @@ export default function OverlayPage() {
           settings={effectiveSettings}
           alert={currentAlert}
           animState={alertAnimState}
+        />
+      )}
+
+      {!currentAlert && activeMedia && (
+        <MediaSharePlayer
+          media={activeMedia}
+          onEnded={onMediaEnded}
         />
       )}
     </div>

@@ -3,6 +3,7 @@ import { supabaseAdmin } from '@/lib/supabaseAdmin';
 import { filterMessage } from '@/lib/services/blacklist';
 import { verifyAdminAuth } from '@/lib/auth';
 import { Donation } from '@/lib/types/database';
+import { parseYouTubeUrl } from '@/lib/media-share';
 
 export async function POST(request: Request) {
   if (!verifyAdminAuth(request)) {
@@ -11,14 +12,19 @@ export async function POST(request: Request) {
 
   try {
     const body = await request.json().catch(() => ({}));
-    const { id, name, amount, message } = body;
+    const { id, name, amount, message, media_url } = body;
 
     const filteredMsg = await filterMessage(message || '');
+    const parsedMedia = typeof media_url === 'string' && media_url.trim()
+      ? parseYouTubeUrl(media_url)
+      : null;
+
     const replayData: Donation = {
       id: `replay-${id || 'item'}-${Date.now()}`,
       name: (name || 'ผู้สนับสนุน').slice(0, 50),
       amount: parseFloat(amount) || 50,
       message: filteredMsg.slice(0, 200),
+      ...(parsedMedia ? { media_url: parsedMedia.canonicalUrl } : {}),
       created_at: new Date().toLocaleTimeString('th-TH'),
       isReplay: true
     };

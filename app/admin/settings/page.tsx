@@ -17,14 +17,69 @@ import {
   Banknote,
   Clock,
   VolumeX,
-  Volume1
+  Volume1,
+  PlayCircle,
+  Image as ImageIcon,
+  Globe,
+  RotateCcw
 } from 'lucide-react';
 import { AlertSettings } from '@/lib/types/database';
 import { Skeleton } from '@/app/components';
+import { SocialPlatformIcon } from '@/app/components/SocialPlatformIcon';
+import {
+  DONATE_PAGE_DEFAULTS,
+  DONATE_PAGE_SETTING_KEYS,
+  getDonatePageProfile
+} from '@/lib/donate-page-profile';
 import { useAdmin } from '../AdminContext';
 import { ALERT_SOUND_PRESETS } from '@/lib/constants';
 
-type SettingsTab = 'payment' | 'audio' | 'automation';
+type SettingsTab = 'payment' | 'audio' | 'automation' | 'donatePage';
+
+const SOCIAL_LINK_FIELDS: ReadonlyArray<{
+  settingKey: keyof Pick<
+    AlertSettings,
+    | 'donate_page_social_discord'
+    | 'donate_page_social_tiktok'
+    | 'donate_page_social_youtube'
+    | 'donate_page_social_twitch'
+    | 'donate_page_social_x_ig'
+  >;
+  id: string;
+  label: string;
+  placeholder: string;
+}> = [
+  {
+    settingKey: DONATE_PAGE_SETTING_KEYS.socialDiscord,
+    id: 'settingDonateDiscord',
+    label: 'Discord',
+    placeholder: 'https://discord.gg/...'
+  },
+  {
+    settingKey: DONATE_PAGE_SETTING_KEYS.socialTiktok,
+    id: 'settingDonateTiktok',
+    label: 'TikTok',
+    placeholder: 'https://www.tiktok.com/@...'
+  },
+  {
+    settingKey: DONATE_PAGE_SETTING_KEYS.socialYoutube,
+    id: 'settingDonateYoutube',
+    label: 'YouTube',
+    placeholder: 'https://www.youtube.com/@...'
+  },
+  {
+    settingKey: DONATE_PAGE_SETTING_KEYS.socialTwitch,
+    id: 'settingDonateTwitch',
+    label: 'Twitch',
+    placeholder: 'https://www.twitch.tv/...'
+  },
+  {
+    settingKey: DONATE_PAGE_SETTING_KEYS.socialInstagramOrX,
+    id: 'settingDonateXIg',
+    label: 'Instagram / X',
+    placeholder: 'https://www.instagram.com/... หรือ https://x.com/...'
+  }
+];
 
 export default function AdminSettingsPage() {
   const { showToast, handleUnauthorized } = useAdmin();
@@ -38,12 +93,27 @@ export default function AdminSettingsPage() {
     alert_volume: 80,
     alert_sound_url: '/sounds/alert.mp3',
     tts_enabled: 'true',
-    tts_min_amount: 20
+    tts_min_amount: 20,
+    media_share_enabled: 'false',
+    media_share_min_amount: 20,
+    media_share_max_duration: 60,
+    media_share_volume: 70,
+    [DONATE_PAGE_SETTING_KEYS.name]: DONATE_PAGE_DEFAULTS.name,
+    [DONATE_PAGE_SETTING_KEYS.handle]: DONATE_PAGE_DEFAULTS.handle,
+    [DONATE_PAGE_SETTING_KEYS.bio]: DONATE_PAGE_DEFAULTS.bio,
+    [DONATE_PAGE_SETTING_KEYS.avatarUrl]: DONATE_PAGE_DEFAULTS.avatarUrl,
+    [DONATE_PAGE_SETTING_KEYS.heroUrl]: DONATE_PAGE_DEFAULTS.heroUrl,
+    [DONATE_PAGE_SETTING_KEYS.socialDiscord]: '',
+    [DONATE_PAGE_SETTING_KEYS.socialTiktok]: '',
+    [DONATE_PAGE_SETTING_KEYS.socialYoutube]: '',
+    [DONATE_PAGE_SETTING_KEYS.socialTwitch]: '',
+    [DONATE_PAGE_SETTING_KEYS.socialInstagramOrX]: ''
   });
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isSaving, setIsSaving] = useState<boolean>(false);
   const [isPlayingAlertSound, setIsPlayingAlertSound] = useState<boolean>(false);
   const [uploadingSound, setUploadingSound] = useState<boolean>(false);
+  const [uploadingImage, setUploadingImage] = useState<'avatar' | 'hero' | null>(null);
   const [soundMode, setSoundMode] = useState<'preset' | 'custom'>('preset');
   const alertSoundRef = useRef<HTMLAudioElement | null>(null);
 
@@ -84,37 +154,56 @@ export default function AdminSettingsPage() {
     }
   };
 
+  const uploadMediaFile = async (file: File): Promise<string> => {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const adminToken = typeof window !== 'undefined' ? (localStorage.getItem('donate_admin_token') || '') : '';
+    const headers: Record<string, string> = {};
+    if (adminToken) {
+      headers['x-admin-token'] = adminToken;
+      headers['Authorization'] = `Bearer ${adminToken}`;
+    }
+
+    const res = await fetch('/api/admin/upload-media', {
+      method: 'POST',
+      headers,
+      body: formData
+    });
+
+    const data = await res.json();
+    if (!res.ok || !data.success || !data.url) {
+      throw new Error(data.message || 'อัปโหลดไฟล์ไม่สำเร็จ');
+    }
+
+    return String(data.url);
+  };
+
   const handleSoundUpload = async (file: File) => {
     setUploadingSound(true);
     try {
-      const formData = new FormData();
-      formData.append('file', file);
-
-      const adminToken = typeof window !== 'undefined' ? (localStorage.getItem('donate_admin_token') || '') : '';
-      const headers: Record<string, string> = {};
-      if (adminToken) {
-        headers['x-admin-token'] = adminToken;
-        headers['Authorization'] = `Bearer ${adminToken}`;
-      }
-
-      const res = await fetch('/api/admin/upload-media', {
-        method: 'POST',
-        headers,
-        body: formData
-      });
-
-      const data = await res.json();
-      if (!res.ok || !data.success) {
-        throw new Error(data.message || 'อัปโหลดเสียงไม่สำเร็จ');
-      }
-
-      setSettings(prev => ({ ...prev, alert_sound_url: data.url }));
+      const url = await uploadMediaFile(file);
+      setSettings(prev => ({ ...prev, alert_sound_url: url }));
       setSoundMode('custom');
       showToast('อัปโหลดไฟล์เสียงสำเร็จ');
     } catch (err: any) {
       alert(err.message || 'เกิดข้อผิดพลาดในการอัปโหลดไฟล์เสียง');
     } finally {
       setUploadingSound(false);
+    }
+  };
+
+  const handleDonateImageUpload = async (target: 'avatar' | 'hero', file: File) => {
+    setUploadingImage(target);
+    try {
+      const url = await uploadMediaFile(file);
+      const key = target === 'avatar' ? DONATE_PAGE_SETTING_KEYS.avatarUrl : DONATE_PAGE_SETTING_KEYS.heroUrl;
+      setSettings(prev => ({ ...prev, [key]: url }));
+      showToast(target === 'avatar' ? 'อัปโหลดรูปโปรไฟล์สำเร็จ (กดบันทึกเพื่อยืนยัน)' : 'อัปโหลดภาพพื้นหลังสำเร็จ (กดบันทึกเพื่อยืนยัน)');
+    } catch (err: any) {
+      alert(err.message || 'เกิดข้อผิดพลาดในการอัปโหลดรูปภาพ');
+    } finally {
+      setUploadingImage(null);
     }
   };
 
@@ -131,7 +220,10 @@ export default function AdminSettingsPage() {
         }
         const data = await res.json();
         if (data.success && data.settings) {
-          setSettings((prev) => ({ ...prev, ...data.settings }));
+          const definedSettings = Object.fromEntries(
+            Object.entries(data.settings).filter(([, value]) => value !== undefined && value !== null)
+          );
+          setSettings((prev) => ({ ...prev, ...definedSettings }));
           if (data.settings.alert_sound_url) {
             const isPreset = ALERT_SOUND_PRESETS.some(p => p.id !== 'custom' && p.id === data.settings.alert_sound_url);
             setSoundMode(isPreset ? 'preset' : 'custom');
@@ -178,6 +270,9 @@ export default function AdminSettingsPage() {
   }
 
   const currentVolume = Number(settings.alert_volume ?? 80);
+  const donatePreviewProfile = getDonatePageProfile(
+    settings as unknown as Record<string, string | number | boolean | undefined>
+  );
 
   return (
     <div>
@@ -226,7 +321,15 @@ export default function AdminSettingsPage() {
           onClick={() => setActiveTab('automation')}
         >
           <Sparkles size={16} />
-          <span>TTS &amp; ระดับยอดเงิน</span>
+          <span>TTS, Media Share &amp; ระดับยอดเงิน</span>
+        </button>
+        <button
+          type="button"
+          className={`tab-btn ${activeTab === 'donatePage' ? 'active' : ''}`}
+          onClick={() => setActiveTab('donatePage')}
+        >
+          <Globe size={16} />
+          <span>หน้าโดเนท &amp; โปรไฟล์</span>
         </button>
       </div>
 
@@ -605,6 +708,97 @@ export default function AdminSettingsPage() {
               </div>
             </div>
 
+            {/* Card: Media Share (YouTube Link) */}
+            <div className="settings-card">
+              <div className="settings-card-header">
+                <div className="settings-card-icon">
+                  <PlayCircle size={18} />
+                </div>
+                <div>
+                  <div className="settings-card-title">แชร์คลิป / เพลง YouTube (Media Share)</div>
+                  <div className="settings-card-desc">
+                    อนุญาตให้ผู้โดเนทเลือกเปิดสวิตช์แนบลิงก์ YouTube เพื่อเล่นขึ้นจอ OBS หลัง Alert &amp; TTS จบลง
+                  </div>
+                </div>
+              </div>
+
+              <div className="form-row">
+                <div className="form-group">
+                  <label className="form-label" htmlFor="settingMediaShareEnabled">
+                    สถานะระบบแนบลิงก์หน้าโดเนท
+                  </label>
+                  <select
+                    id="settingMediaShareEnabled"
+                    className="input-control"
+                    value={String(settings.media_share_enabled === 'true' || settings.media_share_enabled === true)}
+                    onChange={(e) => setSettings({ ...settings, media_share_enabled: e.target.value })}
+                  >
+                    <option value="true">เปิดใช้งาน (ผู้โดเนทเลือกใส่หรือไม่ใส่ลิงก์ก็ได้)</option>
+                    <option value="false">ปิดใช้งาน (ซ่อนช่องใส่ลิงก์บนหน้าโดเนท)</option>
+                  </select>
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label" htmlFor="settingMediaShareMinAmount">
+                    ยอดขั้นต่ำสำหรับแนบลิงก์ YouTube (บาท)
+                  </label>
+                  <input
+                    type="number"
+                    id="settingMediaShareMinAmount"
+                    className="input-control"
+                    min="1"
+                    max="1000000"
+                    value={settings.media_share_min_amount ?? 20}
+                    onChange={(e) => setSettings({ ...settings, media_share_min_amount: parseInt(e.target.value, 10) || 1 })}
+                  />
+                </div>
+              </div>
+
+              <div className="form-row" style={{ marginBottom: 0 }}>
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                  <label className="form-label" htmlFor="settingMediaShareMaxDuration">
+                    ความยาวเล่นสูงสุดต่อคลิป (วินาที · 5-600 วิ)
+                  </label>
+                  <input
+                    type="number"
+                    id="settingMediaShareMaxDuration"
+                    className="input-control"
+                    min="5"
+                    max="600"
+                    value={settings.media_share_max_duration ?? 60}
+                    onChange={(e) => setSettings({ ...settings, media_share_max_duration: parseInt(e.target.value, 10) || 60 })}
+                  />
+                </div>
+
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                    <label className="form-label" htmlFor="settingMediaShareVolume" style={{ marginBottom: 0 }}>
+                      ระดับเสียงคลิป YouTube บน OBS
+                    </label>
+                    <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--accent)' }}>
+                      {Number(settings.media_share_volume ?? 70)}%
+                    </span>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '8px' }}>
+                    {Number(settings.media_share_volume ?? 70) === 0 ? (
+                      <VolumeX size={18} style={{ color: 'var(--text-dim)' }} />
+                    ) : (
+                      <Volume1 size={18} style={{ color: 'var(--accent)' }} />
+                    )}
+                    <input
+                      type="range"
+                      id="settingMediaShareVolume"
+                      min="0"
+                      max="100"
+                      value={Number(settings.media_share_volume ?? 70)}
+                      onChange={(e) => setSettings({ ...settings, media_share_volume: parseInt(e.target.value, 10) || 0 })}
+                      style={{ flex: 1, cursor: 'pointer' }}
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
             {/* Card: Tiered Text Colors */}
             <div className="settings-card">
               <div className="settings-card-header">
@@ -749,6 +943,346 @@ export default function AdminSettingsPage() {
                     </div>
                   </div>
                 </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ================= TAB 4: PUBLIC DONATE PAGE & PROFILE ================= */}
+        {activeTab === 'donatePage' && (
+          <div>
+            {/* Card: Live Mini Preview */}
+            <div className="settings-card">
+              <div className="settings-card-header" style={{ justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+                  <div className="settings-card-icon">
+                    <Globe size={18} />
+                  </div>
+                  <div>
+                    <div className="settings-card-title">ตัวอย่างหน้าโดเนทสาธารณะ (Live Preview)</div>
+                    <div className="settings-card-desc">
+                      แสดงผลโปรไฟล์ รูปแบนเนอร์ และปุ่มโซเชียลตามค่าที่กำลังแก้ไขแบบเรียลไทม์
+                    </div>
+                  </div>
+                </div>
+                <a
+                  href="/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn-secondary"
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', textDecoration: 'none' }}
+                >
+                  <ExternalLink size={14} />
+                  <span>เปิดหน้าโดเนทจริง</span>
+                </a>
+              </div>
+
+              <div
+                style={{
+                  borderRadius: '14px',
+                  overflow: 'hidden',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  background: '#0f1118'
+                }}
+              >
+                <div
+                  style={{
+                    position: 'relative',
+                    height: '128px',
+                    background: donatePreviewProfile.heroUrl
+                      ? `linear-gradient(180deg, rgba(15, 17, 24, 0.15) 0%, #0f1118 100%), url("${donatePreviewProfile.heroUrl}") center/cover no-repeat`
+                      : 'linear-gradient(135deg, #1d2438 0%, #0f1118 100%)'
+                  }}
+                />
+                <div style={{ padding: '0 20px 20px', marginTop: '-42px', position: 'relative' }}>
+                  <div style={{ display: 'flex', alignItems: 'flex-end', gap: '14px', flexWrap: 'wrap' }}>
+                    <div
+                      style={{
+                        width: '76px',
+                        height: '76px',
+                        borderRadius: '20px',
+                        overflow: 'hidden',
+                        border: '3px solid #0f1118',
+                        background: '#1c2130',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        color: '#fff',
+                        fontWeight: 700,
+                        fontSize: '26px',
+                        flexShrink: 0
+                      }}
+                    >
+                      {donatePreviewProfile.avatarUrl ? (
+                        <img
+                          src={donatePreviewProfile.avatarUrl}
+                          alt={donatePreviewProfile.name}
+                          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                        />
+                      ) : (
+                        <span>{donatePreviewProfile.name.charAt(0).toUpperCase()}</span>
+                      )}
+                    </div>
+                    <div style={{ minWidth: 0, flex: 1 }}>
+                      <div style={{ fontSize: '18px', fontWeight: 700, color: '#fff', lineHeight: 1.25 }}>
+                        {donatePreviewProfile.name}
+                      </div>
+                      {donatePreviewProfile.handle && (
+                        <div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.65)', marginTop: '2px' }}>
+                          {donatePreviewProfile.handle}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {donatePreviewProfile.bio && (
+                    <p
+                      style={{
+                        marginTop: '12px',
+                        marginBottom: 0,
+                        fontSize: '13.5px',
+                        lineHeight: 1.55,
+                        color: 'rgba(255,255,255,0.84)',
+                        whiteSpace: 'pre-line'
+                      }}
+                    >
+                      {donatePreviewProfile.bio}
+                    </p>
+                  )}
+
+                  {donatePreviewProfile.socialLinks.length > 0 && (
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '12px' }}>
+                      {donatePreviewProfile.socialLinks.map((item) => (
+                        <span
+                          key={item.key}
+                          title={item.label}
+                          style={{
+                            width: '32px',
+                            height: '32px',
+                            borderRadius: '999px',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            background: 'rgba(255,255,255,0.08)',
+                            border: '1px solid rgba(255,255,255,0.12)',
+                            color: '#e5e7eb'
+                          }}
+                        >
+                          <SocialPlatformIcon platform={item.platform} size={15} />
+                        </span>
+                      ))}
+                    </div>
+                  )}
+
+                  <div style={{ marginTop: '12px', fontSize: '12px', color: 'rgba(255,255,255,0.5)' }}>
+                    หัวข้อฟอร์ม: โดเนทให้ {donatePreviewProfile.name} · ใบเสร็จ: ถึง {donatePreviewProfile.name}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Card: Profile Info */}
+            <div className="settings-card">
+              <div className="settings-card-header">
+                <div className="settings-card-icon">
+                  <Sparkles size={18} />
+                </div>
+                <div>
+                  <div className="settings-card-title">ข้อมูลโปรไฟล์สตรีมเมอร์</div>
+                  <div className="settings-card-desc">
+                    ชื่อที่แสดงจะอัปเดตทั้งโปรไฟล์ หัวข้อฟอร์ม ใบเสร็จ ท้ายเว็บ และชื่อแท็บเบราว์เซอร์
+                  </div>
+                </div>
+              </div>
+
+              <div className="form-row">
+                <div className="form-group">
+                  <label className="form-label" htmlFor="settingDonateName">
+                    ชื่อสตรีมเมอร์ / ชื่อที่แสดง (สูงสุด 60 ตัวอักษร)
+                  </label>
+                  <input
+                    type="text"
+                    id="settingDonateName"
+                    className="input-control"
+                    maxLength={60}
+                    placeholder={DONATE_PAGE_DEFAULTS.name}
+                    value={settings[DONATE_PAGE_SETTING_KEYS.name] ?? ''}
+                    onChange={(e) =>
+                      setSettings({ ...settings, [DONATE_PAGE_SETTING_KEYS.name]: e.target.value })
+                    }
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label" htmlFor="settingDonateHandle">
+                    Handle / ชื่อบัญชี (เว้นว่างเพื่อซ่อน)
+                  </label>
+                  <input
+                    type="text"
+                    id="settingDonateHandle"
+                    className="input-control"
+                    maxLength={60}
+                    placeholder={DONATE_PAGE_DEFAULTS.handle}
+                    value={settings[DONATE_PAGE_SETTING_KEYS.handle] ?? ''}
+                    onChange={(e) =>
+                      setSettings({ ...settings, [DONATE_PAGE_SETTING_KEYS.handle]: e.target.value })
+                    }
+                  />
+                </div>
+              </div>
+
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label" htmlFor="settingDonateBio">
+                  ข้อความแนะนำตัว (Bio — รองรับขึ้นบรรทัดใหม่ สูงสุด 300 ตัวอักษร เว้นว่างเพื่อซ่อน)
+                </label>
+                <textarea
+                  id="settingDonateBio"
+                  className="input-control"
+                  rows={3}
+                  maxLength={300}
+                  placeholder={DONATE_PAGE_DEFAULTS.bio}
+                  value={settings[DONATE_PAGE_SETTING_KEYS.bio] ?? ''}
+                  onChange={(e) =>
+                    setSettings({ ...settings, [DONATE_PAGE_SETTING_KEYS.bio]: e.target.value })
+                  }
+                />
+                <div className="text-muted" style={{ fontSize: '12px', marginTop: '6px' }}>
+                  {(settings[DONATE_PAGE_SETTING_KEYS.bio] ?? '').length}/300 ตัวอักษร
+                </div>
+              </div>
+            </div>
+
+            {/* Card: Avatar & Hero Images */}
+            <div className="settings-card">
+              <div className="settings-card-header">
+                <div className="settings-card-icon">
+                  <ImageIcon size={18} />
+                </div>
+                <div>
+                  <div className="settings-card-title">รูปโปรไฟล์และแบนเนอร์พื้นหลัง</div>
+                  <div className="settings-card-desc">
+                    อัปโหลดภาพใหม่หรือวาง URL รูปภาพ (รองรับ .png, .jpg, .jpeg, .webp, .gif ขนาดไม่เกิน 25MB)
+                  </div>
+                </div>
+              </div>
+
+              <div className="form-row" style={{ marginBottom: 0 }}>
+                {([
+                  {
+                    target: 'avatar' as const,
+                    settingKey: DONATE_PAGE_SETTING_KEYS.avatarUrl,
+                    defaultValue: DONATE_PAGE_DEFAULTS.avatarUrl,
+                    inputId: 'settingDonateAvatarUrl',
+                    uploadId: 'donateAvatarUploadInput',
+                    label: 'รูปโปรไฟล์ (Avatar)',
+                    placeholder: '/avatar.png หรือ https://...'
+                  },
+                  {
+                    target: 'hero' as const,
+                    settingKey: DONATE_PAGE_SETTING_KEYS.heroUrl,
+                    defaultValue: DONATE_PAGE_DEFAULTS.heroUrl,
+                    inputId: 'settingDonateHeroUrl',
+                    uploadId: 'donateHeroUploadInput',
+                    label: 'ภาพแบนเนอร์พื้นหลัง (Hero Banner — ล้างค่าเพื่อใช้พื้นหลังทึบ)',
+                    placeholder: 'https://...'
+                  }
+                ]).map((imgField) => (
+                  <div key={imgField.target} className="form-group" style={{ marginBottom: 0 }}>
+                    <label className="form-label" htmlFor={imgField.inputId}>
+                      {imgField.label}
+                    </label>
+                    <input
+                      type="text"
+                      id={imgField.inputId}
+                      className="input-control"
+                      placeholder={imgField.placeholder}
+                      value={settings[imgField.settingKey] ?? ''}
+                      onChange={(e) =>
+                        setSettings({ ...settings, [imgField.settingKey]: e.target.value })
+                      }
+                    />
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '10px', flexWrap: 'wrap' }}>
+                      <label
+                        htmlFor={imgField.uploadId}
+                        className="btn-secondary"
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                          cursor: uploadingImage === imgField.target ? 'wait' : 'pointer',
+                          marginBottom: 0
+                        }}
+                      >
+                        {uploadingImage === imgField.target ? (
+                          <Loader2 size={14} className="spinner" />
+                        ) : (
+                          <UploadCloud size={14} />
+                        )}
+                        <span>{uploadingImage === imgField.target ? 'กำลังอัปโหลด...' : 'อัปโหลดรูปภาพ'}</span>
+                      </label>
+                      <input
+                        id={imgField.uploadId}
+                        type="file"
+                        accept=".png,.jpg,.jpeg,.webp,.gif,image/png,image/jpeg,image/webp,image/gif"
+                        style={{ display: 'none' }}
+                        disabled={uploadingImage !== null}
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            handleDonateImageUpload(imgField.target, file);
+                            e.target.value = '';
+                          }
+                        }}
+                      />
+                      <button
+                        type="button"
+                        className="btn-secondary"
+                        style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+                        onClick={() =>
+                          setSettings({ ...settings, [imgField.settingKey]: imgField.defaultValue })
+                        }
+                      >
+                        <RotateCcw size={14} />
+                        <span>คืนค่าเริ่มต้น</span>
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Card: Social Links */}
+            <div className="settings-card">
+              <div className="settings-card-header">
+                <div className="settings-card-icon">
+                  <ExternalLink size={18} />
+                </div>
+                <div>
+                  <div className="settings-card-title">ลิงก์โซเชียลมีเดีย (สูงสุด 5 ช่อง)</div>
+                  <div className="settings-card-desc">
+                    ช่องที่ใส่ URL (http:// หรือ https://) จะแสดงเป็นไอคอนใต้ข้อความแนะนำตัว ช่องที่เว้นว่างจะถูกซ่อนอัตโนมัติ
+                  </div>
+                </div>
+              </div>
+
+              <div className="form-row" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', marginBottom: 0 }}>
+                {SOCIAL_LINK_FIELDS.map((field) => (
+                  <div key={field.settingKey} className="form-group" style={{ marginBottom: 0 }}>
+                    <label className="form-label" htmlFor={field.id}>
+                      {field.label}
+                    </label>
+                    <input
+                      type="url"
+                      id={field.id}
+                      className="input-control"
+                      placeholder={field.placeholder}
+                      value={settings[field.settingKey] ?? ''}
+                      onChange={(e) =>
+                        setSettings({ ...settings, [field.settingKey]: e.target.value })
+                      }
+                    />
+                  </div>
+                ))}
               </div>
             </div>
           </div>

@@ -77,8 +77,9 @@
 .helpButton:hover { color: var(--ink); }
 .main { max-width: 940px; margin: -48px auto 44px; position: relative; z-index: 1; display: grid; grid-template-columns: 280px minmax(0, 1fr); gap: 32px; align-items: start; }
 .story { padding-top: 0; }
-.avatar { width: 70px; height: 70px; position: relative; display: grid; place-items: center; overflow: hidden; margin: 0 0 12px; border: 4px solid var(--card-bg); border-radius: 20px; background: var(--raised-bg); color: var(--accent-text); font-size: 32px; font-weight: 700; }
-.avatar > img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.avatar { width: 88px; height: 88px; position: relative; display: grid; place-items: center; overflow: hidden; margin: 0 0 14px; border: 3px solid var(--card-bg); border-radius: 22px; background: linear-gradient(135deg, var(--avatar-start), var(--avatar-end)); color: var(--avatar-text); font-size: 34px; font-weight: 700; box-shadow: 0 8px 22px var(--shadow), 0 0 0 1px var(--accent-line); }
+.avatar > img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: center 45%; }
+.avatarFallback { line-height: 1; user-select: none; }
 .guideCard { margin: 22px 0 0; border-top: 1px solid var(--line); overflow: hidden; }
 .guideHeader { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 12px 0; }
 .guideHeader h3 { font-size: 16px; font-weight: 700; color: var(--ink); }
@@ -339,7 +340,10 @@
 .profile h1 { font-size: 22px; font-weight: 700; letter-spacing: -.5px; overflow-wrap: anywhere; }
 .profile p { color: var(--muted); font-size: 13px; margin-top: 2px; }
 .profile .profileHandle { font-size: 12px; color: var(--dim); }
-.profile .profileBio { margin-top: 14px; font-size: 13px; line-height: 1.8; }
+.profile .profileBio { margin-top: 14px; font-size: 13px; line-height: 1.8; white-space: pre-line; overflow-wrap: anywhere; }
+.socialLinks { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+.socialLinkBtn { width: 34px; height: 34px; display: inline-grid; place-items: center; border-radius: 10px; border: 1px solid var(--line); background: var(--field-bg); color: var(--muted); text-decoration: none; }
+.socialLinkBtn:hover { color: var(--accent-text); border-color: var(--accent-border); background: var(--hover-bg); transform: translateY(-2px); }
 .guideHeader h2 { color: var(--ink); font-size: 14px; font-weight: 500; }
 .sectionTitle { color: var(--ink); font-size: 13px; font-weight: 500; margin-bottom: 11px; }
 .sectionTitle:focus { outline: none; }
@@ -418,6 +422,32 @@
 .statsError { display: flex; align-items: center; justify-content: space-between; gap: 7px; color: var(--muted); font-size: 10px; margin-top: 10px; }
 .statsError button { color: var(--accent-text); padding: 6px; background: transparent; border: 0; border-radius: 5px; white-space: nowrap; }
 .statsError button:hover { background: var(--accent-soft); }
+.mediaBox { margin-top: 16px; }
+.mediaToggle { width: 100%; display: flex; align-items: center; gap: 11px; padding: 11px 13px; border: 1px solid var(--line); border-radius: 11px; background: var(--field-bg); color: var(--ink); text-align: left; transition: border-color .2s, background .2s; }
+.mediaToggle:hover { border-color: var(--accent-border); background: var(--hover-bg); }
+.mediaToggleActive { border-color: var(--accent-border); background: var(--selected); }
+.mediaToggleIcon { width: 34px; height: 34px; flex-shrink: 0; border-radius: 9px; display: grid; place-items: center; background: var(--raised-bg); color: var(--accent); border: 1px solid var(--line-soft); }
+.mediaToggleActive .mediaToggleIcon { background: var(--accent); color: #fff; border-color: transparent; }
+.mediaToggleText { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.mediaToggleText strong { font-size: 12px; font-weight: 500; color: var(--ink); }
+.mediaToggleText small { font-size: 10px; color: var(--muted); line-height: 1.5; }
+.mediaSwitch { position: relative; flex-shrink: 0; width: 36px; height: 21px; border-radius: 999px; background: var(--raised-bg); border: 1px solid var(--line); transition: background .2s, border-color .2s; }
+.mediaSwitch > span { position: absolute; top: 2px; left: 2px; width: 15px; height: 15px; border-radius: 50%; background: var(--muted); transition: transform .2s, background .2s; }
+.mediaToggleActive .mediaSwitch { background: var(--accent); border-color: var(--accent); }
+.mediaToggleActive .mediaSwitch > span { transform: translateX(15px); background: #fff; }
+.mediaDrawer { margin-top: 10px; }
+.mediaInputWrap { position: relative; display: flex; align-items: center; }
+.mediaInput { padding-right: 36px; font-size: 12px !important; }
+.mediaClear { position: absolute; right: 8px; width: 26px; height: 26px; border: 0; border-radius: 6px; background: transparent; color: var(--muted); display: grid; place-items: center; }
+.mediaClear:hover { background: var(--raised-bg); color: var(--ink); }
+.mediaPreviewCard { display: flex; align-items: center; gap: 11px; margin-top: 10px; padding: 9px 11px; border: 1px solid var(--accent-line); border-radius: 10px; background: var(--field-bg); }
+.mediaPreviewCard > img { width: 84px; height: 48px; object-fit: cover; border-radius: 6px; flex-shrink: 0; background: #000; }
+.mediaPreviewMeta { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.mediaPreviewMeta strong { font-size: 11.5px; font-weight: 500; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mediaPreviewMeta span { font-size: 10px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mediaValidBadge { flex-shrink: 0; display: inline-flex; align-items: center; gap: 4px; font-size: 10px; font-weight: 500; padding: 4px 8px; border-radius: 999px; background: var(--success-soft); color: var(--success); }
+.receiptLink { max-width: 65%; display: inline-flex; align-items: center; gap: 5px; color: var(--accent-text); text-decoration: none; font-weight: 500; overflow-wrap: anywhere; text-align: right; }
+.receiptLink:hover { text-decoration: underline; }
 @media (max-width: 800px) {
   .main { grid-template-areas: 'profile' 'goal' 'form' 'ranking' 'guide'; grid-template-rows: repeat(5, auto); }
   .statsCard { display: contents; }

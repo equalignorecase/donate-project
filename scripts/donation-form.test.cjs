@@ -82,3 +82,69 @@ test('rejects profanity and vulgar words in name and message', () => {
   });
   assert.equal(customBlocked.name, 'ชื่อมีคำไม่สุภาพหรือไม่เหมาะสม');
 });
+
+test('media share link is optional when toggle is off and validated when toggle is on', () => {
+  // Off by default -> does not require mediaUrl or enforce mediaMinAmount
+  assert.deepEqual(validateDonation({
+    name: 'ผู้ชม',
+    amount: '10',
+    message: '',
+    method: 'promptpay',
+    hasSlip: true,
+    mediaEnabled: true,
+    attachMedia: false,
+    mediaUrl: '',
+    mediaMinAmount: 50,
+  }), {});
+
+  // On with missing or invalid URL -> rejects mediaUrl
+  assert.ok(validateDonation({
+    name: 'ผู้ชม',
+    amount: '50',
+    message: '',
+    method: 'promptpay',
+    hasSlip: true,
+    mediaEnabled: true,
+    attachMedia: true,
+    mediaUrl: '',
+    mediaMinAmount: 50,
+  }).mediaUrl);
+
+  assert.ok(validateDonation({
+    name: 'ผู้ชม',
+    amount: '50',
+    message: '',
+    method: 'promptpay',
+    hasSlip: true,
+    mediaEnabled: true,
+    attachMedia: true,
+    mediaUrl: 'https://evil.example/watch?v=dQw4w9WgXcQ',
+    mediaMinAmount: 50,
+  }).mediaUrl);
+
+  // On with PromptPay below media minimum -> rejects amount
+  assert.ok(validateDonation({
+    name: 'ผู้ชม',
+    amount: '20',
+    message: '',
+    method: 'promptpay',
+    hasSlip: true,
+    mediaEnabled: true,
+    attachMedia: true,
+    mediaUrl: 'https://youtu.be/dQw4w9WgXcQ',
+    mediaMinAmount: 50,
+  }).amount);
+
+  // Valid YouTube link + meets minimum -> passes
+  assert.deepEqual(validateDonation({
+    name: 'ผู้ชม',
+    amount: '50',
+    message: '',
+    method: 'promptpay',
+    hasSlip: true,
+    mediaEnabled: true,
+    attachMedia: true,
+    mediaUrl: 'https://youtu.be/dQw4w9WgXcQ?t=15',
+    mediaMinAmount: 50,
+  }), {});
+});

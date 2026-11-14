@@ -61,6 +61,30 @@ test('wallet sends the voucher URL and uses the redeemed amount from the server'
   assert.equal(result.amount, 75);
 });
 
+test('verifyDonation and redeemDonation forward optional mediaUrl when provided', async () => {
+  const slip = new File(['image'], 'slip.png', { type: 'image/png' });
+  await verifyDonation(
+    { name: 'ผู้ชม', message: '', amount: '50', slip, mediaUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ' },
+    async (_url, init) => {
+      assert.equal(init.body.get('media_url'), 'https://www.youtube.com/watch?v=dQw4w9WgXcQ');
+      return reply({ success: true, data: verified });
+    }
+  );
+
+  await redeemDonation(
+    { name: 'ผู้ชม', message: '', voucher: 'https://gift.truemoney.com/campaign/?v=abc123', mediaUrl: 'https://youtu.be/dQw4w9WgXcQ' },
+    async (_url, init) => {
+      assert.deepEqual(JSON.parse(init.body), {
+        name: 'ผู้ชม',
+        message: '',
+        voucher_url: 'https://gift.truemoney.com/campaign/?v=abc123',
+        media_url: 'https://youtu.be/dQw4w9WgXcQ',
+      });
+      return reply({ success: true, data: verified });
+    }
+  );
+});
+
 test('API rejection and unreadable responses cannot produce a successful donation', async () => {
   await assert.rejects(createDonationQr(50, async () => reply({ success: false, message: 'กรุณาตั้งค่าพร้อมเพย์' }, 500)), /กรุณาตั้งค่าพร้อมเพย์/);
   await assert.rejects(redeemDonation({ name: 'ผู้ชม', message: '', voucher: 'url' }, async () => reply({ success: false, message: 'ซองถูกใช้แล้ว' }, 400)), /ซองถูกใช้แล้ว/);

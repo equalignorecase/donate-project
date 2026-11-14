@@ -59,6 +59,7 @@ export default function Sidebar({
   const isBlacklistActive = pathname?.startsWith('/admin/blacklist') || activeTab === 'tabBlacklist';
   const isProfileActive = pathname?.startsWith('/admin/profile') || activeTab === 'tabProfile';
   const isCustomizerActive = pathname?.startsWith('/customizer') || activeTab === 'tabCustomizer';
+  const isTestDonateActive = pathname?.startsWith('/admin/test-donate') || activeTab === 'tabTestDonate';
   const isSimulatorActive = pathname?.startsWith('/admin/simulator') || activeTab === 'tabSimulator';
   const isSlipDebugActive = pathname?.startsWith('/admin/slip-debug') || activeTab === 'tabSlipDebug';
 
@@ -240,6 +241,19 @@ export default function Sidebar({
           <div>
             <div className="sidebar-section-title">จอสตรีม & ลิงก์ภายนอก</div>
             <ul className="sidebar-menu">
+              <li>
+                <Link
+                  href="/admin/test-donate"
+                  className={`sidebar-link ${isTestDonateActive ? 'active' : ''}`}
+                  onClick={() => handleLinkClick('tabTestDonate')}
+                >
+                  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="22" y1="2" x2="11" y2="13"></line>
+                    <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                  </svg>
+                  <span>ทดสอบโดเนท (OBS)</span>
+                </Link>
+              </li>
               <li>
                 <Link
                   href="/admin/simulator"

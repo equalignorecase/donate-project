@@ -31,6 +31,8 @@ import GoalWidget from '@/app/overlay/goal/GoalWidget';
 import SupporterWidget from '@/app/overlay/supporters/SupporterWidget';
 import TimerCard from '@/app/overlay/timer/TimerCard';
 import AlertCard, { defaultAlertSettings, getAlertTier } from '@/app/overlay/alert/AlertCard';
+import MediaSharePlayer from '@/app/overlay/MediaSharePlayer';
+import { getMediaShareConfig, parseYouTubeUrl } from '@/lib/media-share';
 import { goalAppearanceDefaults, GoalAppearance } from '@/lib/goalAppearance';
 import { supporterDefaults, SupporterAppearance } from '@/lib/supporterAppearance';
 import { defaultTimerAppearance, TimerAppearance } from '@/lib/timerTypes';
@@ -66,6 +68,8 @@ export default function SimulatorPage() {
     amount: 500,
     message: 'ยินดีด้วยกับการสตรีมครับ! ขอให้ยอดปังๆ สนุกมากๆ ครับ 💖'
   });
+  const [testMediaUrl, setTestMediaUrl] = useState('');
+  const [simPlayingMedia, setSimPlayingMedia] = useState(false);
 
   // Widget settings loaded from API (or fallback defaults)
   const [goalApp, setGoalApp] = useState<GoalAppearance>({ ...goalAppearanceDefaults });
@@ -271,6 +275,7 @@ export default function SimulatorPage() {
       amount: amountVal,
       message: msgVal
     });
+    setSimPlayingMedia(false);
 
     setAlertSimKey(k => k + 1);
     setAlertAnimState('show');
@@ -286,11 +291,13 @@ export default function SimulatorPage() {
       alertAudioRef.current.play().catch(() => {});
     }
 
+    const parsedTestMedia = parseYouTubeUrl(testMediaUrl);
     const testPayload = {
       id: 'test-sim-' + Date.now(),
       name: nameVal,
       amount: amountVal,
       message: msgVal,
+      ...(parsedTestMedia ? { media_url: parsedTestMedia.canonicalUrl } : {}),
       sender_bank: 'SIMULATOR',
       created_at: new Date().toLocaleTimeString('th-TH'),
       isTest: true
@@ -306,16 +313,23 @@ export default function SimulatorPage() {
     }
 
     const duration = Math.max(3, Number(alertSettings.alert_duration) || 6);
+    const mediaCfg = getMediaShareConfig(alertSettings);
+    const shouldSimMedia = Boolean(parsedTestMedia && mediaCfg.enabled);
+
+    const finishAlert = () => {
+      setAlertAnimState('hide');
+      alertTimerRef.current = setTimeout(() => {
+        setAlertAnimState('idle');
+        alertTimerRef.current = null;
+        if (shouldSimMedia) {
+          setSimPlayingMedia(true);
+        }
+      }, 580);
+    };
 
     const scheduleDismiss = (delayMs: number) => {
       if (alertTimerRef.current) clearTimeout(alertTimerRef.current);
-      alertTimerRef.current = setTimeout(() => {
-        setAlertAnimState('hide');
-        alertTimerRef.current = setTimeout(() => {
-          setAlertAnimState('idle');
-          alertTimerRef.current = null;
-        }, 580);
-      }, Math.max(delayMs, 0));
+      alertTimerRef.current = setTimeout(finishAlert, Math.max(delayMs, 0));
     };
 
     // TTS speech preview in simulator
@@ -347,12 +361,19 @@ export default function SimulatorPage() {
   };
 
   const handleSimTtsEnded = () => {
+    const parsedTestMedia = parseYouTubeUrl(testMediaUrl);
+    const mediaCfg = getMediaShareConfig(alertSettings);
+    const shouldSimMedia = Boolean(parsedTestMedia && mediaCfg.enabled);
+
     if (alertTimerRef.current) clearTimeout(alertTimerRef.current);
     alertTimerRef.current = setTimeout(() => {
       setAlertAnimState('hide');
       alertTimerRef.current = setTimeout(() => {
         setAlertAnimState('idle');
         alertTimerRef.current = null;
+        if (shouldSimMedia) {
+          setSimPlayingMedia(true);
+        }
       }, 580);
     }, 1500);
   };
@@ -495,6 +516,14 @@ export default function SimulatorPage() {
         </div>
 
         <div className="simulator-actions">
+          <input
+            type="url"
+            className="input-control"
+            value={testMediaUrl}
+            onChange={(e) => setTestMediaUrl(e.target.value)}
+            placeholder="YouTube URL สำหรับทดสอบ Media Share (ไม่บังคับ)"
+            style={{ width: '260px', height: '36px', fontSize: '12px' }}
+          />
           <button
             type="button"
             className="simulator-btn simulator-btn-primary"
@@ -707,7 +736,7 @@ export default function SimulatorPage() {
                   top: `${layout.alert.y}%`,
                   transform: `translate(-50%, -50%) scale(${layout.alert.scale || 1})`,
                   transformOrigin: 'center center',
-                  display: alertAnimState !== 'idle' || selectedWidget === 'alert' ? 'block' : 'none',
+                  display: alertAnimState !== 'idle' || simPlayingMedia || selectedWidget === 'alert' ? 'block' : 'none',
                 }}
                 onPointerDown={e => handlePointerDown('alert', e)}
                 onClick={() => setSelectedWidget('alert')}
@@ -736,6 +765,22 @@ export default function SimulatorPage() {
                       settings={alertSettings}
                       alert={alertSample}
                       animState={alertAnimState}
+                    />
+                  ) : simPlayingMedia && parseYouTubeUrl(testMediaUrl) ? (
+                    <MediaSharePlayer
+                      media={{
+                        id: `sim-media-${alertSimKey}`,
+                        donation: {
+                          name: alertSample.name,
+                          amount: alertSample.amount,
+                          message: alertSample.message,
+                          media_url: parseYouTubeUrl(testMediaUrl)!.canonicalUrl,
+                        },
+                        parsed: parseYouTubeUrl(testMediaUrl)!,
+                        maxDuration: getMediaShareConfig(alertSettings).maxDuration,
+                        volume: getMediaShareConfig(alertSettings).volume,
+                      }}
+                      onEnded={() => setSimPlayingMedia(false)}
                     />
                   ) : (
                     <div className="sim-alert-placeholder">

@@ -6,6 +6,8 @@ import { filterMessage } from '@/lib/services/blacklist';
 import { Donation } from '@/lib/types/database';
 import { MAX_SLIP_FILE_SIZE_BYTES } from '@/lib/constants';
 import { applyDonationToTimer } from '@/lib/timerLogic';
+import { parseYouTubeUrl, isMissingMediaUrlColumnError } from '@/lib/media-share';
+import { loadMediaShareConfig } from '@/lib/media-share-server';
 
 export const dynamic = 'force-dynamic';
 
@@ -44,6 +46,7 @@ export async function POST(request: Request) {
     const rawName = (formData.get('name') || '').toString().trim();
     const amountStr = formData.get('amount') as string;
     const rawMessage = (formData.get('message') || '').toString().trim();
+    const rawMediaUrl = (formData.get('media_url') || '').toString().trim();
 
     if (formData.get('simulate') === 'true') {
       return NextResponse.json(
@@ -79,6 +82,33 @@ export async function POST(request: Request) {
         );
       }
     } catch (e) {}
+
+    let validatedMediaUrl: string | null = null;
+    let mediaMinAmount = 0;
+    if (rawMediaUrl) {
+      const mediaConfig = await loadMediaShareConfig();
+      if (!mediaConfig.enabled) {
+        return NextResponse.json(
+          { success: false, message: 'ขณะนี้ระบบปิดรับลิงก์คลิป YouTube ชั่วคราว' },
+          { status: 400 }
+        );
+      }
+      const parsedMedia = parseYouTubeUrl(rawMediaUrl);
+      if (!parsedMedia) {
+        return NextResponse.json(
+          { success: false, message: 'ลิงก์ YouTube ไม่ถูกต้อง รองรับเฉพาะลิงก์ youtube.com หรือ youtu.be' },
+          { status: 400 }
+        );
+      }
+      if (expectedAmount < mediaConfig.minAmount) {
+        return NextResponse.json(
+          { success: false, message: `ยอดโดเนทขั้นต่ำสำหรับแนบลิงก์คลิปคือ ${mediaConfig.minAmount} บาท` },
+          { status: 400 }
+        );
+      }
+      validatedMediaUrl = parsedMedia.canonicalUrl;
+      mediaMinAmount = mediaConfig.minAmount;
+    }
 
     let verifiedData: {
       verified: boolean;
@@ -206,10 +236,15 @@ export async function POST(request: Request) {
         }
 
         // 5. Insert into Supabase donations table
+        const effectiveMediaUrl = validatedMediaUrl && verifiedData.amount >= mediaMinAmount
+          ? validatedMediaUrl
+          : null;
+
         const donationRecord: Donation = {
           name,
           amount: verifiedData.amount,
           message: cleanMessage,
+          ...(effectiveMediaUrl ? { media_url: effectiveMediaUrl } : {}),
           transaction_ref: verifiedData.transRef,
           sender_name: verifiedData.senderName,
           sender_bank: verifiedData.senderBank,
@@ -218,11 +253,22 @@ export async function POST(request: Request) {
           status: 'verified'
         };
 
-        const { data: inserted, error: insertError } = await supabaseAdmin
+        let { data: inserted, error: insertError } = await supabaseAdmin
           .from('donations')
           .insert([donationRecord])
           .select()
           .single();
+
+        if (insertError && effectiveMediaUrl && isMissingMediaUrlColumnError(insertError)) {
+          const { media_url: _omitted, ...fallbackRecord } = donationRecord;
+          const retry = await supabaseAdmin
+            .from('donations')
+            .insert([fallbackRecord])
+            .select()
+            .single();
+          inserted = retry.data;
+          insertError = retry.error;
+        }
 
         if (insertError) {
           if (insertError.code === '23505') {
@@ -251,7 +297,8 @@ export async function POST(request: Request) {
             id: inserted.id,
             name: inserted.name,
             amount: inserted.amount,
-            message: inserted.message
+            message: inserted.message,
+            ...(effectiveMediaUrl ? { media_url: effectiveMediaUrl } : {})
           });
           if (timerEvent) {
             await channel.httpSend('timer_update', timerEvent);
@@ -265,7 +312,7 @@ export async function POST(request: Request) {
         return NextResponse.json({
           success: true,
           message: 'การโดเนทสำเร็จและส่งการแจ้งเตือนขึ้นจอแล้ว!',
-          data: inserted
+          data: effectiveMediaUrl ? { ...inserted, media_url: inserted.media_url ?? effectiveMediaUrl } : inserted
         });
       } finally {
         inFlightTransRefs.delete(verifiedData.transRef);

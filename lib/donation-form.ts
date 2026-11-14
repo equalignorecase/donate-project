@@ -1,7 +1,8 @@
 import { containsProfanity } from './profanity';
+import { parseYouTubeUrl } from './media-share';
 
 export type PaymentMethod = 'promptpay' | 'truemoney';
-export type DonationErrors = Partial<Record<'name' | 'amount' | 'message' | 'method' | 'slip' | 'voucher', string>>;
+export type DonationErrors = Partial<Record<'name' | 'amount' | 'message' | 'method' | 'slip' | 'voucher' | 'mediaUrl', string>>;
 
 export interface DonationInput {
   name: string;
@@ -13,6 +14,10 @@ export interface DonationInput {
   minAmount?: number;
   voucher?: string;
   customBlacklist?: readonly string[];
+  mediaEnabled?: boolean;
+  attachMedia?: boolean;
+  mediaUrl?: string;
+  mediaMinAmount?: number;
 }
 
 export function validateDonation(input: DonationInput): DonationErrors {
@@ -36,6 +41,18 @@ export function validateDonation(input: DonationInput): DonationErrors {
       if (url.origin !== 'https://gift.truemoney.com' || url.username || url.password || !/^\/campaign\/?$/.test(url.pathname) || !/^[a-zA-Z0-9]+$/.test(url.searchParams.get('v') || '')) throw new Error('Invalid voucher');
     } catch {
       errors.voucher = 'กรุณาใส่ลิงก์ซองของขวัญ https://gift.truemoney.com/campaign/?v=…';
+    }
+  }
+  if (input.mediaEnabled && input.attachMedia) {
+    const rawMedia = input.mediaUrl?.trim() || '';
+    if (!rawMedia) {
+      errors.mediaUrl = 'กรุณาใส่ลิงก์ YouTube หรือปิดสวิตช์แนบลิงก์';
+    } else if (!parseYouTubeUrl(rawMedia)) {
+      errors.mediaUrl = 'กรุณาใส่ลิงก์ YouTube ที่ถูกต้อง (เช่น youtube.com/watch?v=... หรือ youtu.be/...)';
+    }
+    const mediaMinimum = Math.max(1, input.mediaMinAmount || 20);
+    if (input.method === 'promptpay' && !errors.amount && Number(input.amount) < mediaMinimum) {
+      errors.amount = `ยอดโดเนทขั้นต่ำสำหรับแนบลิงก์คลิปคือ ${mediaMinimum.toLocaleString('th-TH')} บาท`;
     }
   }
   return errors;

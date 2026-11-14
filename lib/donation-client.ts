@@ -26,18 +26,29 @@ export async function createDonationQr(amount: number, request: Request = fetch)
   if (data.amount !== amount || !data.promptpayId || !(data.qrImage || data.qrDataUrl)) throw new Error('ข้อมูล QR Code ไม่ครบถ้วน กรุณาลองสร้างใหม่');
   return data;
 }
-export async function verifyDonation(input: { name: string; message: string; amount: string; slip: File }, request: Request = fetch): Promise<Donation> {
+export async function verifyDonation(input: { name: string; message: string; amount: string; slip: File; mediaUrl?: string }, request: Request = fetch): Promise<Donation> {
   const body = new FormData();
   body.append('name', input.name.trim());
   body.append('message', input.message.trim());
   body.append('amount', input.amount);
   body.append('slip', input.slip);
+  if (input.mediaUrl && input.mediaUrl.trim()) {
+    body.append('media_url', input.mediaUrl.trim());
+  }
   return confirmedDonation(await readResult<Donation>(await request('/api/donate/verify-slip', { method: 'POST', body })));
 }
-export async function redeemDonation(input: { name: string; message: string; voucher: string }, request: Request = fetch): Promise<Donation> {
+export async function redeemDonation(input: { name: string; message: string; voucher: string; mediaUrl?: string }, request: Request = fetch): Promise<Donation> {
+  const payload: Record<string, string> = {
+    name: input.name.trim(),
+    message: input.message.trim(),
+    voucher_url: input.voucher.trim(),
+  };
+  if (input.mediaUrl && input.mediaUrl.trim()) {
+    payload.media_url = input.mediaUrl.trim();
+  }
   const response = await request('/api/donate/truemoney', {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ name: input.name.trim(), message: input.message.trim(), voucher_url: input.voucher.trim() }),
+    body: JSON.stringify(payload),
   });
   return confirmedDonation(await readResult<Donation>(response));
 }

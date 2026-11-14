@@ -14,6 +14,7 @@ import GoalWidget from '@/app/overlay/goal/GoalWidget';
 import SupporterWidget from '@/app/overlay/supporters/SupporterWidget';
 import TimerCard from '@/app/overlay/timer/TimerCard';
 import AlertCard, { defaultAlertSettings } from '@/app/overlay/alert/AlertCard';
+import MediaSharePlayer from '@/app/overlay/MediaSharePlayer';
 import { goalAppearanceDefaults, GoalAppearance } from '@/lib/goalAppearance';
 import { supporterDefaults, SupporterAppearance } from '@/lib/supporterAppearance';
 import { defaultTimerAppearance, TimerAppearance, TimerStatus } from '@/lib/timerTypes';
@@ -44,12 +45,14 @@ export default function OverlayScenePage() {
   const [alertSettings, setAlertSettings] = useState<AlertSettings>(defaultAlertSettings);
   const {
     currentAlert,
+    activeMedia,
     alertAnimState,
     audioRef,
     ttsAudioRef,
     unlockAudio,
     enqueueDonation,
     dismissAlert,
+    onMediaEnded,
     setQueuePaused,
     onTtsEnded,
     handleTtsAudioError
@@ -216,8 +219,8 @@ export default function OverlayScenePage() {
         onError={handleTtsAudioError}
       />
 
-      {/* 1. Alert Box */}
-      {layout.alert.visible && currentAlert && (
+      {/* 1. Alert Box & Media Share */}
+      {layout.alert.visible && (currentAlert || activeMedia) && (
         <div
           style={{
             position: 'absolute',
@@ -227,11 +230,18 @@ export default function OverlayScenePage() {
             transformOrigin: 'center center',
           }}
         >
-          <AlertCard
-            settings={alertSettings}
-            alert={currentAlert}
-            animState={alertAnimState}
-          />
+          {currentAlert ? (
+            <AlertCard
+              settings={alertSettings}
+              alert={currentAlert}
+              animState={alertAnimState}
+            />
+          ) : activeMedia ? (
+            <MediaSharePlayer
+              media={activeMedia}
+              onEnded={onMediaEnded}
+            />
+          ) : null}
         </div>
       )}
 

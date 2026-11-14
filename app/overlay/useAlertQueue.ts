@@ -4,6 +4,8 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { Donation, AlertSettings } from '@/lib/types/database';
 import { amountToThaiWords } from '@/lib/thaiNumber';
 import { prepareTtsText } from '@/lib/tts-helper';
+import { getMediaShareConfig, parseYouTubeUrl } from '@/lib/media-share';
+import type { ActiveMediaItem } from './MediaSharePlayer';
 
 function playSynthesizedChime(volumePercent: number) {
   try {
@@ -44,6 +46,7 @@ function playSynthesizedChime(volumePercent: number) {
 
 export function useAlertQueue(settings: AlertSettings) {
   const [currentAlert, setCurrentAlert] = useState<Donation | null>(null);
+  const [activeMedia, setActiveMedia] = useState<ActiveMediaItem | null>(null);
   const [alertAnimState, setAlertAnimState] = useState<string>('');
   const [audioUnlocked, setAudioUnlocked] = useState<boolean>(false);
 
@@ -51,12 +54,15 @@ export function useAlertQueue(settings: AlertSettings) {
   const isPlayingRef = useRef<boolean>(false);
   const isQueuePausedRef = useRef<boolean>(false);
   const settingsRef = useRef<AlertSettings>(settings);
+  const currentAlertRef = useRef<Donation | null>(null);
+  const activeMediaRef = useRef<ActiveMediaItem | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const ttsAudioRef = useRef<HTMLAudioElement | null>(null);
   const ttsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const currentTtsTextRef = useRef<string>('');
   const alertStartTimeRef = useRef<number>(0);
   const alertDismissTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const mediaGuardTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const isTtsSpeakingRef = useRef<boolean>(false);
   const processedAlertIds = useRef<Set<string>>(new Set());
 
@@ -115,7 +121,7 @@ export function useAlertQueue(settings: AlertSettings) {
 
   const processQueueRef = useRef<() => void>(() => {});
 
-  const dismissAlert = useCallback(() => {
+  const clearPlaybackTimersAndSpeech = useCallback(() => {
     if (alertDismissTimeoutRef.current) {
       clearTimeout(alertDismissTimeoutRef.current);
       alertDismissTimeoutRef.current = null;
@@ -123,6 +129,10 @@ export function useAlertQueue(settings: AlertSettings) {
     if (ttsTimeoutRef.current) {
       clearTimeout(ttsTimeoutRef.current);
       ttsTimeoutRef.current = null;
+    }
+    if (mediaGuardTimeoutRef.current) {
+      clearTimeout(mediaGuardTimeoutRef.current);
+      mediaGuardTimeoutRef.current = null;
     }
     if (ttsAudioRef.current) {
       try {
@@ -136,15 +146,85 @@ export function useAlertQueue(settings: AlertSettings) {
       } catch {}
     }
     isTtsSpeakingRef.current = false;
+  }, []);
+
+  const onMediaEnded = useCallback(() => {
+    if (mediaGuardTimeoutRef.current) {
+      clearTimeout(mediaGuardTimeoutRef.current);
+      mediaGuardTimeoutRef.current = null;
+    }
+    activeMediaRef.current = null;
+    setActiveMedia(null);
+    isPlayingRef.current = false;
+    processQueueRef.current();
+  }, []);
+
+  const finishAlertPhase = useCallback(() => {
+    clearPlaybackTimersAndSpeech();
+
+    const item = currentAlertRef.current;
+    const mediaCfg = getMediaShareConfig(settingsRef.current);
+    const parsed = item?.media_url ? parseYouTubeUrl(item.media_url) : null;
+    const itemAmount = parseFloat(String(item?.amount ?? 0)) || 0;
+    const shouldPlayMedia = Boolean(
+      item &&
+      parsed &&
+      mediaCfg.enabled &&
+      (itemAmount >= mediaCfg.minAmount || item.isTest || item.isReplay)
+    );
 
     setAlertAnimState('hide');
     setTimeout(() => {
       setAlertAnimState('');
+      currentAlertRef.current = null;
+      setCurrentAlert(null);
+
+      if (shouldPlayMedia && item && parsed) {
+        const nextMedia: ActiveMediaItem = {
+          id: String(item.id || `media-${Date.now()}`),
+          donation: item,
+          parsed,
+          maxDuration: mediaCfg.maxDuration,
+          volume: mediaCfg.volume,
+        };
+        activeMediaRef.current = nextMedia;
+        setActiveMedia(nextMedia);
+        mediaGuardTimeoutRef.current = setTimeout(() => {
+          onMediaEnded();
+        }, (mediaCfg.maxDuration + 15) * 1000);
+      } else {
+        isPlayingRef.current = false;
+        processQueueRef.current();
+      }
+    }, 580);
+  }, [clearPlaybackTimersAndSpeech, onMediaEnded]);
+
+  const dismissAlert = useCallback(() => {
+    clearPlaybackTimersAndSpeech();
+    const hadMedia = Boolean(activeMediaRef.current);
+    const hadAlert = Boolean(currentAlertRef.current);
+
+    if (hadMedia) {
+      activeMediaRef.current = null;
+      setActiveMedia(null);
+    }
+
+    if (!hadAlert) {
+      setAlertAnimState('');
+      isPlayingRef.current = false;
+      processQueueRef.current();
+      return;
+    }
+
+    setAlertAnimState('hide');
+    setTimeout(() => {
+      setAlertAnimState('');
+      currentAlertRef.current = null;
       setCurrentAlert(null);
       isPlayingRef.current = false;
       processQueueRef.current();
     }, 580);
-  }, []);
+  }, [clearPlaybackTimersAndSpeech]);
 
   const scheduleAlertDismiss = useCallback(
     (delayMs: number) => {
@@ -152,10 +232,10 @@ export function useAlertQueue(settings: AlertSettings) {
         clearTimeout(alertDismissTimeoutRef.current);
       }
       alertDismissTimeoutRef.current = setTimeout(() => {
-        dismissAlert();
+        finishAlertPhase();
       }, Math.max(delayMs, 0));
     },
-    [dismissAlert]
+    [finishAlertPhase]
   );
 
   const onTtsEnded = useCallback(() => {
@@ -253,6 +333,7 @@ export function useAlertQueue(settings: AlertSettings) {
     isPlayingRef.current = true;
     alertStartTimeRef.current = Date.now();
     const item = queueRef.current.shift()!;
+    currentAlertRef.current = item;
     setCurrentAlert(item);
 
     playAlertSound();
@@ -312,11 +393,13 @@ export function useAlertQueue(settings: AlertSettings) {
     return () => {
       if (ttsTimeoutRef.current) clearTimeout(ttsTimeoutRef.current);
       if (alertDismissTimeoutRef.current) clearTimeout(alertDismissTimeoutRef.current);
+      if (mediaGuardTimeoutRef.current) clearTimeout(mediaGuardTimeoutRef.current);
     };
   }, []);
 
   return {
     currentAlert,
+    activeMedia,
     alertAnimState,
     audioUnlocked,
     audioRef,
@@ -324,6 +407,7 @@ export function useAlertQueue(settings: AlertSettings) {
     unlockAudio,
     enqueueDonation,
     dismissAlert,
+    onMediaEnded,
     setQueuePaused,
     onTtsEnded,
     handleTtsAudioError

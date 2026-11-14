@@ -6,7 +6,7 @@ export const dynamic = 'force-dynamic';
 const PUBLIC_KEYS = new Set(['min_donate', 'receiver_name', 'stream_studio_layout']);
 
 function isPublicSettingKey(key: string): boolean {
-  return PUBLIC_KEYS.has(key) || key.startsWith('alert_') || key.startsWith('tts_');
+  return PUBLIC_KEYS.has(key) || key.startsWith('alert_') || key.startsWith('tts_') || key.startsWith('media_share_') || key.startsWith('donate_page_');
 }
 
 export async function GET() {

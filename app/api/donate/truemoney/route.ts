@@ -3,6 +3,8 @@ import { supabaseAdmin } from '@/lib/supabaseAdmin';
 import { filterMessage } from '@/lib/services/blacklist';
 import { Donation } from '@/lib/types/database';
 import { applyDonationToTimer } from '@/lib/timerLogic';
+import { parseYouTubeUrl, isMissingMediaUrlColumnError } from '@/lib/media-share';
+import { loadMediaShareConfig } from '@/lib/media-share-server';
 
 // In-Flight Voucher Lock to prevent concurrent redemption of the same voucher link
 const inFlightVouchers = new Set<string>();
@@ -47,7 +49,7 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json().catch(() => ({}));
-    const { name, message, voucher_url } = body;
+    const { name, message, voucher_url, media_url } = body;
 
     // 1. Validation
     if (!voucher_url || typeof voucher_url !== 'string' || voucher_url.trim() === '') {
@@ -63,6 +65,28 @@ export async function POST(request: Request) {
         { success: false, message: 'รูปแบบลิงก์ซองของขวัญ TrueMoney ไม่ถูกต้อง (ต้องเป็น https://gift.truemoney.com/campaign/?v=...)' },
         { status: 400 }
       );
+    }
+
+    let validatedMediaUrl: string | null = null;
+    let mediaMinAmount = 0;
+    const rawMediaUrl = typeof media_url === 'string' ? media_url.trim() : '';
+    if (rawMediaUrl) {
+      const mediaConfig = await loadMediaShareConfig();
+      if (!mediaConfig.enabled) {
+        return NextResponse.json(
+          { success: false, message: 'ขณะนี้ระบบปิดรับลิงก์คลิป YouTube ชั่วคราว' },
+          { status: 400 }
+        );
+      }
+      const parsedMedia = parseYouTubeUrl(rawMediaUrl);
+      if (!parsedMedia) {
+        return NextResponse.json(
+          { success: false, message: 'ลิงก์ YouTube ไม่ถูกต้อง รองรับเฉพาะลิงก์ youtube.com หรือ youtu.be' },
+          { status: 400 }
+        );
+      }
+      validatedMediaUrl = parsedMedia.canonicalUrl;
+      mediaMinAmount = mediaConfig.minAmount;
     }
 
     if (inFlightVouchers.has(cleanVoucher)) {
@@ -174,10 +198,15 @@ export async function POST(request: Request) {
       const cleanMsg = await filterMessage(rawMessage);
 
       // 7. Insert into donations table
+      const effectiveMediaUrl = validatedMediaUrl && amountNum >= mediaMinAmount
+        ? validatedMediaUrl
+        : null;
+
       const donationRecord: Donation = {
         name: donorName,
         amount: amountNum,
         message: cleanMsg,
+        ...(effectiveMediaUrl ? { media_url: effectiveMediaUrl } : {}),
         transaction_ref: voucherId,
         sender_name: ownerProfile.full_name || 'TrueMoney User',
         sender_bank: 'TRUEMONEY',
@@ -186,11 +215,22 @@ export async function POST(request: Request) {
         status: 'verified'
       };
 
-      const { data: inserted, error: insertError } = await supabaseAdmin
+      let { data: inserted, error: insertError } = await supabaseAdmin
         .from('donations')
         .insert([donationRecord])
         .select()
         .single();
+
+      if (insertError && effectiveMediaUrl && isMissingMediaUrlColumnError(insertError)) {
+        const { media_url: _omitted, ...fallbackRecord } = donationRecord;
+        const retry = await supabaseAdmin
+          .from('donations')
+          .insert([fallbackRecord])
+          .select()
+          .single();
+        inserted = retry.data;
+        insertError = retry.error;
+      }
 
       if (insertError) {
         if (insertError.code === '23505') {
@@ -220,6 +260,7 @@ export async function POST(request: Request) {
           name: inserted.name,
           amount: inserted.amount,
           message: inserted.message,
+          ...(effectiveMediaUrl ? { media_url: effectiveMediaUrl } : {}),
           sender_bank: 'TRUEMONEY'
         });
         if (timerEvent) {
@@ -234,7 +275,7 @@ export async function POST(request: Request) {
       return NextResponse.json({
         success: true,
         message: 'รับซอง TrueMoney สำเร็จ ยอดเงินเข้าบัญชีเรียบร้อยแล้ว!',
-        data: inserted
+        data: effectiveMediaUrl ? { ...inserted, media_url: inserted.media_url ?? effectiveMediaUrl } : inserted
       });
     } finally {
       inFlightVouchers.delete(cleanVoucher);

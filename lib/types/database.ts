@@ -3,6 +3,7 @@ export interface Donation {
   name: string;
   amount: number;
   message?: string;
+  media_url?: string | null;
   transaction_ref?: string;
   trans_ref?: string;
   slip_url?: string;
@@ -121,6 +122,20 @@ export interface AlertSettings {
   alert_sound_url?: string;
   tts_enabled?: string | boolean;
   tts_min_amount?: number | string;
+  media_share_enabled?: string | boolean;
+  media_share_min_amount?: number | string;
+  media_share_max_duration?: number | string;
+  media_share_volume?: number | string;
+  donate_page_name?: string;
+  donate_page_handle?: string;
+  donate_page_bio?: string;
+  donate_page_avatar_url?: string;
+  donate_page_hero_url?: string;
+  donate_page_social_discord?: string;
+  donate_page_social_tiktok?: string;
+  donate_page_social_youtube?: string;
+  donate_page_social_twitch?: string;
+  donate_page_social_x_ig?: string;
   promptpay_id?: string;
   truemoney_phone?: string;
   receiver_name?: string;

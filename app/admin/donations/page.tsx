@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { createPortal } from 'react-dom';
-import { Plus, Trash2, Edit3, RefreshCw, X, AlertTriangle, MoreHorizontal, Play, Download, SkipForward } from 'lucide-react';
+import { Plus, Trash2, Edit3, RefreshCw, X, AlertTriangle, MoreHorizontal, Play, Download, SkipForward, ExternalLink } from 'lucide-react';
 import { supabase } from '@/lib/supabaseClient';
 import { Donation } from '@/lib/types/database';
 import { Skeleton } from '@/app/components';
@@ -33,6 +33,7 @@ export default function AdminDonationsPage() {
   const [formName, setFormName] = useState<string>('');
   const [formAmount, setFormAmount] = useState<string>('');
   const [formMessage, setFormMessage] = useState<string>('');
+  const [formMediaUrl, setFormMediaUrl] = useState<string>('');
   const [formStatus, setFormStatus] = useState<string>('verified');
   const [formRef, setFormRef] = useState<string>('');
   const [formTriggerAlert, setFormTriggerAlert] = useState<boolean>(false);
@@ -176,7 +177,8 @@ export default function AdminDonationsPage() {
           id: item.id,
           name: item.name,
           amount: item.amount,
-          message: item.message
+          message: item.message,
+          media_url: item.media_url
         })
       });
       if (res.status === 401) {
@@ -199,6 +201,7 @@ export default function AdminDonationsPage() {
     setFormName('');
     setFormAmount('');
     setFormMessage('');
+    setFormMediaUrl('');
     setFormStatus('verified');
     setFormRef('');
     setFormTriggerAlert(false);
@@ -211,6 +214,7 @@ export default function AdminDonationsPage() {
     setFormName(item.name || '');
     setFormAmount(String(item.amount || ''));
     setFormMessage(item.message || '');
+    setFormMediaUrl(item.media_url || '');
     setFormStatus(item.status || 'verified');
     setFormRef(item.transaction_ref || item.trans_ref || '');
     setFormTriggerAlert(false);
@@ -241,6 +245,7 @@ export default function AdminDonationsPage() {
           name: formName.trim() || 'ผู้สนับสนุนนิรนาม',
           amount: parsedAmount,
           message: formMessage.trim(),
+          media_url: formMediaUrl.trim(),
           status: formStatus,
           transaction_ref: formRef.trim(),
           triggerAlert: formTriggerAlert
@@ -288,6 +293,7 @@ export default function AdminDonationsPage() {
           name: formName.trim() || 'ผู้สนับสนุนนิรนาม',
           amount: parsedAmount,
           message: formMessage.trim(),
+          media_url: formMediaUrl.trim(),
           status: formStatus,
           transaction_ref: formRef.trim(),
           triggerAlert: formTriggerAlert
@@ -667,7 +673,31 @@ export default function AdminDonationsPage() {
                     )}
                   </td>
                   <td style={{ maxWidth: '240px', wordBreak: 'break-word', color: 'var(--text-muted)' }}>
-                    {item.message || '-'}
+                    <div>{item.message || '-'}</div>
+                    {item.media_url && (
+                      <a
+                        href={item.media_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '4px',
+                          marginTop: '4px',
+                          fontSize: '11px',
+                          fontWeight: 600,
+                          color: '#ef4444',
+                          background: 'rgba(239, 68, 68, 0.1)',
+                          border: '1px solid rgba(239, 68, 68, 0.25)',
+                          borderRadius: '999px',
+                          padding: '2px 8px',
+                          textDecoration: 'none'
+                        }}
+                        title={item.media_url}
+                      >
+                        ▶ YouTube Link <ExternalLink size={10} />
+                      </a>
+                    )}
                   </td>
                   <td
                     style={{
@@ -923,6 +953,17 @@ export default function AdminDonationsPage() {
                   />
                 </div>
 
+                <div className="form-group">
+                  <label className="form-label">ลิงก์คลิป YouTube (ไม่บังคับ)</label>
+                  <input
+                    type="url"
+                    className="input-control"
+                    placeholder="https://www.youtube.com/watch?v=... หรือ https://youtu.be/..."
+                    value={formMediaUrl}
+                    onChange={(e) => setFormMediaUrl(e.target.value)}
+                  />
+                </div>
+
                 <div className="form-row">
                   <div className="form-group">
                     <label className="form-label">สถานะ</label>
@@ -1051,6 +1092,17 @@ export default function AdminDonationsPage() {
                     onChange={(e) => setFormMessage(e.target.value)}
                     maxLength={200}
                     style={{ resize: 'vertical' }}
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">ลิงก์คลิป YouTube (ไม่บังคับ)</label>
+                  <input
+                    type="url"
+                    className="input-control"
+                    placeholder="https://www.youtube.com/watch?v=... หรือ https://youtu.be/..."
+                    value={formMediaUrl}
+                    onChange={(e) => setFormMediaUrl(e.target.value)}
                   />
                 </div>
 
