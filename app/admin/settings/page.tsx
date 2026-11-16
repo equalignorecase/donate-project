@@ -21,7 +21,10 @@ import {
   PlayCircle,
   Image as ImageIcon,
   Globe,
-  RotateCcw
+  RotateCcw,
+  Activity,
+  CheckCircle2,
+  AlertCircle
 } from 'lucide-react';
 import { AlertSettings } from '@/lib/types/database';
 import { Skeleton } from '@/app/components';
@@ -115,6 +118,15 @@ export default function AdminSettingsPage() {
   const [uploadingSound, setUploadingSound] = useState<boolean>(false);
   const [uploadingImage, setUploadingImage] = useState<'avatar' | 'hero' | null>(null);
   const [soundMode, setSoundMode] = useState<'preset' | 'custom'>('preset');
+  const [tmHealthLoading, setTmHealthLoading] = useState<boolean>(false);
+  const [tmHealthResult, setTmHealthResult] = useState<{
+    status: 'online' | 'offline';
+    statusCode?: number;
+    latencyMs?: number;
+    message?: string;
+    apiUrl?: string;
+    data?: Record<string, unknown>;
+  } | null>(null);
   const alertSoundRef = useRef<HTMLAudioElement | null>(null);
 
   const handleTestAlertSound = () => {
@@ -204,6 +216,57 @@ export default function AdminSettingsPage() {
       alert(err.message || 'เกิดข้อผิดพลาดในการอัปโหลดรูปภาพ');
     } finally {
       setUploadingImage(null);
+    }
+  };
+
+  const handleCheckTrueMoneyHealth = async () => {
+    setTmHealthLoading(true);
+    try {
+      const adminToken = typeof window !== 'undefined' ? (localStorage.getItem('donate_admin_token') || '') : '';
+      const headers: Record<string, string> = {};
+      if (adminToken) {
+        headers['x-admin-token'] = adminToken;
+        headers['Authorization'] = `Bearer ${adminToken}`;
+      }
+
+      const res = await fetch('/api/admin/truemoney/health', {
+        headers,
+        cache: 'no-store'
+      });
+
+      if (res.status === 401) {
+        handleUnauthorized();
+        return;
+      }
+
+      const data = await res.json();
+      if (data.status === 'online') {
+        setTmHealthResult({
+          status: 'online',
+          statusCode: data.statusCode || 200,
+          latencyMs: data.latencyMs,
+          apiUrl: data.apiUrl,
+          data: data.data
+        });
+        showToast(`TrueMoney API ออนไลน์ปกติ (${data.latencyMs} ms)`);
+      } else {
+        setTmHealthResult({
+          status: 'offline',
+          statusCode: data.statusCode,
+          latencyMs: data.latencyMs,
+          apiUrl: data.apiUrl,
+          message: data.message || 'ไม่สามารถเชื่อมต่อได้'
+        });
+        showToast(`TrueMoney API ออฟไลน์: ${data.message || 'เชื่อมต่อไม่สำเร็จ'}`);
+      }
+    } catch (err: any) {
+      setTmHealthResult({
+        status: 'offline',
+        message: err.message || 'เกิดข้อผิดพลาดในการตรวจสอบสถานะ'
+      });
+      showToast('เกิดข้อผิดพลาดในการตรวจสอบสถานะ API');
+    } finally {
+      setTmHealthLoading(false);
     }
   };
 
@@ -378,6 +441,73 @@ export default function AdminSettingsPage() {
                     value={settings.truemoney_phone || ''}
                     onChange={(e) => setSettings({ ...settings, truemoney_phone: e.target.value })}
                   />
+
+                  {/* TrueMoney API Health Check */}
+                  <div style={{ marginTop: '10px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                      <button
+                        type="button"
+                        className="btn-secondary"
+                        onClick={handleCheckTrueMoneyHealth}
+                        disabled={tmHealthLoading}
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                          padding: '6px 12px',
+                          fontSize: '12.5px',
+                          cursor: tmHealthLoading ? 'wait' : 'pointer'
+                        }}
+                      >
+                        {tmHealthLoading ? (
+                          <Loader2 size={13} className="spinner" />
+                        ) : (
+                          <Activity size={13} />
+                        )}
+                        <span>{tmHealthLoading ? 'กำลังตรวจสอบ...' : 'ทดสอบ API TrueWallet (Health)'}</span>
+                      </button>
+
+                      {tmHealthResult && (
+                        <span
+                          style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '5px',
+                            padding: '4px 10px',
+                            borderRadius: '999px',
+                            fontSize: '12px',
+                            fontWeight: 600,
+                            background: tmHealthResult.status === 'online' ? 'rgba(34, 197, 94, 0.12)' : 'rgba(239, 68, 68, 0.12)',
+                            color: tmHealthResult.status === 'online' ? '#22c55e' : '#ef4444',
+                            border: `1px solid ${tmHealthResult.status === 'online' ? 'rgba(34, 197, 94, 0.3)' : 'rgba(239, 68, 68, 0.3)'}`
+                          }}
+                        >
+                          {tmHealthResult.status === 'online' ? (
+                            <CheckCircle2 size={13} />
+                          ) : (
+                            <AlertCircle size={13} />
+                          )}
+                          <span>
+                            {tmHealthResult.status === 'online'
+                              ? `ออนไลน์ (Online) • ${tmHealthResult.latencyMs} ms`
+                              : `ออฟไลน์ (Offline)${tmHealthResult.latencyMs ? ` • ${tmHealthResult.latencyMs} ms` : ''}`}
+                          </span>
+                        </span>
+                      )}
+                    </div>
+
+                    {tmHealthResult && tmHealthResult.status === 'offline' && (
+                      <div style={{ fontSize: '12px', color: '#ef4444', marginTop: '6px' }}>
+                        {tmHealthResult.message}
+                      </div>
+                    )}
+
+                    {tmHealthResult && tmHealthResult.status === 'online' && (
+                      <div style={{ fontSize: '11.5px', color: 'var(--text-muted)', marginTop: '6px' }}>
+                        Endpoint: <code>{tmHealthResult.apiUrl}</code> (HTTP {tmHealthResult.statusCode})
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
 
