@@ -55,7 +55,6 @@ export default function OverlayPage() {
     alert_tiered_legendary_to: '#f5af19'
   });
 
-  const [showBanner, setShowBanner] = useState<boolean>(true);
   const [isNoBgMode, setIsNoBgMode] = useState<boolean>(false);
 
   // Compute effective settings: Strip background, border, blur & shadow when in TikTok/No-BG mode
@@ -103,7 +102,6 @@ export default function OverlayPage() {
   // Unlock audio context on user click/interaction
   const unlockAudio = () => {
     baseUnlockAudio();
-    setTimeout(() => setShowBanner(false), 2000);
   };
 
   // Listen to any user interaction to unlock audio and check URL params for TikTok/No-BG mode
@@ -113,7 +111,6 @@ export default function OverlayPage() {
     window.addEventListener('pointerdown', handleGesture);
     window.addEventListener('keydown', handleGesture);
 
-    let bannerTimer: NodeJS.Timeout | null = null;
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
       const isTikTok =
@@ -126,27 +123,12 @@ export default function OverlayPage() {
         setIsNoBgMode(true);
         document.body.classList.add('tiktok-mode');
       }
-
-      if (
-        isTikTok ||
-        params.get('obs') === '1' ||
-        params.get('clean') === '1' ||
-        params.get('stream') === '1' ||
-        params.get('studio') === '1'
-      ) {
-        setShowBanner(false);
-      } else {
-        bannerTimer = setTimeout(() => {
-          setShowBanner(false);
-        }, 8000);
-      }
     }
 
     return () => {
       window.removeEventListener('click', handleGesture);
       window.removeEventListener('pointerdown', handleGesture);
       window.removeEventListener('keydown', handleGesture);
-      if (bannerTimer) clearTimeout(bannerTimer);
     };
   }, []);
 
@@ -345,75 +327,6 @@ export default function OverlayPage() {
         onEnded={onTtsEnded}
         onError={handleTtsAudioError}
       />
-
-      {/* Browser Autoplay Notice & Local Sound Tester (Hidden in OBS via ?obs=1 or close button) */}
-      {showBanner && (
-        <div
-          style={{
-            position: 'fixed',
-            top: 14,
-            left: '50%',
-            transform: 'translateX(-50%)',
-            zIndex: 99999,
-            background: audioUnlocked ? 'rgba(15, 23, 42, 0.88)' : 'rgba(220, 38, 38, 0.94)',
-            backdropFilter: 'blur(12px)',
-            color: '#ffffff',
-            padding: '8px 16px',
-            borderRadius: '9999px',
-            boxShadow: '0 8px 30px rgba(0,0,0,0.3)',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '12px',
-            fontSize: '13px',
-            fontWeight: 500,
-            fontFamily: 'sans-serif',
-            transition: 'all 0.3s ease',
-            border: '1px solid rgba(255,255,255,0.15)'
-          }}
-        >
-          <span>
-            {audioUnlocked
-              ? '🔊 เสียงพร้อมทำงานแล้ว'
-              : '🔇 เบราว์เซอร์บล็อกเสียงอัตโนมัติ (คลิกที่นี่เพื่อเปิดเสียง)'}
-          </span>
-          <button
-            type="button"
-            onClick={triggerLocalTest}
-            style={{
-              background: '#ffffff',
-              color: '#0f172a',
-              border: 'none',
-              padding: '4px 12px',
-              borderRadius: '9999px',
-              fontSize: '12px',
-              fontWeight: 700,
-              cursor: 'pointer',
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '4px',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.2)'
-            }}
-          >
-            ▶ ทดสอบ Alert + TTS (1,000฿)
-          </button>
-          <button
-            type="button"
-            onClick={() => setShowBanner(false)}
-            title="ซ่อนแถบนี้ (สำหรับ OBS หน้าจอโปร่งใสอยู่แล้ว)"
-            style={{
-              background: 'transparent',
-              border: 'none',
-              color: 'rgba(255, 255, 255, 0.7)',
-              cursor: 'pointer',
-              fontSize: '16px',
-              lineHeight: 1,
-              padding: '2px 4px',
-            }}
-          >
-            ✕
-          </button>
-        </div>
-      )}
 
       {currentAlert && (
         <AlertCard
