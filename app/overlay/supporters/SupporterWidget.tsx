@@ -231,6 +231,8 @@ export default function SupporterWidget({ donors, appearance, mode }: { donors: 
             const isCardsLayout = appearance.supporter_layout === 'cards';
             const effectiveShowDivider = showDivider && !isLastItem && !isCardsLayout;
             const rowPadding = Number(appearance.supporter_row_padding || '12');
+            const rowSidePadding = Number(appearance.supporter_row_side_padding || '14');
+            const rankGap = Number(appearance.supporter_rank_gap || '12');
 
             return (
               <li
@@ -245,6 +247,9 @@ export default function SupporterWidget({ donors, appearance, mode }: { donors: 
                     : 'transparent',
                   paddingTop: `${rowPadding}px`,
                   paddingBottom: `${rowPadding}px`,
+                  paddingLeft: `${rowSidePadding}px`,
+                  paddingRight: `${rowSidePadding}px`,
+                  gap: `${rankGap}px`,
                   ['--row-bg' as any]: rowBg,
                 }}
               >

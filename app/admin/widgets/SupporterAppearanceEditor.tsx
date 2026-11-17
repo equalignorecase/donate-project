@@ -20,13 +20,15 @@ const colors: [keyof SupporterAppearance, string][] = [
 
 const sizes: [keyof SupporterAppearance, string, string][] = [
   ['supporter_width', 'ความกว้างการ์ด', 'px'],
-  ['supporter_padding', 'ระยะขอบด้านใน', 'px'],
+  ['supporter_padding', 'ระยะขอบด้านในของการ์ดรวม', 'px'],
   ['supporter_radius', 'ความโค้งการ์ด', 'px'],
   ['supporter_title_size', 'ขนาดหัวข้อ', 'px'],
   ['supporter_name_size', 'ขนาดชื่อ', 'px'],
   ['supporter_amount_size', 'ขนาดยอดเงิน', 'px'],
   ['supporter_row_gap', 'ระยะห่างระหว่างรายการ (Row Gap)', 'px'],
-  ['supporter_row_padding', 'ความโปร่ง/ระยะขอบบนล่างของแถว (Row Padding)', 'px'],
+  ['supporter_row_padding', 'ความโปร่งบน-ล่างของแถว (Row Vertical Padding)', 'px'],
+  ['supporter_row_side_padding', 'ระยะขอบซ้าย-ขวาของแถว (Row Side Padding)', 'px'],
+  ['supporter_rank_gap', 'ระยะห่างระหว่างอันดับกับชื่อ (Rank-to-Name Gap)', 'px'],
   ['supporter_opacity', 'ความทึบพื้นหลัง', '%'],
   ['supporter_limit', 'จำนวนรายการสูงสุด', 'คน']
 ];
