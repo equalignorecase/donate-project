@@ -11,7 +11,8 @@ const colors: [keyof SupporterAppearance, string][] = [
   ['supporter_bg_color', 'พื้นหลังการ์ด'],
   ['supporter_text_color', 'ชื่อและข้อความ'],
   ['supporter_amount_color', 'ยอดบริจาค'],
-  ['supporter_border_color', 'ขอบการ์ดและเส้นแบ่ง'],
+  ['supporter_border_color', 'ขอบการ์ดนอก'],
+  ['supporter_divider_color', 'เส้นแบ่งระหว่างแถว (Divider)'],
   ['supporter_row_color', 'พื้นหลังรายการ'],
   ['supporter_rank_color', 'หมายเลขอันดับ'],
   ['supporter_rank_bg_color', 'พื้นหลังหมายเลขอันดับ']
@@ -24,7 +25,8 @@ const sizes: [keyof SupporterAppearance, string, string][] = [
   ['supporter_title_size', 'ขนาดหัวข้อ', 'px'],
   ['supporter_name_size', 'ขนาดชื่อ', 'px'],
   ['supporter_amount_size', 'ขนาดยอดเงิน', 'px'],
-  ['supporter_row_gap', 'ระยะห่างรายการ', 'px'],
+  ['supporter_row_gap', 'ระยะห่างระหว่างรายการ (Row Gap)', 'px'],
+  ['supporter_row_padding', 'ความโปร่ง/ระยะขอบบนล่างของแถว (Row Padding)', 'px'],
   ['supporter_opacity', 'ความทึบพื้นหลัง', '%'],
   ['supporter_limit', 'จำนวนรายการสูงสุด', 'คน']
 ];

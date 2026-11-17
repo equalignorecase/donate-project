@@ -226,6 +226,12 @@ export default function SupporterWidget({ donors, appearance, mode }: { donors: 
             const rowShineDelay = `${(index * 0.28).toFixed(2)}s`;
             const amountShineDelay = `${(index * 0.28 + 0.18).toFixed(2)}s`;
 
+            const totalVisible = Math.min(donors.length, Number(appearance.supporter_limit));
+            const isLastItem = index === totalVisible - 1;
+            const isCardsLayout = appearance.supporter_layout === 'cards';
+            const effectiveShowDivider = showDivider && !isLastItem && !isCardsLayout;
+            const rowPadding = Number(appearance.supporter_row_padding || '12');
+
             return (
               <li
                 key={`${index}-${donor.name}`}
@@ -233,8 +239,12 @@ export default function SupporterWidget({ donors, appearance, mode }: { donors: 
                 style={{
                   background: hasBeam ? undefined : rowBg,
                   borderColor: appearance.supporter_border_color,
-                  borderBottomWidth: showDivider ? undefined : 0,
-                  borderBottomColor: showDivider ? undefined : 'transparent',
+                  borderBottomWidth: effectiveShowDivider ? 1 : 0,
+                  borderBottomColor: effectiveShowDivider
+                    ? (appearance.supporter_divider_color || appearance.supporter_border_color || '#334155')
+                    : 'transparent',
+                  paddingTop: `${rowPadding}px`,
+                  paddingBottom: `${rowPadding}px`,
                   ['--row-bg' as any]: rowBg,
                 }}
               >

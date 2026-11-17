@@ -5,9 +5,9 @@ export type SupporterMode = keyof typeof supporterModes;
 export const supporterDefaults = {
   supporter_mode: 'daily', supporter_title: '', supporter_title_align: 'center', supporter_font: 'LINESeedSansTH', supporter_layout: 'list',
   supporter_bg_color: '#0f172a', supporter_text_color: '#ffffff', supporter_amount_color: '#67e8f9',
-  supporter_border_color: '#64748b', supporter_row_color: '#1e293b', supporter_rank_color: '#fbbf24', supporter_rank_bg_color: '#334155',
+  supporter_border_color: '#64748b', supporter_divider_color: '#334155', supporter_row_color: '#1e293b', supporter_rank_color: '#fbbf24', supporter_rank_bg_color: '#334155',
   supporter_opacity: '90', supporter_width: '600', supporter_padding: '24', supporter_radius: '20',
-  supporter_title_size: '24', supporter_name_size: '20', supporter_amount_size: '20', supporter_row_gap: '8', supporter_limit: '5',
+  supporter_title_size: '24', supporter_name_size: '20', supporter_amount_size: '20', supporter_row_gap: '8', supporter_row_padding: '12', supporter_limit: '5',
   supporter_show_bg: 'true', supporter_show_border: 'true', supporter_show_divider: 'true', supporter_show_title: 'true', supporter_show_amount: 'true', supporter_show_rank: 'true', supporter_show_rank_bg: 'true',
   supporter_shine_sweep: 'true', supporter_shine_theme: 'crystal', supporter_shine_intensity: 'vivid', supporter_shine_delay: '3',
   supporter_border_beam: 'false', supporter_beam_theme: 'podium', supporter_beam_target: 'top3',
@@ -15,7 +15,7 @@ export const supporterDefaults = {
 export type SupporterAppearance = typeof supporterDefaults;
 export const supporterRanges: Partial<Record<keyof SupporterAppearance, [number, number]>> = {
   supporter_opacity: [0, 100], supporter_width: [240, 1600], supporter_padding: [0, 80], supporter_radius: [0, 80],
-  supporter_title_size: [12, 64], supporter_name_size: [12, 64], supporter_amount_size: [12, 64], supporter_row_gap: [0, 40], supporter_limit: [1, 10], supporter_shine_delay: [1, 15],
+  supporter_title_size: [12, 64], supporter_name_size: [12, 64], supporter_amount_size: [12, 64], supporter_row_gap: [0, 40], supporter_row_padding: [4, 40], supporter_limit: [1, 10], supporter_shine_delay: [1, 15],
 };
 export function validSupporterAppearance(key: keyof SupporterAppearance, value: unknown): boolean {
   if (typeof value !== 'string') return false;
