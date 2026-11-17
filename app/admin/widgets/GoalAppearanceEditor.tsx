@@ -48,6 +48,7 @@ interface GoalAppearanceEditorProps {
 }
 
 const gradientPresets = [
+  { name: 'Rainbow RGB', label: '🌈 สายรุ้ง RGB', from: '#ff0055', to: '#00ccff', isRainbow: true },
   { name: 'Cyber Neon', label: 'ไซเบอร์ นีออน', from: '#00f2fe', to: '#4facfe' },
   { name: 'Sunset Glow', label: 'ซันเซ็ท โกลว์', from: '#ff5858', to: '#f09819' },
   { name: 'Neon Violet', label: 'นีออน ไวโอเล็ต', from: '#f72585', to: '#7209b7' },
@@ -470,6 +471,31 @@ export default function GoalAppearanceEditor({
           </div>
         </div>
 
+        {/* Rainbow RGB Bar Mode Switch */}
+        <div
+          className={`goal-switch-card ${value.goal_bar_rainbow === 'true' ? 'active' : ''}`}
+          style={{
+            marginBottom: '16px',
+            background: value.goal_bar_rainbow === 'true'
+              ? 'linear-gradient(135deg, rgba(255,0,85,0.12), rgba(0,204,255,0.12))'
+              : undefined,
+            border: value.goal_bar_rainbow === 'true' ? '1px solid rgba(255,0,85,0.35)' : undefined,
+          }}
+          onClick={() => !disabled && toggleBoolean('goal_bar_rainbow')}
+          role="checkbox"
+          aria-checked={value.goal_bar_rainbow === 'true'}
+        >
+          <div>
+            <span className="goal-switch-title">🌈 โหมดสายรุ้งเคลื่อนไหว (Animated Rainbow RGB)</span>
+            <p className="goal-switch-desc">
+              เอฟเฟกต์สีรุ้งเคลื่อนไหวต่อเนื่อง (Flowing Spectrum) โดดเด่นสะดุดตาบนหน้าสตรีม
+            </p>
+          </div>
+          <div className="goal-switch-track">
+            <div className="goal-switch-thumb" />
+          </div>
+        </div>
+
         {/* Dedicated Goal Bar Gradient Control Card */}
         <div className="goal-gradient-feature-card">
           <div className="goal-gradient-header">
@@ -490,7 +516,15 @@ export default function GoalAppearanceEditor({
             <div
               className={`goal-switch-card ${value.goal_gradient === 'true' ? 'active' : ''}`}
               style={{ margin: 0, padding: '8px 14px' }}
-              onClick={() => !disabled && toggleBoolean('goal_gradient')}
+              onClick={() => {
+                if (disabled) return;
+                const nextGrad = value.goal_gradient === 'true' ? 'false' : 'true';
+                onChange({
+                  ...value,
+                  goal_gradient: nextGrad,
+                  ...(nextGrad === 'true' ? {} : { goal_bar_rainbow: 'false' }),
+                });
+              }}
               role="checkbox"
               aria-checked={value.goal_gradient === 'true'}
             >
@@ -508,15 +542,19 @@ export default function GoalAppearanceEditor({
             <div className="goal-gradient-preview-label">
               <span>ตัวอย่างสีหลอด (Live Bar Preview)</span>
               <span className="goal-gradient-preview-mode">
-                {value.goal_gradient === 'true' ? 'Linear Gradient 90° (ซ้ายไปขวา)' : 'สีเดี่ยว (Solid Color)'}
+                {value.goal_bar_rainbow === 'true'
+                  ? '🌈 Rainbow RGB Flow (เคลื่อนไหว)'
+                  : (value.goal_gradient === 'true' ? 'Linear Gradient 90° (ซ้ายไปขวา)' : 'สีเดี่ยว (Solid Color)')}
               </span>
             </div>
             <div 
-              className="goal-gradient-preview-bar"
+              className={`goal-gradient-preview-bar${value.goal_bar_rainbow === 'true' ? ' goal-fill-rainbow' : ''}`}
               style={{
-                background: value.goal_gradient === 'true'
-                  ? `linear-gradient(90deg, ${value.goal_bar_color}, ${value.goal_bar_end_color})`
-                  : value.goal_bar_color
+                background: value.goal_bar_rainbow === 'true'
+                  ? undefined
+                  : (value.goal_gradient === 'true'
+                      ? `linear-gradient(90deg, ${value.goal_bar_color}, ${value.goal_bar_end_color})`
+                      : value.goal_bar_color)
               }}
             >
               <div className="goal-gradient-preview-shine" />
@@ -596,10 +634,12 @@ export default function GoalAppearanceEditor({
             </div>
             <div className="goal-presets-list">
               {gradientPresets.map(preset => {
-                const isSelected = 
-                  value.goal_gradient === 'true' &&
-                  value.goal_bar_color.toLowerCase() === preset.from.toLowerCase() &&
-                  value.goal_bar_end_color.toLowerCase() === preset.to.toLowerCase();
+                const isSelected = (preset as any).isRainbow
+                  ? value.goal_bar_rainbow === 'true'
+                  : value.goal_bar_rainbow !== 'true' &&
+                    value.goal_gradient === 'true' &&
+                    value.goal_bar_color.toLowerCase() === preset.from.toLowerCase() &&
+                    value.goal_bar_end_color.toLowerCase() === preset.to.toLowerCase();
                 return (
                   <button
                     key={preset.name}
@@ -607,19 +647,32 @@ export default function GoalAppearanceEditor({
                     disabled={disabled}
                     className={`goal-preset-chip ${isSelected ? 'active' : ''}`}
                     onClick={() => {
-                      onChange({
-                        ...value,
-                        goal_bar_color: preset.from,
-                        goal_bar_end_color: preset.to,
-                        goal_gradient: 'true',
-                      });
+                      if ((preset as any).isRainbow) {
+                        onChange({
+                          ...value,
+                          goal_bar_rainbow: 'true',
+                          goal_gradient: 'true',
+                          goal_bar_color: preset.from,
+                          goal_bar_end_color: preset.to,
+                        });
+                      } else {
+                        onChange({
+                          ...value,
+                          goal_bar_rainbow: 'false',
+                          goal_bar_color: preset.from,
+                          goal_bar_end_color: preset.to,
+                          goal_gradient: 'true',
+                        });
+                      }
                     }}
                     title={`${preset.name} (${preset.from} → ${preset.to})`}
                   >
                     <span
                       className="goal-preset-chip-preview"
                       style={{
-                        background: `linear-gradient(90deg, ${preset.from}, ${preset.to})`,
+                        background: (preset as any).isRainbow
+                          ? 'linear-gradient(90deg, #ff0055, #ff7700, #ffdd00, #00ff66, #00ccff, #7700ff)'
+                          : `linear-gradient(90deg, ${preset.from}, ${preset.to})`,
                       }}
                     />
                     <span className="goal-preset-chip-name">{preset.label}</span>

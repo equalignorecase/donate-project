@@ -386,6 +386,85 @@ export default function SupporterAppearanceEditor({
               </>
             )}
           </fieldset>
+
+          <fieldset disabled={disabled} className="goal-editor-controls">
+            <legend>กรอบแสงนีออนและเอฟเฟกต์อันดับท็อป (Top Rank Border Beam &amp; Rainbow)</legend>
+            <div className="goal-toggle-grid" style={{ marginBottom: value.supporter_border_beam === 'true' ? '12px' : 0 }}>
+              <label>
+                <input
+                  type="checkbox"
+                  checked={value.supporter_border_beam === 'true'}
+                  onChange={event => update('supporter_border_beam', String(event.target.checked))}
+                />
+                <span>เปิดกรอบแสงนีออนไฮไลท์อันดับท็อป (Border Beam Glow)</span>
+              </label>
+            </div>
+
+            {value.supporter_border_beam === 'true' && (
+              <>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '14px', marginBottom: '14px' }}>
+                  <label className="goal-font-control">
+                    ธีมสีกรอบแสงและเหรียญอันดับ
+                    <select
+                      value={value.supporter_beam_theme || 'podium'}
+                      onChange={event => update('supporter_beam_theme', event.target.value)}
+                    >
+                      <option value="rainbow">🌈 โฮโลแกรมสายรุ้ง RGB (Holographic Rainbow)</option>
+                      <option value="podium">🥇🥈🥉 โพเดียมคลาสสิก (ทอง/เงิน/ทองแดง)</option>
+                      <option value="gold">🏆 ทองคำพรีเมียม (Pure Gold)</option>
+                      <option value="cyan">⚡ ไซเบอร์ไซแอน (Cyber Cyan)</option>
+                    </select>
+                  </label>
+
+                  <label className="goal-font-control">
+                    เป้าหมายอันดับที่ใส่กรอบแสง
+                    <select
+                      value={value.supporter_beam_target || 'top3'}
+                      onChange={event => update('supporter_beam_target', event.target.value)}
+                    >
+                      <option value="top3">ท็อป 3 อันดับแรก (Top 1 - 3)</option>
+                      <option value="top1">เฉพาะอันดับ 1 สูงสุด (Top 1 Champion)</option>
+                    </select>
+                  </label>
+                </div>
+
+                {value.supporter_beam_theme === 'rainbow' && (
+                  <div style={{ fontSize: '12px', color: '#38bdf8', background: 'rgba(56, 189, 248, 0.08)', padding: '8px 12px', borderRadius: '8px', border: '1px solid rgba(56, 189, 248, 0.2)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span>🌈</span>
+                    <span><strong>เปิดใช้งาน Rainbow Rank:</strong> ป้ายเหรียญอันดับท็อป 1-3 และขอบแถวจะหมุนวนเฉดสีรุ้ง RGB 60fps ต่อเนื่อง</span>
+                  </div>
+                )}
+              </>
+            )}
+
+            {/* Quick 1-click Preset */}
+            <div style={{ marginTop: '12px', display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+              <button
+                type="button"
+                className="goal-preset-chip"
+                style={{
+                  background: value.supporter_beam_theme === 'rainbow' && value.supporter_border_beam === 'true'
+                    ? 'linear-gradient(90deg, rgba(255,0,85,0.2), rgba(0,204,255,0.2))'
+                    : undefined,
+                  border: value.supporter_beam_theme === 'rainbow' && value.supporter_border_beam === 'true'
+                    ? '1px solid rgba(255,0,85,0.5)'
+                    : undefined,
+                  padding: '6px 14px'
+                }}
+                onClick={() => {
+                  onChange({
+                    ...value,
+                    supporter_border_beam: 'true',
+                    supporter_beam_theme: 'rainbow',
+                    supporter_shine_sweep: 'true',
+                    supporter_shine_theme: 'rainbow',
+                  });
+                }}
+              >
+                <span>🌈 1-Click เปิดโหมดสายรุ้งท็อปอันดับ (Full Holo Rainbow)</span>
+              </button>
+            </div>
+          </fieldset>
         </>
       )}
 

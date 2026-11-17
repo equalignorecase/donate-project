@@ -59,11 +59,14 @@ export default function GoalWidget({
 
   const cardOpacity = Number(appearance.goal_opacity ?? 0);
   const isCardTransparent = cardOpacity <= 0;
-  const barStart = appearance.goal_bar_color || '#0038ff';
-  const barEnd = appearance.goal_bar_end_color || barStart;
-  const barBackground = appearance.goal_gradient === 'true'
-    ? `linear-gradient(90deg, ${barStart}, ${barEnd})`
-    : barStart;
+  const isRainbow = appearance.goal_bar_rainbow === 'true';
+  const barStart = isRainbow ? '#ff0055' : (appearance.goal_bar_color || '#0038ff');
+  const barEnd = isRainbow ? '#00ccff' : (appearance.goal_bar_end_color || barStart);
+  const barBackground = isRainbow
+    ? 'linear-gradient(90deg, #ff0055 0%, #ff7700 16.6%, #ffdd00 33.3%, #00ff66 50%, #00ccff 66.6%, #7700ff 83.3%, #ff0055 100%)'
+    : (appearance.goal_gradient === 'true'
+        ? `linear-gradient(90deg, ${barStart}, ${barEnd})`
+        : barStart);
   const isTextInside = appearance.goal_text_inside !== 'false';
   const isOverchargeEnabled = appearance.goal_overcharge_enabled !== 'false';
   const isSoundEnabled = appearance.goal_overcharge_sound !== 'false';
@@ -185,6 +188,18 @@ export default function GoalWidget({
           viewBox={`0 0 ${size} ${size}`}
           aria-hidden="true"
         >
+          {isRainbow && (
+            <defs>
+              <linearGradient id="goalRainbowCircleGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#ff0055" />
+                <stop offset="20%" stopColor="#ff7700" />
+                <stop offset="40%" stopColor="#ffdd00" />
+                <stop offset="60%" stopColor="#00ff66" />
+                <stop offset="80%" stopColor="#00ccff" />
+                <stop offset="100%" stopColor="#7700ff" />
+              </linearGradient>
+            </defs>
+          )}
           <circle
             cx={size / 2}
             cy={size / 2}
@@ -203,7 +218,7 @@ export default function GoalWidget({
             cy={size / 2}
             r={r}
             fill="none"
-            stroke={barStart}
+            stroke={isRainbow ? 'url(#goalRainbowCircleGradient)' : barStart}
             strokeWidth={strokeW}
             strokeDasharray={circumference}
             strokeDashoffset={strokeDashoffset}
@@ -211,7 +226,7 @@ export default function GoalWidget({
             transform={`rotate(-90 ${size / 2} ${size / 2})`}
             className="goal-circle-fill"
             style={{
-              filter: appearance.goal_bar_shine === 'true' ? `drop-shadow(0 0 8px ${hexToRgba(barStart, 0.75)})` : undefined,
+              filter: appearance.goal_bar_shine === 'true' || isRainbow ? `drop-shadow(0 0 10px ${hexToRgba(barStart, 0.8)})` : undefined,
             }}
           />
         </svg>
@@ -288,7 +303,7 @@ export default function GoalWidget({
           {/* Inner fluid spherical mask */}
           <div className="goal-orb-fluid-tank" style={{ background: trackBg }}>
             <div
-              className="goal-orb-liquid"
+              className={`goal-orb-liquid${isRainbow ? ' goal-fill-rainbow' : ''}`}
               style={{
                 height: `${percent}%`,
                 background: barBackground,
@@ -364,7 +379,7 @@ export default function GoalWidget({
             {/* Micro Hairline Bar */}
             <div className="goal-pill-rail" style={{ background: 'rgba(255, 255, 255, 0.08)' }}>
               <div
-                className="goal-pill-bar"
+                className={`goal-pill-bar${isRainbow ? ' goal-fill-rainbow' : ''}`}
                 style={{
                   width: `${percent}%`,
                   background: barBackground,
@@ -503,7 +518,7 @@ export default function GoalWidget({
                 aria-valuenow={Math.min(current, safeTarget)}
               >
                 <div 
-                  className="goal-fill" 
+                  className={`goal-fill${isRainbow ? ' goal-fill-rainbow' : ''}`} 
                   style={{ 
                     width: `${percent}%`, 
                     height: '100%',

@@ -251,17 +251,19 @@ export default function SupporterWidget({ donors, appearance, mode }: { donors: 
                 )}
                 {mode !== 'recent' && appearance.supporter_show_rank === 'true' && (
                   <span
-                    className="supporter-rank"
+                    className={`supporter-rank${hasBeam && beamTheme === 'rainbow' ? ' supporter-rank-rainbow' : ''}`}
                     style={{
                       color: hasBeam ? '#ffffff' : appearance.supporter_rank_color,
                       background: hasBeam
-                        ? (index === 0
-                            ? 'linear-gradient(135deg, #f59e0b, #b45309)'
-                            : index === 1
-                            ? 'linear-gradient(135deg, #94a3b8, #475569)'
-                            : 'linear-gradient(135deg, #d97706, #78350f)')
+                        ? (beamTheme === 'rainbow'
+                            ? undefined
+                            : (index === 0
+                                ? 'linear-gradient(135deg, #f59e0b, #b45309)'
+                                : index === 1
+                                ? 'linear-gradient(135deg, #94a3b8, #475569)'
+                                : 'linear-gradient(135deg, #d97706, #78350f)'))
                         : (appearance.supporter_show_rank_bg === 'false' ? 'transparent' : (appearance.supporter_rank_bg_color || '#334155')),
-                      boxShadow: hasBeam ? '0 2px 6px rgba(0,0,0,0.3)' : undefined,
+                      boxShadow: hasBeam ? (beamTheme === 'rainbow' ? undefined : '0 2px 6px rgba(0,0,0,0.3)') : undefined,
                     }}
                   >
                     {index + 1}

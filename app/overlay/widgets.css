@@ -718,6 +718,105 @@ body.widget-overlay-body {
     }
 }
 
+/* ==========================================================
+   Rainbow Animations: Goal Bar Flow & Supporter Ranking Holo
+   ========================================================== */
+
+@keyframes goalRainbowFlow {
+    0% {
+        background-position: 0% 50%;
+    }
+    100% {
+        background-position: 200% 50%;
+    }
+}
+
+.goal-fill-rainbow {
+    background: linear-gradient(90deg, 
+        #ff0055 0%, 
+        #ff7700 16.6%, 
+        #ffdd00 33.3%, 
+        #00ff66 50%, 
+        #00ccff 66.6%, 
+        #7700ff 83.3%, 
+        #ff0055 100%
+    ) !important;
+    background-size: 200% 100% !important;
+    animation: goalRainbowFlow 3s linear infinite !important;
+    box-shadow: 0 0 16px rgba(255, 0, 128, 0.45), 0 0 24px rgba(0, 204, 255, 0.35) !important;
+}
+
+.supporter-beam-row {
+    position: relative;
+    overflow: hidden;
+    border-radius: inherit;
+    transition: all 0.3s ease;
+}
+
+.supporter-beam-rainbow {
+    border: 1.5px solid transparent !important;
+    background: linear-gradient(var(--row-bg, #1e293b), var(--row-bg, #1e293b)) padding-box,
+                linear-gradient(90deg, #ff0055, #ff7700, #ffdd00, #00ff66, #00ccff, #7700ff, #ff0055) border-box !important;
+    background-size: 100% 100%, 200% 100% !important;
+    animation: supporterRainbowBorder 3.5s linear infinite !important;
+    box-shadow: 0 0 16px rgba(255, 0, 128, 0.25), 0 0 22px rgba(0, 204, 255, 0.22) !important;
+}
+
+.supporter-beam-gold {
+    border: 1.5px solid rgba(251, 191, 36, 0.45) !important;
+    box-shadow: 0 0 14px rgba(245, 158, 11, 0.28) !important;
+}
+
+.supporter-beam-cyan {
+    border: 1.5px solid rgba(56, 189, 248, 0.45) !important;
+    box-shadow: 0 0 14px rgba(56, 189, 248, 0.28) !important;
+}
+
+.supporter-beam-rank-1 {
+    border: 1.5px solid rgba(251, 191, 36, 0.5) !important;
+    box-shadow: 0 0 16px rgba(245, 158, 11, 0.3) !important;
+}
+
+.supporter-beam-rank-2 {
+    border: 1.5px solid rgba(148, 163, 184, 0.45) !important;
+    box-shadow: 0 0 12px rgba(148, 163, 184, 0.22) !important;
+}
+
+.supporter-beam-rank-3 {
+    border: 1.5px solid rgba(217, 119, 6, 0.45) !important;
+    box-shadow: 0 0 12px rgba(217, 119, 6, 0.22) !important;
+}
+
+@keyframes supporterRainbowBorder {
+    0% {
+        background-position: 0% 0%, 0% 50%;
+    }
+    100% {
+        background-position: 0% 0%, 200% 50%;
+    }
+}
+
+.supporter-rank-rainbow {
+    background: linear-gradient(135deg, #ff0055, #ff7700, #ffdd00, #00ff66, #00ccff, #7700ff, #ff0055) !important;
+    background-size: 250% 250% !important;
+    animation: supporterRainbowRank 4s ease infinite !important;
+    color: #ffffff !important;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6) !important;
+    box-shadow: 0 0 10px rgba(255, 0, 128, 0.5), 0 0 18px rgba(0, 204, 255, 0.4) !important;
+}
+
+@keyframes supporterRainbowRank {
+    0% {
+        background-position: 0% 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
+    100% {
+        background-position: 0% 50%;
+    }
+}
+
 @media (prefers-reduced-motion: reduce) {
     .goal-fill {
         transition: none;

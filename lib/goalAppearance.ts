@@ -37,6 +37,7 @@ export const goalAppearanceDefaults = {
   goal_bar_pattern: 'none',
   goal_bar_pattern_opacity: '80',
   goal_bar_animated: 'false',
+  goal_bar_rainbow: 'false',
   goal_bar_shine: 'false',
   goal_font: 'LINESeedSansTH-ExtraBold',
   goal_bg_color: '#000000',
