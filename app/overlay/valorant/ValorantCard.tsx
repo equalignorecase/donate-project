@@ -5,6 +5,20 @@ import { ValorantRankData, ValorantSettings } from '@/lib/types/valorant';
 import { valorantDefaults } from '@/lib/valorantSettings';
 import './valorant.css';
 
+function hexToRgba(color: string, alpha: number): string {
+  if (!color) return `rgba(20, 25, 35, ${alpha})`;
+  if (color.startsWith('rgba(') || color.startsWith('rgb(')) return color;
+  const clean = color.replace('#', '');
+  const full = clean.length === 3
+    ? clean.split('').map((c) => c + c).join('')
+    : clean;
+  if (full.length !== 6) return `rgba(20, 25, 35, ${alpha})`;
+  const r = parseInt(full.substring(0, 2), 16) || 0;
+  const g = parseInt(full.substring(2, 4), 16) || 0;
+  const b = parseInt(full.substring(4, 6), 16) || 0;
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
 interface ValorantCardProps {
   data?: ValorantRankData | null;
   settings?: Partial<ValorantSettings>;
@@ -59,10 +73,14 @@ export default function ValorantCard({
     strokeVal = '0.35px currentColor';
   }
 
+  const isCompact = cfg.valorant_theme === 'compact';
+
   // Compute card style variables
   const cardStyle: React.CSSProperties = showBg ? {
-    backgroundColor: cfg.valorant_bg_color || '#1e293b',
-    opacity: Number(opacityVal) < 1 ? Number(opacityVal) : 1,
+    backgroundColor: isCompact
+      ? hexToRgba(cfg.valorant_bg_color || '#141923', Number(opacityVal))
+      : cfg.valorant_bg_color || '#1e293b',
+    opacity: !isCompact && Number(opacityVal) < 1 ? Number(opacityVal) : 1,
     borderRadius: `${cfg.valorant_radius || 16}px`,
     borderColor: cfg.valorant_show_border === 'true' ? cfg.valorant_border_color || 'rgba(255,255,255,0.1)' : 'transparent',
     borderWidth: cfg.valorant_show_border === 'true' ? '1px' : '0px',
@@ -100,6 +118,7 @@ export default function ValorantCard({
   const lastChange = data?.last_match_change ?? 0;
 
   const lastMatchPrefix = (cfg.valorant_last_match_label || 'เกมล่าสุด').trim();
+  const lastMatchDeltaText = lastChange > 0 ? `+${lastChange} RR` : `${lastChange} RR`;
   let lastMatchText = `${lastMatchPrefix}: 0 RR`;
   let pillClass = 'neutral';
   if (lastChange > 0) {
@@ -108,6 +127,76 @@ export default function ValorantCard({
   } else if (lastChange < 0) {
     lastMatchText = `${lastMatchPrefix}: ${lastChange} RR`;
     pillClass = 'loss';
+  }
+
+  const leaderboardRank = data?.leaderboard_rank && data.leaderboard_rank > 0 ? data.leaderboard_rank : null;
+  const compactRrText = data ? `${data.ranking_in_tier} RR` : '0 RR';
+  const showRightStats = showLastMatch || showWl;
+
+  if (isCompact) {
+    return (
+      <div
+        className="valorant-card-container theme-compact"
+        style={{ ...containerStyle, ...cssVars }}
+      >
+        <div className={`valorant-card valorant-card-compact ${!showBg ? 'no-background' : ''}`} style={cardStyle}>
+          {showBadge && (
+            <div className="valorant-compact-badge">
+              <img
+                src={badgeUrl}
+                alt={currentRank}
+                className="valorant-compact-badge-img"
+                loading="lazy"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src = 'https://media.valorant-api.com/competitivetiers/03621f52-342b-cf4e-4f86-9350a49c6d04/0/largeicon.png';
+                }}
+              />
+            </div>
+          )}
+
+          <div className="valorant-compact-main">
+            {leaderboardRank && (
+              <div className={`valorant-compact-lb ${showShine ? 'val-text-shine' : ''}`}>
+                #{leaderboardRank}
+              </div>
+            )}
+            {(showRank || showRr) && (
+              <div className="valorant-compact-sub">
+                {showRank && <span className="valorant-compact-tier">{currentRank}</span>}
+                {showRank && showRr && <span className="valorant-compact-dot">·</span>}
+                {showRr && <span className="valorant-compact-rr">{compactRrText}</span>}
+              </div>
+            )}
+            {loading && !data && (
+              <div className="valorant-compact-status">กำลังโหลดข้อมูล...</div>
+            )}
+            {error && !data && (
+              <div className="valorant-compact-error">{error}</div>
+            )}
+          </div>
+
+          {showRightStats && (
+            <>
+              <div className="valorant-compact-divider" aria-hidden="true" />
+              <div className="valorant-compact-stats">
+                {showLastMatch && (
+                  <div className="valorant-compact-stat-row">
+                    <span className="valorant-compact-stat-label">{lastMatchPrefix}</span>
+                    <span className={`valorant-compact-delta ${pillClass}`}>{lastMatchDeltaText}</span>
+                  </div>
+                )}
+                {showWl && (
+                  <div className="valorant-compact-stat-row">
+                    <span className="valorant-compact-stat-label">W/L</span>
+                    <span className="valorant-compact-wl">{wins}-{losses}</span>
+                  </div>
+                )}
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+    );
   }
 
   return (

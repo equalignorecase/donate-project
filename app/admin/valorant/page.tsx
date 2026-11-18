@@ -159,7 +159,7 @@ export default function ValorantAdminPage() {
     }));
   };
 
-  const handleApplyPreset = (themeName: 'classic' | 'neon' | 'glass' | 'minimal') => {
+  const handleApplyPreset = (themeName: 'classic' | 'neon' | 'glass' | 'minimal' | 'compact') => {
     const preset = valorantThemes[themeName];
     if (preset) {
       setSettings(prev => ({
@@ -905,6 +905,16 @@ export default function ValorantAdminPage() {
                 <span className="val-preset-name">Minimalist</span>
                 <span style={{ fontSize: '11px', color: 'var(--text-dim)' }}>เรียบง่ายไร้ขอบ</span>
               </button>
+
+              <button 
+                type="button" 
+                className={`val-preset-btn ${settings.valorant_theme === 'compact' ? 'active' : ''}`}
+                onClick={() => handleApplyPreset('compact')}
+              >
+                <span className="val-preset-icon">🏷️</span>
+                <span className="val-preset-name">Compact Tracker</span>
+                <span style={{ fontSize: '11px', color: 'var(--text-dim)' }}>แถบกะทัดรัด + #Rank</span>
+              </button>
             </div>
 
             {/* Show Background Switch */}
@@ -1020,6 +1030,47 @@ export default function ValorantAdminPage() {
                     style={{ flex: 1 }}
                     value={settings.valorant_accent_color}
                     onChange={(e) => handleInputChange('valorant_accent_color', e.target.value)}
+                  />
+                </div>
+              </div>
+
+              <div className="val-form-group">
+                <label className="val-label">แสดงขอบการ์ด (Card Border)</label>
+                <div className="val-toggle-row" style={{ marginTop: '6px' }}>
+                  <span className="val-toggle-desc">เปิด/ปิดเส้นขอบรอบการ์ด</span>
+                  <label className="val-switch">
+                    <input
+                      type="checkbox"
+                      checked={settings.valorant_show_border !== 'false'}
+                      onChange={() => handleToggle('valorant_show_border')}
+                    />
+                    <span className="val-slider"></span>
+                  </label>
+                </div>
+              </div>
+
+              <div
+                className="val-form-group"
+                style={{
+                  opacity: settings.valorant_show_border === 'false' || settings.valorant_show_bg === 'false' ? 0.4 : 1,
+                  pointerEvents: settings.valorant_show_border === 'false' || settings.valorant_show_bg === 'false' ? 'none' : 'auto',
+                  transition: 'opacity 0.2s',
+                }}
+              >
+                <label className="val-label">สีขอบการ์ด (Border Color)</label>
+                <div className="val-color-control">
+                  <input
+                    type="color"
+                    className="val-color-picker"
+                    value={/^#[0-9a-fA-F]{6}$/.test(settings.valorant_border_color || '') ? settings.valorant_border_color : '#374151'}
+                    onChange={(e) => handleInputChange('valorant_border_color', e.target.value)}
+                  />
+                  <input
+                    type="text"
+                    className="val-input"
+                    style={{ flex: 1 }}
+                    value={settings.valorant_border_color}
+                    onChange={(e) => handleInputChange('valorant_border_color', e.target.value)}
                   />
                 </div>
               </div>

@@ -14,7 +14,7 @@ export interface MobileTopBarProps {
 
 export default function MobileTopBar({
   onOpenSidebar,
-  title = 'Streamer Admin',
+  title = 'localhost admin',
   subtitle = 'จัดการระบบโดเนท & สตรีม',
   badge,
   rightAction,

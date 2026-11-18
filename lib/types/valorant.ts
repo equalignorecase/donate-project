@@ -26,7 +26,7 @@ export interface ValorantSettings {
   valorant_last_match_label: string;
 
   // Appearance
-  valorant_theme: 'classic' | 'neon' | 'glass' | 'minimal';
+  valorant_theme: 'classic' | 'neon' | 'glass' | 'minimal' | 'compact';
   valorant_show_bg: string;
   valorant_shine: string;
   valorant_bg_color: string;
@@ -72,6 +72,7 @@ export interface ValorantRankData {
   wins: number;
   losses: number;
   last_match_change: number;
+  leaderboard_rank?: number | null;
   updated_at: string;
 }
 

@@ -5,23 +5,10 @@ import { Donation } from '@/lib/types/database';
 import { applyDonationToTimer } from '@/lib/timerLogic';
 import { parseYouTubeUrl, isMissingMediaUrlColumnError } from '@/lib/media-share';
 import { loadMediaShareConfig } from '@/lib/media-share-server';
+import { checkRateLimit, getClientIp } from '@/lib/rateLimit';
 
 // In-Flight Voucher Lock to prevent concurrent redemption of the same voucher link
 const inFlightVouchers = new Set<string>();
-
-// In-Memory IP Rate Limiter (จำกัด 6 ครั้งต่อ 2 นาทีต่อหนึ่ง IP)
-const truemoneyRateLimitMap = new Map<string, { count: number; resetAt: number }>();
-function checkTruemoneyRateLimit(ip: string, limit = 6, windowMs = 120000): boolean {
-  const now = Date.now();
-  const entry = truemoneyRateLimitMap.get(ip);
-  if (!entry || now > entry.resetAt) {
-    truemoneyRateLimitMap.set(ip, { count: 1, resetAt: now + windowMs });
-    return true;
-  }
-  if (entry.count >= limit) return false;
-  entry.count += 1;
-  return true;
-}
 
 function isValidTrueMoneyVoucher(input: string): boolean {
   if (/^[a-zA-Z0-9_-]{10,64}$/.test(input)) return true;
@@ -39,15 +26,14 @@ function isValidTrueMoneyVoucher(input: string): boolean {
 
 export async function POST(request: Request) {
   try {
-    const forwardedFor = request.headers.get('x-forwarded-for') || '127.0.0.1';
-    const clientIp = forwardedFor.split(',')[0].trim();
-    if (!checkTruemoneyRateLimit(clientIp, 6, 120000)) {
+    const clientIp = getClientIp(request);
+    const rate = await checkRateLimit(`truemoney:${clientIp}`, 6, 120000);
+    if (!rate.allowed) {
       return NextResponse.json(
         { success: false, message: 'คุณส่งลิงก์ซองของขวัญบ่อยเกินไป กรุณารอ 2 นาทีก่อนลองใหม่' },
         { status: 429 }
       );
     }
-
     const body = await request.json().catch(() => ({}));
     const { name, message, voucher_url, media_url } = body;
 

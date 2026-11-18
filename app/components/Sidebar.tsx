@@ -35,7 +35,7 @@ export default function Sidebar({
   blacklistCount = 0,
   currentUser,
   onLogout,
-  brandTitle = 'Streamer Admin',
+  brandTitle = 'localhost admin',
   brandHref = '/admin',
   theme = 'light',
   onToggleTheme

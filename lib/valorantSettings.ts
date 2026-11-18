@@ -69,6 +69,16 @@ export const valorantThemes: Record<string, Partial<ValorantSettings>> = {
     valorant_show_border: 'false',
     valorant_radius: '8',
   },
+  compact: {
+    valorant_theme: 'compact',
+    valorant_bg_color: '#141923',
+    valorant_bg_opacity: '88',
+    valorant_text_color: '#f8fafc',
+    valorant_accent_color: '#fb7185',
+    valorant_border_color: '#fb7185',
+    valorant_show_border: 'true',
+    valorant_radius: '14',
+  },
 };
 
 export const regionOptions = [

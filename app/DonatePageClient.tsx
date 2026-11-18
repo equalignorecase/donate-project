@@ -2,15 +2,15 @@
 
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import {
-  ArrowRight, Copy, Download,
+  ArrowRight, Clock, Copy, Download,
   Check, CheckCheck, CircleHelp, ExternalLink,
   LoaderCircle,
-  Moon, PlayCircle, ShieldCheck, Sun, UploadCloud,
+  Moon, PlayCircle, RefreshCw, ShieldCheck, Sun, UploadCloud,
   X,
 } from 'lucide-react';
 import { validateDonation, validateSlip, type DonationErrors, type PaymentMethod } from '@/lib/donation-form';
 import { containsProfanity } from '@/lib/profanity';
-import { createDonationQr, redeemDonation, verifyDonation } from '@/lib/donation-client';
+import { createDonationQr, redeemDonation, verifyDonation, type SlipUploadStage } from '@/lib/donation-client';
 import { readDonationTheme, saveDonationTheme, type DonationTheme } from '@/lib/donation-theme';
 import {
   DEFAULT_MEDIA_SHARE_MAX_DURATION,
@@ -25,6 +25,13 @@ import type { PromptPayResult } from '@/lib/services/promptpay';
 import styles from './donation.module.css';
 
 const INITIAL_AMOUNT = 5;
+const QR_EXPIRY_SECONDS = 300;
+const formatCountdown = (seconds: number) => {
+  const safe = Math.max(0, seconds);
+  const mins = Math.floor(safe / 60);
+  const secs = safe % 60;
+  return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+};
 const moneyFormatter = new Intl.NumberFormat('th-TH', { maximumFractionDigits: 2 });
 const AMOUNTS = [5, 10, 20, 50, 100, 500];
 const METHODS = [
@@ -67,6 +74,9 @@ export default function DonatePageClient({ initialProfile }: { initialProfile: D
   const [busy, setBusy] = useState(false);
   const [voucher, setVoucher] = useState('');
   const [qrData, setQrData] = useState<PromptPayResult | null>(null);
+  const [qrExpiresAt, setQrExpiresAt] = useState<number | null>(null);
+  const [qrRemaining, setQrRemaining] = useState(QR_EXPIRY_SECONDS);
+  const [uploadProgress, setUploadProgress] = useState<{ stage: SlipUploadStage; percent: number } | null>(null);
   const [minAmount, setMinAmount] = useState(INITIAL_AMOUNT);
   const [avatarError, setAvatarError] = useState(false);
   const [heroError, setHeroError] = useState(false);
@@ -135,6 +145,19 @@ export default function DonatePageClient({ initialProfile }: { initialProfile: D
   useEffect(() => { setAvatarError(false); }, [profile.avatarUrl]);
   useEffect(() => { setHeroError(false); }, [profile.heroUrl]);
   useEffect(() => { if (receipt) successHeading.current?.focus(); }, [receipt]);
+  const isQrExpired = Boolean(qrData && qrExpiresAt !== null && qrRemaining <= 0);
+
+  useEffect(() => {
+    if (!qrData || !qrExpiresAt || receipt) return;
+    const syncRemaining = () => {
+      const next = Math.max(0, Math.ceil((qrExpiresAt - Date.now()) / 1000));
+      setQrRemaining(next);
+    };
+    syncRemaining();
+    const timer = setInterval(syncRemaining, 500);
+    return () => clearInterval(timer);
+  }, [qrData, qrExpiresAt, receipt]);
+
   useEffect(() => { if (qrData) qrHeading.current?.focus(); }, [qrData]);
   useEffect(() => {
     const controller = new AbortController();
@@ -259,6 +282,7 @@ export default function DonatePageClient({ initialProfile }: { initialProfile: D
   function changeAmount(value: string) {
     setAmount(value);
     setQrData(null);
+    setQrExpiresAt(null);
     removeFile();
     clearError('amount');
   }
@@ -268,9 +292,31 @@ export default function DonatePageClient({ initialProfile }: { initialProfile: D
     setMethod(value);
     setGuideMethod(null);
     setQrData(null);
+    setQrExpiresAt(null);
     removeFile();
     setVoucher('');
     setErrors({});
+  }
+
+  async function regenerateQr() {
+    if (submitting.current) return;
+    const targetAmount = qrData?.amount ?? Number(amount);
+    if (!Number.isFinite(targetAmount) || targetAmount <= 0) return;
+    submitting.current = true;
+    setBusy(true);
+    setToast(null);
+    try {
+      const nextQr = await createDonationQr(targetAmount);
+      setQrData(nextQr);
+      setQrExpiresAt(Date.now() + QR_EXPIRY_SECONDS * 1000);
+      setQrRemaining(QR_EXPIRY_SECONDS);
+      setToast({ text: 'สร้าง QR ใหม่แล้ว กรุณาโอนเงินและแนบสลิปภายใน 5 นาที' });
+    } catch (error) {
+      setToast({ text: error instanceof Error ? error.message : 'สร้าง QR ใหม่ไม่สำเร็จ', error: true });
+    } finally {
+      submitting.current = false;
+      setBusy(false);
+    }
   }
 
   async function submit(event: FormEvent<HTMLFormElement>) {
@@ -302,19 +348,30 @@ export default function DonatePageClient({ initialProfile }: { initialProfile: D
       document.getElementById(`donation-${firstField}`)?.focus();
       return;
     }
+    if (method === 'promptpay' && qrData && isQrExpired) {
+      setToast({ text: 'QR พร้อมเพย์หมดอายุแล้ว กรุณากดสร้าง QR ใหม่', error: true });
+      return;
+    }
     submitting.current = true;
     setBusy(true);
     setToast(null);
+    setUploadProgress(null);
     const submittedMediaUrl = mediaEnabled && attachMedia && parsedMedia ? parsedMedia.canonicalUrl : undefined;
     try {
       if (method === 'promptpay' && !qrData) {
         setQrData(await createDonationQr(Number(amount)));
-        setToast({ text: 'สร้าง QR แล้ว ตรวจสอบผู้รับ โอนเงิน และแนบสลิปด้านล่าง' });
+        setQrExpiresAt(Date.now() + QR_EXPIRY_SECONDS * 1000);
+        setQrRemaining(QR_EXPIRY_SECONDS);
+        setToast({ text: 'สร้าง QR แล้ว ตรวจสอบผู้รับ โอนเงิน และแนบสลิปภายใน 5 นาที' });
         return;
       }
       const donation = method === 'truemoney'
         ? await redeemDonation({ name, message, voucher, mediaUrl: submittedMediaUrl })
-        : await verifyDonation({ name, message, amount: String(qrData!.amount), slip: file!, mediaUrl: submittedMediaUrl });
+        : await verifyDonation(
+            { name, message, amount: String(qrData!.amount), slip: file!, mediaUrl: submittedMediaUrl },
+            fetch,
+            (stage, percent) => setUploadProgress({ stage, percent })
+          );
       setReceipt({
         name: donation.name, amount: donation.amount.toLocaleString('th-TH', { maximumFractionDigits: 2 }),
         message: donation.message || '', method: currentMethod.name,
@@ -328,6 +385,7 @@ export default function DonatePageClient({ initialProfile }: { initialProfile: D
     } finally {
       submitting.current = false;
       setBusy(false);
+      setUploadProgress(null);
     }
   }
 
@@ -343,6 +401,8 @@ export default function DonatePageClient({ initialProfile }: { initialProfile: D
     setGuideMethod(null);
     setVoucher('');
     setQrData(null);
+    setQrExpiresAt(null);
+    setUploadProgress(null);
     removeFile();
     setErrors({});
   }
@@ -664,32 +724,61 @@ export default function DonatePageClient({ initialProfile }: { initialProfile: D
                   <p className={styles.paymentHint} id="voucher-hint">คัดลอกลิงก์ซองจากแอป TrueMoney มาวางที่นี่</p>
                 </div> : qrData ? <>
                 <div className={styles.formSection}>
-                  <h3 className={styles.sectionTitle} ref={qrHeading} tabIndex={-1}>สแกน QR เพื่อโอนเงิน</h3>
-                  <div className={styles.qrPanel}>
-                    <span className={styles.qrBrand}><img src="/payments/promptpay.png" alt="PromptPay" width={132} height={44} /></span>
-                    <img className={styles.qrImage} src={qrData.qrImage || qrData.qrDataUrl} alt={`QR PromptPay จำนวน ${displayAmount} บาท`} />
-                    <strong className={styles.qrAmount}>฿{displayAmount} THB</strong>
-                    <div className={styles.qrActions}>
-                      <button type="button" onClick={copyPromptPay}><Copy size={14} />คัดลอกหมายเลข</button>
-                      <button type="button" onClick={saveQrImage}><Download size={14} />บันทึก QR</button>
-                    </div>
-                    <span className={styles.qrTip}>ทริก: หากบันทึกไม่ได้ สามารถกดค้างที่รูป QR เพื่อบันทึกภาพได้โดยตรง</span>
+                  <div className={styles.qrHeaderRow}>
+                    <h3 className={styles.sectionTitle} ref={qrHeading} tabIndex={-1}>สแกน QR เพื่อโอนเงิน</h3>
+                    <span className={`${styles.qrTimer} ${isQrExpired ? styles.qrTimerExpired : qrRemaining <= 60 ? styles.qrTimerWarning : ''}`} aria-live="polite">
+                      <Clock size={13} />
+                      {isQrExpired ? 'หมดอายุแล้ว' : `หมดอายุใน ${formatCountdown(qrRemaining)}`}
+                    </span>
                   </div>
+                  {isQrExpired ? (
+                    <div className={styles.qrExpiredPanel}>
+                      <p>QR พร้อมเพย์หมดอายุแล้ว เพื่อความปลอดภัยกรุณาสร้าง QR ใหม่ก่อนโอนเงิน</p>
+                      <button type="button" className={styles.qrRegenButton} onClick={regenerateQr} disabled={busy}>
+                        <RefreshCw size={15} />สร้าง QR ใหม่ ฿{displayAmount}
+                      </button>
+                    </div>
+                  ) : (
+                    <div className={styles.qrPanel}>
+                      <span className={styles.qrBrand}><img src="/payments/promptpay.png" alt="PromptPay" width={132} height={44} /></span>
+                      <img className={styles.qrImage} src={qrData.qrImage || qrData.qrDataUrl} alt={`QR PromptPay จำนวน ${displayAmount} บาท`} />
+                      <strong className={styles.qrAmount}>฿{displayAmount} THB</strong>
+                      <div className={styles.qrActions}>
+                        <button type="button" onClick={copyPromptPay}><Copy size={14} />คัดลอกหมายเลข</button>
+                        <button type="button" onClick={saveQrImage}><Download size={14} />บันทึก QR</button>
+                      </div>
+                      <span className={styles.qrTip}>ทริก: หากบันทึกไม่ได้ สามารถกดค้างที่รูป QR เพื่อบันทึกภาพได้โดยตรง</span>
+                    </div>
+                  )}
                   <p className={styles.paymentHint}>ตรวจสอบผู้รับและยอดก่อนโอน หากโอนแล้วแต่ยืนยันไม่สำเร็จ ให้เก็บหลักฐานและติดต่อผู้ดูแลก่อนทำรายการซ้ำ</p>
                 </div>
                 <div className={styles.formSection}>
                   <h3 className={styles.sectionTitle}>แนบสลิปหลังโอนเงิน</h3>
                   <input className={styles.hiddenInput} ref={fileInput} type="file" accept="image/jpeg,image/png,image/webp" aria-label="เลือกไฟล์สลิป" tabIndex={-1} onChange={(event) => selectFile(event.target.files?.[0])} />
                   <div className={`${styles.dropzone} ${dragging ? styles.dragging : ''} ${errors.slip ? styles.dropError : ''}`} onDragOver={(event) => { event.preventDefault(); if (!busy) setDragging(true); }} onDragLeave={(event) => { if (!event.currentTarget.contains(event.relatedTarget as Node)) setDragging(false); }} onDrop={(event) => { event.preventDefault(); setDragging(false); selectFile(event.dataTransfer.files?.[0]); }}>
-                    {file ? <div className={styles.filePreview}>{preview && <img src={preview} alt="ตัวอย่างสลิปที่เลือก" onError={() => { removeFile(); setErrors((previous) => ({ ...previous, slip: 'ไม่สามารถเปิดรูปภาพนี้ได้ กรุณาเลือกไฟล์ภาพอื่น' })); }} />}<div><strong>{file.name}</strong><span>{(file.size / 1024).toFixed(1)} KB <span className={styles.fileReady}><Check size={12} /> แนบแล้ว</span></span><button type="button" onClick={() => fileInput.current?.click()}>เปลี่ยนรูปภาพ</button></div><button type="button" className={styles.removeFile} aria-label="ลบสลิป" onClick={removeFile}><X size={17} /></button></div> : <button type="button" id="donation-slip" className={styles.uploadButton} onClick={() => fileInput.current?.click()} aria-invalid={!!errors.slip} aria-describedby={errors.slip ? 'slip-error' : 'slip-hint'}><span className={styles.uploadIcon}><UploadCloud size={23} /></span><strong>ลากไฟล์มาวางที่นี่ <span>หรือเลือกไฟล์</span></strong><span id="slip-hint">JPG, PNG หรือ WEBP ขนาดไม่เกิน 4 MB</span></button>}
+                    {file ? <div className={styles.filePreview}>{preview && <img src={preview} alt="ตัวอย่างสลิปที่เลือก" onError={() => { removeFile(); setErrors((previous) => ({ ...previous, slip: 'ไม่สามารถเปิดรูปภาพนี้ได้ กรุณาเลือกไฟล์ภาพอื่น' })); }} />}<div><strong>{file.name}</strong><span>{(file.size / 1024).toFixed(1)} KB <span className={styles.fileReady}><Check size={12} /> แนบแล้ว</span></span><button type="button" onClick={() => fileInput.current?.click()} disabled={busy}>เปลี่ยนรูปภาพ</button></div><button type="button" className={styles.removeFile} aria-label="ลบสลิป" onClick={removeFile} disabled={busy}><X size={17} /></button></div> : <button type="button" id="donation-slip" className={styles.uploadButton} onClick={() => fileInput.current?.click()} aria-invalid={!!errors.slip} aria-describedby={errors.slip ? 'slip-error' : 'slip-hint'}><span className={styles.uploadIcon}><UploadCloud size={23} /></span><strong>ลากไฟล์มาวางที่นี่ <span>หรือเลือกไฟล์</span></strong><span id="slip-hint">JPG, PNG หรือ WEBP ขนาดไม่เกิน 4 MB</span></button>}
                   </div>
+                  {uploadProgress && (
+                    <div className={styles.uploadProgressBox} aria-live="polite">
+                      <div className={styles.uploadProgressMeta}>
+                        <span>{uploadProgress.stage === 'uploading' ? 'กำลังอัปโหลดสลิป…' : 'กำลังตรวจสอบสลิปกับธนาคาร…'}</span>
+                        <strong>{uploadProgress.stage === 'uploading' ? `${uploadProgress.percent}%` : 'กำลังยืนยัน'}</strong>
+                      </div>
+                      <div className={styles.uploadProgressTrack}>
+                        <div
+                          className={`${styles.uploadProgressFill} ${uploadProgress.stage === 'verifying' ? styles.uploadProgressVerifying : ''}`}
+                          style={{ width: `${uploadProgress.stage === 'verifying' ? 100 : uploadProgress.percent}%` }}
+                        />
+                      </div>
+                    </div>
+                  )}
                   {errors.slip && <p className={styles.error} id="slip-error">{errors.slip}</p>}
                 </div>
                 </> : null}
 
                 <div className={styles.formBottom}>
                   <div className={styles.total}><span>ยอดโดเนท</span>{method === 'promptpay' ? <strong>฿{displayAmount}<span> THB</span></strong> : <span>ตามยอดที่รับได้จากซอง</span>}</div>
-                  <button className={styles.submitButton} type="submit" disabled={busy || !!errors.name || !!errors.message}>{busy ? <><LoaderCircle size={20} className={styles.spinner} />{method === 'truemoney' ? 'กำลังรับซองของขวัญ…' : qrData ? 'กำลังตรวจสอบสลิป…' : 'กำลังสร้าง QR…'}</> : <>{method === 'truemoney' ? 'ยืนยันซองของขวัญ' : qrData ? `ยืนยันสลิป ฿${displayAmount}` : `สร้าง QR พร้อมเพย์ ฿${displayAmount}`}<ArrowRight size={19} className={styles.submitArrow} /></>}</button>
+                  <button className={styles.submitButton} type="submit" disabled={busy || isQrExpired || !!errors.name || !!errors.message}>{busy ? <><LoaderCircle size={20} className={styles.spinner} />{method === 'truemoney' ? 'กำลังรับซองของขวัญ…' : uploadProgress ? (uploadProgress.stage === 'uploading' ? `กำลังอัปโหลดสลิป ${uploadProgress.percent}%…` : 'กำลังตรวจสอบสลิป…') : qrData ? 'กำลังตรวจสอบสลิป…' : 'กำลังสร้าง QR…'}</> : <>{method === 'truemoney' ? 'ยืนยันซองของขวัญ' : isQrExpired ? 'QR หมดอายุแล้ว' : qrData ? `ยืนยันสลิป ฿${displayAmount}` : `สร้าง QR พร้อมเพย์ ฿${displayAmount}`}<ArrowRight size={19} className={styles.submitArrow} /></>}</button>
                   <p className={styles.paymentNotice}><ShieldCheck size={13} />{method === 'truemoney' ? 'กดยืนยันเพื่อรับเงินจริงจากซองของขวัญ' : 'ยืนยันการสนับสนุนหลังตรวจสอบสลิปสำเร็จ'}</p>
                 </div>
               </fieldset>

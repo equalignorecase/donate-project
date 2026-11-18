@@ -305,3 +305,132 @@
   to { transform: rotate(360deg); }
 }
 
+/* Theme: Compact Tracker */
+.theme-compact .valorant-card-compact {
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+  padding: 10px 18px 10px 12px;
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+}
+
+.valorant-compact-badge {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.valorant-compact-badge-img {
+  width: 44px;
+  height: 44px;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.55));
+}
+
+.valorant-compact-main {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+}
+
+.valorant-compact-lb {
+  font-size: 28px;
+  line-height: 1;
+  font-weight: var(--val-weight-bold, 800);
+  color: var(--accent-color, #fb7185);
+  letter-spacing: 0.4px;
+  white-space: nowrap;
+}
+
+.valorant-compact-sub {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  white-space: nowrap;
+  font-size: 14px;
+  line-height: 1.25;
+}
+
+.valorant-compact-tier {
+  color: rgba(248, 250, 252, 0.78);
+  font-weight: var(--val-weight-medium, 600);
+}
+
+.valorant-compact-dot {
+  color: rgba(248, 250, 252, 0.45);
+}
+
+.valorant-compact-rr {
+  color: var(--text-color, #f8fafc);
+  font-weight: var(--val-weight-bold, 800);
+}
+
+.valorant-compact-divider {
+  width: 1px;
+  align-self: stretch;
+  margin: 4px 2px;
+  background: rgba(255, 255, 255, 0.14);
+  flex-shrink: 0;
+}
+
+.valorant-compact-stats {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 3px;
+  white-space: nowrap;
+  font-size: 13px;
+  line-height: 1.25;
+}
+
+.valorant-compact-stat-row {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.valorant-compact-stat-label {
+  color: rgba(248, 250, 252, 0.68);
+  font-weight: var(--val-weight-medium, 600);
+}
+
+.valorant-compact-delta {
+  font-weight: var(--val-weight-bold, 800);
+}
+
+.valorant-compact-delta.win {
+  color: #4ade80;
+}
+
+.valorant-compact-delta.loss {
+  color: #f87171;
+}
+
+.valorant-compact-delta.neutral {
+  color: #cbd5e1;
+}
+
+.valorant-compact-wl {
+  color: var(--text-color, #f8fafc);
+  font-weight: var(--val-weight-bold, 800);
+}
+
+.valorant-compact-status {
+  font-size: 12px;
+  color: #94a3b8;
+}
+
+.valorant-compact-error {
+  font-size: 12px;
+  color: #f87171;
+}
+

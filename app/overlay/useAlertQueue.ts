@@ -301,7 +301,10 @@ export function useAlertQueue(settings: AlertSettings) {
         clearTimeout(ttsTimeoutRef.current);
       }
 
-      const url = `/api/tts?text=${encodeURIComponent(textToSpeak)}`;
+      const overlayToken = typeof window !== 'undefined'
+        ? new URLSearchParams(window.location.search).get('token')
+        : null;
+      const url = `/api/tts?text=${encodeURIComponent(textToSpeak)}${overlayToken ? `&token=${encodeURIComponent(overlayToken)}` : ''}`;
 
       if (ttsAudioRef.current) {
         ttsAudioRef.current.src = url;

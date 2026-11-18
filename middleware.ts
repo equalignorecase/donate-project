@@ -78,6 +78,18 @@ export async function middleware(request: NextRequest) {
     }
   }
 
+  if (pathname.startsWith('/overlay')) {
+    const overlayToken = process.env.OVERLAY_TOKEN?.trim();
+    if (overlayToken && !isAuthenticated) {
+      const providedToken =
+        request.nextUrl.searchParams.get('token')?.trim() ||
+        request.headers.get('x-overlay-token')?.trim();
+      if (providedToken !== overlayToken) {
+        return new NextResponse('Forbidden: invalid overlay token', { status: 403 });
+      }
+    }
+  }
+
   if (pathname.startsWith('/admin') || pathname.startsWith('/customizer')) {
     if (!isAuthenticated) {
       const loginUrl = new URL('/login', request.url);
@@ -98,5 +110,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/admin/:path*', '/customizer/:path*', '/login', '/api/admin/:path*']
+  matcher: ['/admin/:path*', '/customizer/:path*', '/overlay/:path*', '/login', '/api/admin/:path*']
 };

@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import axios from 'axios';
 import { prepareTtsText } from '@/lib/tts-helper';
+import { checkRateLimit, getClientIp } from '@/lib/rateLimit';
+import { verifyAdminAuth } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 
@@ -8,18 +10,54 @@ export const dynamic = 'force-dynamic';
 const audioCache = new Map<string, Buffer>();
 const MAX_CACHE_SIZE = 150;
 
-// Simple In-Memory Rate Limiter (จำกัด 12 ครั้งต่อนาทีต่อหนึ่ง IP)
-const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
-function isRateLimited(ip: string, limit = 12, windowMs = 60000): boolean {
-  const now = Date.now();
-  const entry = rateLimitMap.get(ip);
-  if (!entry || now > entry.resetAt) {
-    rateLimitMap.set(ip, { count: 1, resetAt: now + windowMs });
+function getExpectedHost(request: Request): string {
+  return (
+    request.headers.get('x-forwarded-host') ||
+    request.headers.get('host') ||
+    new URL(request.url).host
+  ).toLowerCase();
+}
+
+function isAllowedTtsRequest(request: Request, searchParams: URLSearchParams): boolean {
+  const secFetchSite = request.headers.get('sec-fetch-site');
+  if (secFetchSite === 'cross-site') return false;
+
+  const expectedHost = getExpectedHost(request);
+  const origin = request.headers.get('origin');
+  if (origin) {
+    try {
+      if (new URL(origin).host.toLowerCase() !== expectedHost) return false;
+    } catch {
+      return false;
+    }
+  }
+
+  const referer = request.headers.get('referer');
+  let refererUrl: URL | null = null;
+  if (referer) {
+    try {
+      refererUrl = new URL(referer);
+      if (refererUrl.host.toLowerCase() !== expectedHost) return false;
+    } catch {
+      return false;
+    }
+  }
+
+  const overlayToken = process.env.OVERLAY_TOKEN?.trim();
+  const isAdmin = verifyAdminAuth(request);
+  if (isAdmin) return true;
+
+  if (overlayToken) {
+    const queryToken = searchParams.get('token') || request.headers.get('x-overlay-token');
+    if (queryToken === overlayToken) return true;
+    if (refererUrl && (refererUrl.pathname.startsWith('/admin') || refererUrl.pathname.startsWith('/customizer'))) {
+      return true;
+    }
     return false;
   }
-  if (entry.count >= limit) return true;
-  entry.count += 1;
-  return false;
+
+  // Require browser same-origin context when no OVERLAY_TOKEN is configured
+  return Boolean(origin || referer || secFetchSite === 'same-origin');
 }
 
 /**
@@ -102,13 +140,17 @@ async function generateGoogleTts(text: string): Promise<Buffer> {
 
 export async function GET(request: Request) {
   try {
-    const forwardedFor = request.headers.get('x-forwarded-for') || '127.0.0.1';
-    const clientIp = forwardedFor.split(',')[0].trim();
-    if (isRateLimited(clientIp, 12, 60000)) {
+    const { searchParams } = new URL(request.url);
+    if (!isAllowedTtsRequest(request, searchParams)) {
+      return new NextResponse('Forbidden', { status: 403 });
+    }
+
+    const clientIp = getClientIp(request);
+    const rate = await checkRateLimit(`tts:${clientIp}`, 12, 60000);
+    if (!rate.allowed) {
       return new NextResponse('คุณส่งคำขอสังเคราะห์เสียงถี่เกินไป กรุณารอสักครู่', { status: 429 });
     }
 
-    const { searchParams } = new URL(request.url);
     const rawText = searchParams.get('text') || '';
     const text = prepareTtsText(rawText.trim().slice(0, 300));
 

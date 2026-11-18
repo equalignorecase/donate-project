@@ -97,6 +97,28 @@ export async function GET(request: Request) {
     const mmrJson = await mmrRes.json();
     const mmrData = mmrJson.data || {};
 
+    let leaderboardRank: number | null =
+      typeof mmrData.leaderboard_rank === 'number' && mmrData.leaderboard_rank > 0
+        ? mmrData.leaderboard_rank
+        : null;
+
+    if (!leaderboardRank && Number(mmrData.currenttier ?? 0) >= 24) {
+      try {
+        const lbUrl = `https://api.henrikdev.xyz/valorant/v1/leaderboard/${region}?name=${encodeURIComponent(name)}&tag=${encodeURIComponent(tag)}`;
+        const lbRes = await fetch(lbUrl, { headers, cache: 'no-store' });
+        if (lbRes.ok) {
+          const lbJson = await lbRes.json().catch(() => null);
+          const lbEntry = Array.isArray(lbJson) ? lbJson[0] : Array.isArray(lbJson?.data) ? lbJson.data[0] : lbJson?.data;
+          const rankVal = Number(lbEntry?.leaderboardRank ?? lbEntry?.leaderboard_rank);
+          if (Number.isFinite(rankVal) && rankVal > 0) {
+            leaderboardRank = rankVal;
+          }
+        }
+      } catch {
+        // Optional leaderboard lookup; ignore network failure
+      }
+    }
+
     let historyData: ValorantMatchHistoryItem[] = [];
     if (historyRes && historyRes.ok) {
       const histJson = await historyRes.json().catch(() => ({}));
@@ -169,6 +191,7 @@ export async function GET(request: Request) {
       wins,
       losses,
       last_match_change: lastMatchChange,
+      leaderboard_rank: leaderboardRank,
       updated_at: new Date().toISOString(),
     };
 

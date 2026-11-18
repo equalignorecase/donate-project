@@ -8,6 +8,7 @@ import { MAX_SLIP_FILE_SIZE_BYTES } from '@/lib/constants';
 import { applyDonationToTimer } from '@/lib/timerLogic';
 import { parseYouTubeUrl, isMissingMediaUrlColumnError } from '@/lib/media-share';
 import { loadMediaShareConfig } from '@/lib/media-share-server';
+import { checkRateLimit, getClientIp } from '@/lib/rateLimit';
 
 export const dynamic = 'force-dynamic';
 
@@ -16,26 +17,11 @@ const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 // In-Flight Locks to prevent race conditions when the same slip is submitted concurrently
 const inFlightSlipHashes = new Set<string>();
 const inFlightTransRefs = new Set<string>();
-
-// In-Memory IP Rate Limiter (จำกัด 6 ครั้งต่อ 2 นาทีต่อหนึ่ง IP)
-const slipRateLimitMap = new Map<string, { count: number; resetAt: number }>();
-function checkSlipRateLimit(ip: string, limit = 6, windowMs = 120000): boolean {
-  const now = Date.now();
-  const entry = slipRateLimitMap.get(ip);
-  if (!entry || now > entry.resetAt) {
-    slipRateLimitMap.set(ip, { count: 1, resetAt: now + windowMs });
-    return true;
-  }
-  if (entry.count >= limit) return false;
-  entry.count += 1;
-  return true;
-}
-
 export async function POST(request: Request) {
   try {
-    const forwardedFor = request.headers.get('x-forwarded-for') || '127.0.0.1';
-    const clientIp = forwardedFor.split(',')[0].trim();
-    if (!checkSlipRateLimit(clientIp, 6, 120000)) {
+    const clientIp = getClientIp(request);
+    const rate = await checkRateLimit(`slip:${clientIp}`, 6, 120000);
+    if (!rate.allowed) {
       return NextResponse.json(
         { success: false, message: 'คุณส่งสลิปบ่อยเกินไป กรุณารอ 2 นาทีก่อนลองใหม่' },
         { status: 429 }
@@ -69,19 +55,31 @@ export async function POST(request: Request) {
 
     // 2. Check minimum donation setting
     try {
-      const { data: minSet } = await supabaseAdmin
+      const { data: minSet, error: minErr } = await supabaseAdmin
         .from('settings')
         .select('value')
         .eq('key', 'min_donate')
         .single();
-      const minVal = parseFloat(minSet?.value) || 1;
+      if (minErr) {
+        console.error('[verify-slip] Failed to read min_donate setting:', minErr.message);
+      }
+      const parsedMin = parseFloat(minSet?.value);
+      const minVal = Number.isFinite(parsedMin) && parsedMin > 0 ? parsedMin : 1;
       if (expectedAmount < minVal) {
         return NextResponse.json(
           { success: false, message: `ยอดเงินขั้นต่ำในการโดเนทคือ ${minVal} บาท` },
           { status: 400 }
         );
       }
-    } catch (e) {}
+    } catch (e: any) {
+      console.error('[verify-slip] Unexpected error reading min_donate:', e?.message || e);
+      if (expectedAmount < 1) {
+        return NextResponse.json(
+          { success: false, message: 'ยอดเงินขั้นต่ำในการโดเนทคือ 1 บาท' },
+          { status: 400 }
+        );
+      }
+    }
 
     let validatedMediaUrl: string | null = null;
     let mediaMinAmount = 0;

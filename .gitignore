@@ -12,3 +12,4 @@ data/
 feature.txt
 .audit/
 .agents/
+supabase/.temp/

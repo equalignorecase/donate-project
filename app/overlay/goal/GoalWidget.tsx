@@ -47,6 +47,12 @@ export default function GoalWidget({
   const isFlat = ['slim', 'segmented', 'hud', 'milestone', 'floating'].includes(appearance.goal_bar_style);
   const isSegmented = appearance.goal_bar_style === 'segmented';
   const hasGloss = !isFlat && appearance.goal_bar_style !== 'minimal';
+  const barRadiusRaw = Number(appearance.goal_bar_radius ?? 50);
+  const barRadius = Number.isFinite(barRadiusRaw) ? Math.max(0, barRadiusRaw) : 50;
+  const trackPadding = isHUD ? 3 : isFlat ? 0 : 4;
+  const isPillBar = barRadius >= 40;
+  const trackRadius = isPillBar ? '9999px' : `${barRadius}px`;
+  const fillRadius = isPillBar ? '9999px' : `${Math.max(0, barRadius - trackPadding)}px`;
 
   // Unfilled Track: สีดำแบบโปร่งแสงพร้อม backdrop blur เมื่อหลอดยังไม่เต็ม
   const trackBlur = Math.max(0, Math.min(40, Number(appearance.goal_track_blur ?? 12)));
@@ -497,14 +503,14 @@ export default function GoalWidget({
                 className={`goal-track goal-track-${appearance.goal_bar_style}${appearance.goal_bar_animated === 'true' ? ' goal-track-animated' : ''}${percent >= 100 ? ' goal-track-complete' : ''}`} 
                 style={{ 
                   height: `${appearance.goal_bar_height}px`, 
-                  borderRadius: Number(appearance.goal_bar_radius ?? 50) >= 40 ? '9999px' : `${appearance.goal_bar_radius}px`, 
+                  borderRadius: trackRadius, 
                   background: isSegmented ? `repeating-linear-gradient(90deg, ${trackBg} 0 20px, transparent 20px 24px)` : trackBg,
                   backdropFilter: trackBlur > 0 ? `blur(${trackBlur}px)` : undefined,
                   WebkitBackdropFilter: trackBlur > 0 ? `blur(${trackBlur}px)` : undefined,
                   border: isFlat ? 'none' : '1.5px solid rgba(255, 255, 255, 0.22)',
                   boxShadow: isFlat ? 'none' : 'inset 0 2px 6px rgba(0, 0, 0, 0.75), 0 4px 14px rgba(0, 0, 0, 0.45)',
                   color: appearance.goal_bar_color,
-                  padding: isHUD ? '3px' : isFlat ? '0' : '4px',
+                  padding: `${trackPadding}px`,
                   clipPath: isHUD ? 'polygon(4% 0, 100% 0, 100% 80%, 96% 100%, 0 100%, 0 20%)' : undefined,
                   boxSizing: 'border-box',
                   display: 'flex',
@@ -522,7 +528,7 @@ export default function GoalWidget({
                   style={{ 
                     width: `${percent}%`, 
                     height: '100%',
-                    borderRadius: isFlat ? `${appearance.goal_bar_radius}px` : '9999px',
+                    borderRadius: fillRadius,
                     border: percent > 0 && !isFlat ? '1px solid rgba(255, 255, 255, 0.3)' : 'none',
                     boxShadow: percent > 0 && !isFlat ? '3px 0 10px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.4)' : 'none',
                     maskImage: isSegmented ? 'repeating-linear-gradient(90deg, #000 0 20px, transparent 20px 24px)' : undefined,
