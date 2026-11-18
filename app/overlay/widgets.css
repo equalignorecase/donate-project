@@ -85,8 +85,6 @@ body.widget-overlay-body {
     color: #e0f2fe;
     background: rgba(15, 23, 42, 0.7);
     border: 1px solid rgba(59, 130, 246, 0.4);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.15);
     text-shadow: 
         -1px -1px 0 #000,  
@@ -233,8 +231,6 @@ body.widget-overlay-body {
     align-items: center;
     background: rgba(0, 0, 0, .45);
     border-radius: 9999px;
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
     border: 1.5px solid rgba(255, 255, 255, 0.22);
 }
 

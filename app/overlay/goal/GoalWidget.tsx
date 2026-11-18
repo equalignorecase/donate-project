@@ -127,31 +127,37 @@ export default function GoalWidget({
     badgeDynamicStyle.background = 'transparent';
     badgeDynamicStyle.border = 'none';
     badgeDynamicStyle.boxShadow = 'none';
+    badgeDynamicStyle.backdropFilter = 'none';
+    badgeDynamicStyle.WebkitBackdropFilter = 'none';
     badgeDynamicStyle.padding = '0';
     badgeDynamicStyle.textShadow = '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000, 0 2px 4px rgba(0,0,0,0.9)';
   } else if (durationStyle === 'solid') {
     badgeDynamicStyle.background = durationBgColor;
     badgeDynamicStyle.border = durationBorderColor ? `1px solid ${durationBorderColor}` : 'none';
     badgeDynamicStyle.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.6)';
+    badgeDynamicStyle.backdropFilter = 'none';
+    badgeDynamicStyle.WebkitBackdropFilter = 'none';
     badgeDynamicStyle.padding = '4px 14px';
   } else if (durationStyle === 'outline') {
     badgeDynamicStyle.background = hexToRgba(durationBgColor, Math.min(durationBgOpacity, 0.25));
     badgeDynamicStyle.border = `1.5px solid ${durationBorderColor}`;
     badgeDynamicStyle.boxShadow = 'none';
+    badgeDynamicStyle.backdropFilter = 'none';
+    badgeDynamicStyle.WebkitBackdropFilter = 'none';
     badgeDynamicStyle.padding = '4px 14px';
   } else if (durationStyle === 'glow') {
     badgeDynamicStyle.background = hexToRgba(durationBgColor, durationBgOpacity);
     badgeDynamicStyle.border = `1px solid ${durationBorderColor}`;
     badgeDynamicStyle.boxShadow = `0 0 12px ${hexToRgba(durationBorderColor, 0.65)}, inset 0 0 6px ${hexToRgba(durationBorderColor, 0.3)}`;
-    badgeDynamicStyle.backdropFilter = 'blur(8px)';
-    badgeDynamicStyle.WebkitBackdropFilter = 'blur(8px)';
+    badgeDynamicStyle.backdropFilter = isCardTransparent ? 'none' : 'blur(8px)';
+    badgeDynamicStyle.WebkitBackdropFilter = isCardTransparent ? 'none' : 'blur(8px)';
     badgeDynamicStyle.padding = '4px 14px';
   } else {
     // Default 'glass'
     badgeDynamicStyle.background = hexToRgba(durationBgColor, durationBgOpacity);
     badgeDynamicStyle.border = `1px solid ${hexToRgba(durationBorderColor, 0.55)}`;
-    badgeDynamicStyle.backdropFilter = 'blur(10px)';
-    badgeDynamicStyle.WebkitBackdropFilter = 'blur(10px)';
+    badgeDynamicStyle.backdropFilter = isCardTransparent ? 'none' : 'blur(10px)';
+    badgeDynamicStyle.WebkitBackdropFilter = isCardTransparent ? 'none' : 'blur(10px)';
     badgeDynamicStyle.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.15)';
     badgeDynamicStyle.padding = '4px 14px';
   }
@@ -505,8 +511,8 @@ export default function GoalWidget({
                   height: `${appearance.goal_bar_height}px`, 
                   borderRadius: trackRadius, 
                   background: isSegmented ? `repeating-linear-gradient(90deg, ${trackBg} 0 20px, transparent 20px 24px)` : trackBg,
-                  backdropFilter: trackBlur > 0 ? `blur(${trackBlur}px)` : undefined,
-                  WebkitBackdropFilter: trackBlur > 0 ? `blur(${trackBlur}px)` : undefined,
+                  backdropFilter: !isCardTransparent && trackBlur > 0 ? `blur(${trackBlur}px)` : 'none',
+                  WebkitBackdropFilter: !isCardTransparent && trackBlur > 0 ? `blur(${trackBlur}px)` : 'none',
                   border: isFlat ? 'none' : '1.5px solid rgba(255, 255, 255, 0.22)',
                   boxShadow: isFlat ? 'none' : 'inset 0 2px 6px rgba(0, 0, 0, 0.75), 0 4px 14px rgba(0, 0, 0, 0.45)',
                   color: appearance.goal_bar_color,
