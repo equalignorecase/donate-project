@@ -40,8 +40,6 @@
   gap: 16px;
   padding: 12px 24px 12px 16px;
   background: rgba(30, 41, 59, 0.95);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
   border-radius: 16px;
   border: 1px solid rgba(255, 255, 255, 0.1);
   box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.3);
@@ -258,8 +256,6 @@
 
 .theme-glass .valorant-card {
   background: rgba(15, 23, 42, var(--bg-opacity, 0.5));
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
   border: 1px solid rgba(255, 255, 255, 0.2);
   box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
 }
@@ -312,8 +308,6 @@
   gap: 14px;
   min-width: 0;
   padding: 10px 18px 10px 12px;
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
 }
 
@@ -432,5 +426,94 @@
 .valorant-compact-error {
   font-size: 12px;
   color: #f87171;
+}
+
+/* Compact Tracker Shine Effects */
+.valorant-compact-lb.val-text-shine {
+  background-image: linear-gradient(
+    115deg,
+    var(--accent-color, #fb7185) 0%,
+    var(--accent-color, #fb7185) 30%,
+    rgba(255, 255, 255, 0.95) 43%,
+    #ffffff 49%,
+    #ffffff 51%,
+    rgba(255, 255, 255, 0.95) 57%,
+    var(--accent-color, #fb7185) 70%,
+    var(--accent-color, #fb7185) 100%
+  );
+  background-size: 260% 100%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: val-text-shine-sweep 3.5s cubic-bezier(0.25, 1, 0.5, 1) infinite;
+  display: inline-block;
+  will-change: background-position;
+}
+
+.valorant-compact-tier.val-text-shine {
+  background-image: linear-gradient(
+    115deg,
+    rgba(248, 250, 252, 0.78) 0%,
+    rgba(248, 250, 252, 0.78) 32%,
+    rgba(255, 255, 255, 0.95) 44%,
+    #ffffff 50%,
+    rgba(255, 255, 255, 0.95) 56%,
+    rgba(248, 250, 252, 0.78) 68%,
+    rgba(248, 250, 252, 0.78) 100%
+  );
+  background-size: 260% 100%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: val-text-shine-sweep 3.5s cubic-bezier(0.25, 1, 0.5, 1) infinite;
+  display: inline-block;
+  will-change: background-position;
+}
+
+.valorant-compact-rr.val-text-shine {
+  background-image: linear-gradient(
+    115deg,
+    var(--text-color, #f8fafc) 0%,
+    var(--text-color, #f8fafc) 32%,
+    rgba(255, 255, 255, 0.95) 44%,
+    #ffffff 50%,
+    rgba(255, 255, 255, 0.95) 56%,
+    var(--text-color, #f8fafc) 68%,
+    var(--text-color, #f8fafc) 100%
+  );
+  background-size: 260% 100%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: val-text-shine-sweep 3.5s cubic-bezier(0.25, 1, 0.5, 1) infinite;
+  animation-delay: 0.22s;
+  display: inline-block;
+  will-change: background-position;
+}
+
+@keyframes val-card-shine-sweep {
+  0% {
+    transform: translateX(-140%) skewX(-22deg);
+  }
+  42%, 100% {
+    transform: translateX(280%) skewX(-22deg);
+  }
+}
+
+.valorant-card-compact.val-card-shine::after {
+  content: '';
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 45%;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.08) 45%,
+    rgba(255, 255, 255, 0.16) 50%,
+    rgba(255, 255, 255, 0.08) 55%,
+    transparent 100%
+  );
+  pointer-events: none;
+  animation: val-card-shine-sweep 4.2s cubic-bezier(0.25, 1, 0.5, 1) infinite;
 }
 

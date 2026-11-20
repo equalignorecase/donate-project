@@ -139,7 +139,7 @@ export default function ValorantCard({
         className="valorant-card-container theme-compact"
         style={{ ...containerStyle, ...cssVars }}
       >
-        <div className={`valorant-card valorant-card-compact ${!showBg ? 'no-background' : ''}`} style={cardStyle}>
+        <div className={`valorant-card valorant-card-compact ${!showBg ? 'no-background' : ''} ${showShine && showBg ? 'val-card-shine' : ''}`} style={cardStyle}>
           {showBadge && (
             <div className="valorant-compact-badge">
               <img
@@ -162,9 +162,9 @@ export default function ValorantCard({
             )}
             {(showRank || showRr) && (
               <div className="valorant-compact-sub">
-                {showRank && <span className="valorant-compact-tier">{currentRank}</span>}
+                {showRank && <span className={`valorant-compact-tier ${showShine ? 'val-text-shine' : ''}`}>{currentRank}</span>}
                 {showRank && showRr && <span className="valorant-compact-dot">·</span>}
-                {showRr && <span className="valorant-compact-rr">{compactRrText}</span>}
+                {showRr && <span className={`valorant-compact-rr ${showShine ? 'val-text-shine' : ''}`}>{compactRrText}</span>}
               </div>
             )}
             {loading && !data && (
