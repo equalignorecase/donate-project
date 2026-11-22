@@ -48,17 +48,15 @@ interface GoalAppearanceEditorProps {
 }
 
 const gradientPresets = [
-  { name: 'Rainbow RGB', label: '🌈 สายรุ้ง RGB', from: '#ff0055', to: '#00ccff', isRainbow: true },
-  { name: 'Cyber Neon', label: 'ไซเบอร์ นีออน', from: '#00f2fe', to: '#4facfe' },
-  { name: 'Sunset Glow', label: 'ซันเซ็ท โกลว์', from: '#ff5858', to: '#f09819' },
-  { name: 'Neon Violet', label: 'นีออน ไวโอเล็ต', from: '#f72585', to: '#7209b7' },
-  { name: 'Emerald Aurora', label: 'เอเมอรัลด์ ออโรรา', from: '#10b981', to: '#06b6d4' },
-  { name: 'Golden Flame', label: 'เฟลม โกลเด้น', from: '#f59e0b', to: '#ef4444' },
-  { name: 'Deep Blue', label: 'ดีพบลู โอเชียน', from: '#2563eb', to: '#38bdf8' },
-  { name: 'Luxury Gold', label: 'ลักชัวรี โกลด์', from: '#d97706', to: '#fbbf24' },
-  { name: 'Sweet Peach', label: 'สวีท พีช', from: '#f43f5e', to: '#fb7185' },
-  { name: 'Purple Matrix', label: 'เพอร์เพิล ไฮป์', from: '#8b5cf6', to: '#ec4899' },
-  { name: 'Midnight Electric', label: 'อิเล็กทริก บลู', from: '#3b82f6', to: '#8b5cf6' },
+  { name: 'Rainbow Hologram', label: '🌈 สายรุ้ง Hologram', from: '#ff3d77', mid: '#34d399', to: '#22d3ee', isRainbow: true },
+  { name: 'Aurora Borealis', label: 'ออโรรา นีออน', from: '#22d3ee', mid: '#6366f1', to: '#e879f9' },
+  { name: 'Cyber Plasma', label: 'ไซเบอร์ พลาสมา', from: '#00f5d4', mid: '#00bbf9', to: '#6366f1' },
+  { name: 'Sunset Velvet', label: 'ซันเซ็ท เวลเวท', from: '#ff4d6d', mid: '#ff8a3d', to: '#fbbf24' },
+  { name: 'Sakura Neon', label: 'ซากุระ นีออน', from: '#f43f5e', mid: '#d946ef', to: '#8b5cf6' },
+  { name: 'Emerald Mint', label: 'เอเมอรัลด์ มิ้นท์', from: '#10b981', mid: '#14b8a6', to: '#38bdf8' },
+  { name: 'Royal Gold', label: 'รอยัล โกลด์', from: '#f59e0b', mid: '#fde047', to: '#fb923c' },
+  { name: 'Midnight Berry', label: 'มิดไนท์ เบอร์รี', from: '#3b82f6', mid: '#8b5cf6', to: '#ec4899' },
+  { name: 'Toxic Lime', label: 'ท็อกซิก ไลม์', from: '#84cc16', mid: '#10b981', to: '#06b6d4' },
 ];
 
 const otherColors: { key: keyof GoalAppearance; label: string; group: string }[] = [
@@ -543,18 +541,25 @@ export default function GoalAppearanceEditor({
               <span>ตัวอย่างสีหลอด (Live Bar Preview)</span>
               <span className="goal-gradient-preview-mode">
                 {value.goal_bar_rainbow === 'true'
-                  ? '🌈 Rainbow RGB Flow (เคลื่อนไหว)'
-                  : (value.goal_gradient === 'true' ? 'Linear Gradient 90° (ซ้ายไปขวา)' : 'สีเดี่ยว (Solid Color)')}
+                  ? '🌈 Hologram Rainbow (ไหลต่อเนื่อง)'
+                  : (value.goal_gradient === 'true'
+                      ? (value.goal_gradient_flow !== 'false' ? '✨ 3-Color Flowing Energy' : 'Smooth 3-Color Gradient')
+                      : 'สีเดี่ยว (Solid Color)')}
               </span>
             </div>
             <div 
-              className={`goal-gradient-preview-bar${value.goal_bar_rainbow === 'true' ? ' goal-fill-rainbow' : ''}`}
+              className={`goal-gradient-preview-bar${value.goal_bar_rainbow === 'true' ? ' goal-fill-rainbow' : (value.goal_gradient === 'true' && value.goal_gradient_flow !== 'false' ? ' goal-fill-flowing' : '')}`}
               style={{
                 background: value.goal_bar_rainbow === 'true'
                   ? undefined
                   : (value.goal_gradient === 'true'
-                      ? `linear-gradient(90deg, ${value.goal_bar_color}, ${value.goal_bar_end_color})`
-                      : value.goal_bar_color)
+                      ? (value.goal_gradient_flow !== 'false'
+                          ? `linear-gradient(90deg, ${value.goal_bar_color} 0%, ${value.goal_bar_mid_color || value.goal_bar_end_color} 25%, ${value.goal_bar_end_color} 50%, ${value.goal_bar_mid_color || value.goal_bar_end_color} 75%, ${value.goal_bar_color} 100%)`
+                          : `linear-gradient(90deg, ${value.goal_bar_color} 0%, ${value.goal_bar_mid_color || value.goal_bar_end_color} 50%, ${value.goal_bar_end_color} 100%)`)
+                      : value.goal_bar_color),
+                boxShadow: value.goal_gradient === 'true' || value.goal_bar_rainbow === 'true'
+                  ? `0 0 18px ${value.goal_bar_color}55, inset 0 1px 0 rgba(255,255,255,0.45)`
+                  : undefined,
               }}
             >
               <div className="goal-gradient-preview-shine" />
@@ -564,17 +569,15 @@ export default function GoalAppearanceEditor({
             </div>
           </div>
 
-          {/* Dual Color Pickers: Start & End */}
-          <div className="goal-dual-picker-grid">
+          {/* 3-Color Pickers: Start, Mid, End */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(175px, 1fr))', gap: '10px', marginBottom: '16px' }}>
             {/* Start Color */}
             <label className="goal-picker-box">
               <div className="goal-picker-info">
                 <span className="goal-picker-role">
-                  {value.goal_gradient === 'true' ? 'สีเริ่มต้น (Start)' : 'สีหลอด (Bar Color)'}
+                  {value.goal_gradient === 'true' ? '1. สีเริ่มต้น (Start)' : 'สีหลอด (Bar Color)'}
                 </span>
-                <span className="goal-picker-sub">
-                  {value.goal_gradient === 'true' ? 'ฝั่งซ้ายของหลอด' : 'สีหลอดหลัก'}
-                </span>
+                <span className="goal-picker-sub">ฝั่งซ้าย</span>
               </div>
               <div className="goal-swatch-wrapper">
                 <div
@@ -594,18 +597,35 @@ export default function GoalAppearanceEditor({
               </div>
             </label>
 
-            {/* Gradient Arrow Divider */}
-            <div className="goal-picker-arrow">
-              <ArrowRight size={18} />
-            </div>
-
-            {/* End Color (Enabled when gradient is on) */}
+            {/* Mid Color */}
             <label className={`goal-picker-box ${value.goal_gradient !== 'true' ? 'disabled-dim' : ''}`}>
               <div className="goal-picker-info">
-                <span className="goal-picker-role">สีปลายทาง (End)</span>
-                <span className="goal-picker-sub">
-                  {value.goal_gradient === 'true' ? 'ฝั่งขวาของหลอด' : 'เปิดไล่สีก่อนใช้งาน'}
-                </span>
+                <span className="goal-picker-role">2. สีตรงกลาง (Mid)</span>
+                <span className="goal-picker-sub">ช่วงเชื่อมสีให้เนียน</span>
+              </div>
+              <div className="goal-swatch-wrapper">
+                <div
+                  className="goal-color-preview-circle"
+                  style={{ backgroundColor: value.goal_bar_mid_color || value.goal_bar_end_color }}
+                >
+                  <input
+                    type="color"
+                    className="goal-color-input-hidden"
+                    aria-label="สีหลอดตรงกลาง"
+                    value={value.goal_bar_mid_color || value.goal_bar_end_color}
+                    disabled={disabled || value.goal_gradient !== 'true'}
+                    onChange={e => update('goal_bar_mid_color', e.target.value)}
+                  />
+                </div>
+                <span className="goal-hex-badge">{(value.goal_bar_mid_color || value.goal_bar_end_color).toUpperCase()}</span>
+              </div>
+            </label>
+
+            {/* End Color */}
+            <label className={`goal-picker-box ${value.goal_gradient !== 'true' ? 'disabled-dim' : ''}`}>
+              <div className="goal-picker-info">
+                <span className="goal-picker-role">3. สีปลายทาง (End)</span>
+                <span className="goal-picker-sub">ฝั่งขวา</span>
               </div>
               <div className="goal-swatch-wrapper">
                 <div
@@ -626,11 +646,33 @@ export default function GoalAppearanceEditor({
             </label>
           </div>
 
+          {/* Flowing & Tip Glow Toggles */}
+          <div className="goal-toggle-grid" style={{ marginBottom: '16px' }}>
+            <label>
+              <input
+                type="checkbox"
+                checked={value.goal_gradient_flow !== 'false'}
+                disabled={disabled || value.goal_gradient !== 'true'}
+                onChange={e => update('goal_gradient_flow', String(e.target.checked))}
+              />
+              <span>✨ ไล่สีไหลเคลื่อนไหวต่อเนื่อง (Flowing Energy)</span>
+            </label>
+            <label>
+              <input
+                type="checkbox"
+                checked={value.goal_bar_tip_glow !== 'false'}
+                disabled={disabled}
+                onChange={e => update('goal_bar_tip_glow', String(e.target.checked))}
+              />
+              <span>⚡ หัวหลอดเรืองแสงปลายหลอด (Glowing Energy Tip)</span>
+            </label>
+          </div>
+
           {/* Gradient Presets Quick Select */}
           <div className="goal-presets-section">
             <div className="goal-presets-title">
               <span>พรีเซ็ตไล่สีแนะนำ (Gradient Presets)</span>
-              <span className="goal-presets-hint">คลิกเลือกสีพร้อมเปิดใช้งานทันที</span>
+              <span className="goal-presets-hint">คลิกเลือกสี 3 เฉดพร้อมเปิดใช้งานทันที</span>
             </div>
             <div className="goal-presets-list">
               {gradientPresets.map(preset => {
@@ -639,6 +681,7 @@ export default function GoalAppearanceEditor({
                   : value.goal_bar_rainbow !== 'true' &&
                     value.goal_gradient === 'true' &&
                     value.goal_bar_color.toLowerCase() === preset.from.toLowerCase() &&
+                    (value.goal_bar_mid_color || '').toLowerCase() === preset.mid.toLowerCase() &&
                     value.goal_bar_end_color.toLowerCase() === preset.to.toLowerCase();
                 return (
                   <button
@@ -653,6 +696,7 @@ export default function GoalAppearanceEditor({
                           goal_bar_rainbow: 'true',
                           goal_gradient: 'true',
                           goal_bar_color: preset.from,
+                          goal_bar_mid_color: preset.mid,
                           goal_bar_end_color: preset.to,
                         });
                       } else {
@@ -660,19 +704,21 @@ export default function GoalAppearanceEditor({
                           ...value,
                           goal_bar_rainbow: 'false',
                           goal_bar_color: preset.from,
+                          goal_bar_mid_color: preset.mid,
                           goal_bar_end_color: preset.to,
                           goal_gradient: 'true',
+                          goal_gradient_flow: 'true',
                         });
                       }
                     }}
-                    title={`${preset.name} (${preset.from} → ${preset.to})`}
+                    title={`${preset.name} (${preset.from} → ${preset.mid} → ${preset.to})`}
                   >
                     <span
                       className="goal-preset-chip-preview"
                       style={{
                         background: (preset as any).isRainbow
-                          ? 'linear-gradient(90deg, #ff0055, #ff7700, #ffdd00, #00ff66, #00ccff, #7700ff)'
-                          : `linear-gradient(90deg, ${preset.from}, ${preset.to})`,
+                          ? 'linear-gradient(90deg, #ff3d77, #ff8a3d, #facc15, #34d399, #22d3ee, #818cf8, #e879f9)'
+                          : `linear-gradient(90deg, ${preset.from}, ${preset.mid}, ${preset.to})`,
                       }}
                     />
                     <span className="goal-preset-chip-name">{preset.label}</span>

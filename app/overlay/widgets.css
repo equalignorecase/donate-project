@@ -729,17 +729,36 @@ body.widget-overlay-body {
 
 .goal-fill-rainbow {
     background: linear-gradient(90deg, 
-        #ff0055 0%, 
-        #ff7700 16.6%, 
-        #ffdd00 33.3%, 
-        #00ff66 50%, 
-        #00ccff 66.6%, 
-        #7700ff 83.3%, 
-        #ff0055 100%
+        #ff3d77 0%, 
+        #ff8a3d 14%, 
+        #facc15 28%, 
+        #34d399 44%, 
+        #22d3ee 60%, 
+        #818cf8 76%, 
+        #e879f9 90%, 
+        #ff3d77 100%
     ) !important;
     background-size: 200% 100% !important;
-    animation: goalRainbowFlow 3s linear infinite !important;
-    box-shadow: 0 0 16px rgba(255, 0, 128, 0.45), 0 0 24px rgba(0, 204, 255, 0.35) !important;
+    animation: goalRainbowFlow 4.2s linear infinite !important;
+    box-shadow: 0 0 18px rgba(255, 61, 119, 0.42), 0 0 28px rgba(34, 211, 238, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.45) !important;
+}
+
+.goal-fill-flowing {
+    background-size: 200% 100% !important;
+    animation: goalRainbowFlow 4s linear infinite !important;
+}
+
+.goal-fill-tip {
+    position: absolute;
+    top: 2px;
+    bottom: 2px;
+    right: 0;
+    width: 10px;
+    border-radius: 9999px;
+    background: linear-gradient(90deg, rgba(255, 255, 255, 0), rgba(255, 255, 255, 0.92));
+    box-shadow: 0 0 12px 2px rgba(255, 255, 255, 0.78);
+    pointer-events: none;
+    z-index: 2;
 }
 
 .supporter-beam-row {
