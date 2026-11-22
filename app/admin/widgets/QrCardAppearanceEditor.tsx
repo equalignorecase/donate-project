@@ -345,6 +345,52 @@ export default function QrCardAppearanceEditor({
           </div>
 
           <fieldset disabled={disabled} className="goal-editor-controls">
+            <legend>เอฟเฟกต์ลำแสงวิ่งพาดผ่านการ์ด (Shine Sweep)</legend>
+            <div className="goal-toggle-grid" style={{ marginBottom: value.qr_card_shine_sweep !== 'false' ? '14px' : 0 }}>
+              <label>
+                <input
+                  type="checkbox"
+                  checked={value.qr_card_shine_sweep !== 'false'}
+                  onChange={e => update('qr_card_shine_sweep', String(e.target.checked))}
+                />
+                <span>เปิดลำแสงวิ่งพาดผ่านการ์ด + ออร่าข้อความหลัก</span>
+              </label>
+            </div>
+            {value.qr_card_shine_sweep !== 'false' && (
+              <div className="goal-control-grid">
+                <label className="goal-font-control">
+                  โทนสีลำแสงวิ่ง
+                  <select
+                    value={value.qr_card_shine_theme || 'crystal'}
+                    onChange={e => update('qr_card_shine_theme', e.target.value)}
+                  >
+                    <option value="crystal">💎 คริสตัลประกายเพชร (Crystal)</option>
+                    <option value="gold">🏆 ประกายทอง (Golden Glow)</option>
+                    <option value="cyan">⚡ นีออนไซแอน (Cyber Cyan)</option>
+                    <option value="rose">🌸 โรสพิงค์ (Rose Pink)</option>
+                    <option value="emerald">💚 เอเมอรัลด์ (Emerald)</option>
+                    <option value="rainbow">🌈 สายรุ้ง (Rainbow)</option>
+                  </select>
+                </label>
+                <label className="goal-range-control">
+                  <span>
+                    หน่วงเวลาหยุดพักก่อนวิ่งรอบใหม่
+                    <strong>{value.qr_card_shine_delay || '3'} วินาที</strong>
+                  </span>
+                  <input
+                    type="range"
+                    min={qrCardRanges.qr_card_shine_delay?.[0] ?? 1}
+                    max={qrCardRanges.qr_card_shine_delay?.[1] ?? 15}
+                    step={1}
+                    value={value.qr_card_shine_delay || '3'}
+                    onChange={e => update('qr_card_shine_delay', e.target.value)}
+                  />
+                </label>
+              </div>
+            )}
+          </fieldset>
+
+          <fieldset disabled={disabled} className="goal-editor-controls">
             <legend>กำหนดสีสันทุกส่วน</legend>
             <div className="goal-color-grid">
               {qrColors.map(([key, label]) => (

@@ -30,6 +30,9 @@ export const qrCardDefaults = {
   qr_card_border_color: '#38bdf8',
   qr_card_show_border: 'true',
   qr_card_rainbow_border: 'false',
+  qr_card_shine_sweep: 'true',
+  qr_card_shine_theme: 'crystal',
+  qr_card_shine_delay: '3',
   qr_card_title_color: '#ffffff',
   qr_card_subtitle_color: '#cbd5e1',
   qr_card_badge_bg_color: '#2563eb',
@@ -52,6 +55,7 @@ export const qrCardRanges: Partial<Record<keyof QrCardAppearance, [number, numbe
   qr_card_title_size: [12, 64],
   qr_card_subtitle_size: [10, 48],
   qr_card_opacity: [0, 100],
+  qr_card_shine_delay: [1, 15],
 };
 
 export function validQrCardAppearance(key: keyof QrCardAppearance, value: unknown): boolean {
@@ -60,6 +64,7 @@ export function validQrCardAppearance(key: keyof QrCardAppearance, value: unknow
   if (key === 'qr_card_layout') return ['vertical', 'horizontal'].includes(value);
   if (key === 'qr_card_text_align') return ['left', 'center', 'right'].includes(value);
   if (key === 'qr_card_font') return goalFontOptions.some(font => font.value === value);
+  if (key === 'qr_card_shine_theme') return ['crystal', 'gold', 'cyan', 'rose', 'emerald', 'rainbow'].includes(value);
   if (key === 'qr_card_badge_text') return value.length <= 60;
   if (key === 'qr_card_title') return value.length <= 160;
   if (key === 'qr_card_subtitle') return value.length <= 240;

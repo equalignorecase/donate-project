@@ -66,4 +66,5 @@ test('QrCardWidget renders image mode with title, subtitle, and rainbow border',
   assert.ok(html.includes('สแกนจ่ายได้เลย'));
   assert.ok(html.includes('ขึ้นจอทันที'));
   assert.ok(html.includes('supporter-beam-rainbow'));
+  assert.ok(html.includes('qr-card-shine-beam'));
 });

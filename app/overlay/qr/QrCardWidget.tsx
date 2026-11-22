@@ -15,6 +15,39 @@ function hexToRgba(hex: string, alpha: number): string {
   return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }
 
+const SHINE_THEME_MAP: Record<string, { beamBg: string; beamShadow: string; textStops: string }> = {
+  gold: {
+    beamBg: 'linear-gradient(90deg, transparent 0%, rgba(245, 158, 11, 0.12) 20%, rgba(253, 224, 71, 0.45) 46%, rgba(255, 255, 255, 0.9) 50%, rgba(253, 224, 71, 0.45) 54%, rgba(245, 158, 11, 0.12) 80%, transparent 100%)',
+    beamShadow: '0 0 24px 4px rgba(250, 204, 21, 0.45)',
+    textStops: '#f59e0b 40%, #ffffff 50%, #fde047 60%',
+  },
+  cyan: {
+    beamBg: 'linear-gradient(90deg, transparent 0%, rgba(6, 182, 212, 0.12) 20%, rgba(103, 232, 249, 0.45) 46%, rgba(255, 255, 255, 0.9) 50%, rgba(103, 232, 249, 0.45) 54%, rgba(6, 182, 212, 0.12) 80%, transparent 100%)',
+    beamShadow: '0 0 24px 4px rgba(34, 211, 238, 0.45)',
+    textStops: '#06b6d4 40%, #ffffff 50%, #67e8f9 60%',
+  },
+  rose: {
+    beamBg: 'linear-gradient(90deg, transparent 0%, rgba(236, 72, 153, 0.12) 20%, rgba(249, 168, 212, 0.45) 46%, rgba(255, 255, 255, 0.9) 50%, rgba(249, 168, 212, 0.45) 54%, rgba(236, 72, 153, 0.12) 80%, transparent 100%)',
+    beamShadow: '0 0 24px 4px rgba(244, 114, 182, 0.45)',
+    textStops: '#ec4899 40%, #ffffff 50%, #f9a8d4 60%',
+  },
+  emerald: {
+    beamBg: 'linear-gradient(90deg, transparent 0%, rgba(16, 185, 129, 0.12) 20%, rgba(110, 231, 183, 0.45) 46%, rgba(255, 255, 255, 0.9) 50%, rgba(110, 231, 183, 0.45) 54%, rgba(16, 185, 129, 0.12) 80%, transparent 100%)',
+    beamShadow: '0 0 24px 4px rgba(52, 211, 153, 0.45)',
+    textStops: '#10b981 40%, #ffffff 50%, #6ee7b7 60%',
+  },
+  rainbow: {
+    beamBg: 'linear-gradient(90deg, transparent 0%, rgba(244, 63, 94, 0.25) 22%, rgba(250, 204, 21, 0.4) 38%, rgba(255, 255, 255, 0.92) 50%, rgba(52, 211, 153, 0.4) 62%, rgba(56, 189, 248, 0.3) 78%, transparent 100%)',
+    beamShadow: '0 0 26px 5px rgba(168, 85, 247, 0.5)',
+    textStops: '#f43f5e 36%, #facc15 44%, #ffffff 50%, #34d399 56%, #38bdf8 64%',
+  },
+  crystal: {
+    beamBg: 'linear-gradient(90deg, transparent 0%, rgba(56, 189, 248, 0.12) 20%, rgba(186, 230, 253, 0.45) 46%, rgba(255, 255, 255, 0.92) 50%, rgba(186, 230, 253, 0.45) 54%, rgba(56, 189, 248, 0.12) 80%, transparent 100%)',
+    beamShadow: '0 0 24px 4px rgba(186, 230, 253, 0.48)',
+    textStops: '#38bdf8 40%, #ffffff 50%, #bae6fd 60%',
+  },
+};
+
 export default function QrCardWidget({
   appearance = qrCardDefaults,
 }: {
@@ -80,6 +113,16 @@ export default function QrCardWidget({
   const showSubtitle = appearance.qr_card_show_subtitle !== 'false' && Boolean(appearance.qr_card_subtitle.trim());
   const hasText = showBadge || showTitle || showSubtitle;
 
+  const isShineEnabled = appearance.qr_card_shine_sweep !== 'false';
+  const shineTheme = appearance.qr_card_shine_theme || 'crystal';
+  const shineCfg = SHINE_THEME_MAP[shineTheme] || SHINE_THEME_MAP.crystal;
+  const pauseSec = Math.max(1, Math.min(15, Number(appearance.qr_card_shine_delay || '3')));
+  const sweepSec = 1.65;
+  const totalSec = Number((sweepSec + pauseSec).toFixed(2));
+  const pEnd = Number(((sweepSec / totalSec) * 100).toFixed(2));
+  const titleBaseColor = appearance.qr_card_title_color || '#ffffff';
+  const titleShimmerGradient = `linear-gradient(110deg, ${titleBaseColor} 0%, ${titleBaseColor} 32%, ${shineCfg.textStops}, ${titleBaseColor} 68%, ${titleBaseColor} 100%)`;
+
   return (
     <section
       className={`obs-widget qr-card-widget${isRainbow ? ' supporter-beam-rainbow' : ''}`}
@@ -100,9 +143,48 @@ export default function QrCardWidget({
         justifyContent: 'center',
         gap: `${gap}px`,
         boxSizing: 'border-box',
+        position: 'relative',
+        overflow: 'hidden',
         ['--row-bg' as any]: bg === 'transparent' ? '#0f172a' : bg,
       }}
     >
+      {isShineEnabled && (
+        <>
+          <style>{`
+            @keyframes qr-card-beam-glide {
+              0% { transform: translate3d(-140%, 0, 0) skewX(-24deg); opacity: 0; }
+              ${Number((pEnd * 0.1).toFixed(2))}% { opacity: 0.95; }
+              ${Number((pEnd * 0.85).toFixed(2))}% { opacity: 0.95; }
+              ${pEnd}% { transform: translate3d(520%, 0, 0) skewX(-24deg); opacity: 0; }
+              100% { transform: translate3d(520%, 0, 0) skewX(-24deg); opacity: 0; }
+            }
+            @keyframes qr-card-text-shine {
+              0% { background-position: 135% 0; }
+              ${pEnd}% { background-position: -35% 0; }
+              100% { background-position: -35% 0; }
+            }
+          `}</style>
+          <span
+            className="qr-card-shine-beam"
+            aria-hidden="true"
+            style={{
+              position: 'absolute',
+              top: '-45%',
+              left: 0,
+              width: '28%',
+              minWidth: '90px',
+              height: '190%',
+              pointerEvents: 'none',
+              zIndex: 0,
+              background: shineCfg.beamBg,
+              boxShadow: shineCfg.beamShadow,
+              animation: `qr-card-beam-glide ${totalSec}s cubic-bezier(0.22, 1, 0.36, 1) infinite`,
+              willChange: 'transform, opacity',
+            }}
+          />
+        </>
+      )}
+
       {/* Media Box: QR Code or Uploaded Image */}
       <div
         style={{
@@ -118,6 +200,8 @@ export default function QrCardWidget({
           justifyContent: 'center',
           boxShadow: isQrMode ? '0 6px 18px rgba(0,0,0,0.22)' : undefined,
           boxSizing: 'border-box',
+          position: 'relative',
+          zIndex: 1,
         }}
       >
         {imageSrc ? (
@@ -174,6 +258,8 @@ export default function QrCardWidget({
                 : 'center',
             textAlign,
             gap: `${textGap}px`,
+            position: 'relative',
+            zIndex: 1,
           }}
         >
           {showBadge && (
@@ -199,9 +285,19 @@ export default function QrCardWidget({
                 margin: 0,
                 fontSize: `${appearance.qr_card_title_size}px`,
                 fontWeight: 800,
-                color: appearance.qr_card_title_color,
+                color: titleBaseColor,
                 lineHeight: 1.25,
                 overflowWrap: 'anywhere',
+                ...(isShineEnabled
+                  ? {
+                      backgroundImage: titleShimmerGradient,
+                      backgroundSize: '250% 100%',
+                      WebkitBackgroundClip: 'text',
+                      backgroundClip: 'text',
+                      WebkitTextFillColor: 'transparent',
+                      animation: `qr-card-text-shine ${totalSec}s cubic-bezier(0.22, 1, 0.36, 1) infinite`,
+                    }
+                  : {}),
               }}
             >
               {appearance.qr_card_title}
