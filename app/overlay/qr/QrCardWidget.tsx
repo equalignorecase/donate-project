@@ -114,6 +114,10 @@ export default function QrCardWidget({
   const hasText = showBadge || showTitle || showSubtitle;
 
   const isShineEnabled = appearance.qr_card_shine_sweep !== 'false';
+  const shineOnCard = isShineEnabled && appearance.qr_card_shine_card !== 'false';
+  const shineOnTitle = isShineEnabled && appearance.qr_card_shine_title !== 'false';
+  const shineOnSubtitle = isShineEnabled && appearance.qr_card_shine_subtitle === 'true';
+  const hasAnyShine = shineOnCard || shineOnTitle || shineOnSubtitle;
   const shineTheme = appearance.qr_card_shine_theme || 'crystal';
   const shineCfg = SHINE_THEME_MAP[shineTheme] || SHINE_THEME_MAP.crystal;
   const pauseSec = Math.max(1, Math.min(15, Number(appearance.qr_card_shine_delay || '3')));
@@ -121,7 +125,15 @@ export default function QrCardWidget({
   const totalSec = Number((sweepSec + pauseSec).toFixed(2));
   const pEnd = Number(((sweepSec / totalSec) * 100).toFixed(2));
   const titleBaseColor = appearance.qr_card_title_color || '#ffffff';
-  const titleShimmerGradient = `linear-gradient(110deg, ${titleBaseColor} 0%, ${titleBaseColor} 32%, ${shineCfg.textStops}, ${titleBaseColor} 68%, ${titleBaseColor} 100%)`;
+  const subtitleBaseColor = appearance.qr_card_subtitle_color || '#cbd5e1';
+  const buildTextShimmer = (baseColor: string) => ({
+    backgroundImage: `linear-gradient(110deg, ${baseColor} 0%, ${baseColor} 32%, ${shineCfg.textStops}, ${baseColor} 68%, ${baseColor} 100%)`,
+    backgroundSize: '250% 100%',
+    WebkitBackgroundClip: 'text',
+    backgroundClip: 'text',
+    WebkitTextFillColor: 'transparent',
+    animation: `qr-card-text-shine ${totalSec}s cubic-bezier(0.22, 1, 0.36, 1) infinite`,
+  });
 
   return (
     <section
@@ -148,41 +160,41 @@ export default function QrCardWidget({
         ['--row-bg' as any]: bg === 'transparent' ? '#0f172a' : bg,
       }}
     >
-      {isShineEnabled && (
-        <>
-          <style>{`
-            @keyframes qr-card-beam-glide {
-              0% { transform: translate3d(-140%, 0, 0) skewX(-24deg); opacity: 0; }
-              ${Number((pEnd * 0.1).toFixed(2))}% { opacity: 0.95; }
-              ${Number((pEnd * 0.85).toFixed(2))}% { opacity: 0.95; }
-              ${pEnd}% { transform: translate3d(520%, 0, 0) skewX(-24deg); opacity: 0; }
-              100% { transform: translate3d(520%, 0, 0) skewX(-24deg); opacity: 0; }
-            }
-            @keyframes qr-card-text-shine {
-              0% { background-position: 135% 0; }
-              ${pEnd}% { background-position: -35% 0; }
-              100% { background-position: -35% 0; }
-            }
-          `}</style>
-          <span
-            className="qr-card-shine-beam"
-            aria-hidden="true"
-            style={{
-              position: 'absolute',
-              top: '-45%',
-              left: 0,
-              width: '28%',
-              minWidth: '90px',
-              height: '190%',
-              pointerEvents: 'none',
-              zIndex: 0,
-              background: shineCfg.beamBg,
-              boxShadow: shineCfg.beamShadow,
-              animation: `qr-card-beam-glide ${totalSec}s cubic-bezier(0.22, 1, 0.36, 1) infinite`,
-              willChange: 'transform, opacity',
-            }}
-          />
-        </>
+      {hasAnyShine && (
+        <style>{`
+          @keyframes qr-card-beam-glide {
+            0% { transform: translate3d(-140%, 0, 0) skewX(-24deg); opacity: 0; }
+            ${Number((pEnd * 0.1).toFixed(2))}% { opacity: 0.95; }
+            ${Number((pEnd * 0.85).toFixed(2))}% { opacity: 0.95; }
+            ${pEnd}% { transform: translate3d(520%, 0, 0) skewX(-24deg); opacity: 0; }
+            100% { transform: translate3d(520%, 0, 0) skewX(-24deg); opacity: 0; }
+          }
+          @keyframes qr-card-text-shine {
+            0% { background-position: 135% 0; }
+            ${pEnd}% { background-position: -35% 0; }
+            100% { background-position: -35% 0; }
+          }
+        `}</style>
+      )}
+      {shineOnCard && (
+        <span
+          className="qr-card-shine-beam"
+          aria-hidden="true"
+          style={{
+            position: 'absolute',
+            top: '-45%',
+            left: 0,
+            width: '28%',
+            minWidth: '90px',
+            height: '190%',
+            pointerEvents: 'none',
+            zIndex: 0,
+            background: shineCfg.beamBg,
+            boxShadow: shineCfg.beamShadow,
+            animation: `qr-card-beam-glide ${totalSec}s cubic-bezier(0.22, 1, 0.36, 1) infinite`,
+            willChange: 'transform, opacity',
+          }}
+        />
       )}
 
       {/* Media Box: QR Code or Uploaded Image */}
@@ -288,16 +300,7 @@ export default function QrCardWidget({
                 color: titleBaseColor,
                 lineHeight: 1.25,
                 overflowWrap: 'anywhere',
-                ...(isShineEnabled
-                  ? {
-                      backgroundImage: titleShimmerGradient,
-                      backgroundSize: '250% 100%',
-                      WebkitBackgroundClip: 'text',
-                      backgroundClip: 'text',
-                      WebkitTextFillColor: 'transparent',
-                      animation: `qr-card-text-shine ${totalSec}s cubic-bezier(0.22, 1, 0.36, 1) infinite`,
-                    }
-                  : {}),
+                ...(shineOnTitle ? buildTextShimmer(titleBaseColor) : {}),
               }}
             >
               {appearance.qr_card_title}
@@ -309,9 +312,10 @@ export default function QrCardWidget({
                 margin: 0,
                 fontSize: `${appearance.qr_card_subtitle_size}px`,
                 fontWeight: 500,
-                color: appearance.qr_card_subtitle_color,
+                color: subtitleBaseColor,
                 lineHeight: 1.35,
                 overflowWrap: 'anywhere',
+                ...(shineOnSubtitle ? buildTextShimmer(subtitleBaseColor) : {}),
               }}
             >
               {appearance.qr_card_subtitle}

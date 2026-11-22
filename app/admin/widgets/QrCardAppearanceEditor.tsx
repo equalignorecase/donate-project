@@ -353,11 +353,43 @@ export default function QrCardAppearanceEditor({
                   checked={value.qr_card_shine_sweep !== 'false'}
                   onChange={e => update('qr_card_shine_sweep', String(e.target.checked))}
                 />
-                <span>เปิดลำแสงวิ่งพาดผ่านการ์ด + ออร่าข้อความหลัก</span>
+                <span>เปิดเอฟเฟกต์ Shine Effect</span>
               </label>
             </div>
             {value.qr_card_shine_sweep !== 'false' && (
-              <div className="goal-control-grid">
+              <>
+                <div style={{ marginBottom: '14px' }}>
+                  <span style={{ fontSize: '12.5px', color: 'var(--text-muted)', display: 'block', marginBottom: '8px' }}>
+                    เลือกจุดที่ต้องการให้แสงวิ่ง (เลือกได้หลายจุด):
+                  </span>
+                  <div className="goal-toggle-grid">
+                    <label>
+                      <input
+                        type="checkbox"
+                        checked={value.qr_card_shine_card !== 'false'}
+                        onChange={e => update('qr_card_shine_card', String(e.target.checked))}
+                      />
+                      <span>ลำแสงพาดการ์ด (Card)</span>
+                    </label>
+                    <label>
+                      <input
+                        type="checkbox"
+                        checked={value.qr_card_shine_title !== 'false'}
+                        onChange={e => update('qr_card_shine_title', String(e.target.checked))}
+                      />
+                      <span>ออร่าข้อความหลัก (Title)</span>
+                    </label>
+                    <label>
+                      <input
+                        type="checkbox"
+                        checked={value.qr_card_shine_subtitle === 'true'}
+                        onChange={e => update('qr_card_shine_subtitle', String(e.target.checked))}
+                      />
+                      <span>ออร่าข้อความรอง (Subtitle)</span>
+                    </label>
+                  </div>
+                </div>
+                <div className="goal-control-grid">
                 <label className="goal-font-control">
                   โทนสีลำแสงวิ่ง
                   <select
@@ -387,6 +419,7 @@ export default function QrCardAppearanceEditor({
                   />
                 </label>
               </div>
+              </>
             )}
           </fieldset>
 

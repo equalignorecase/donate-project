@@ -68,3 +68,19 @@ test('QrCardWidget renders image mode with title, subtitle, and rainbow border',
   assert.ok(html.includes('supporter-beam-rainbow'));
   assert.ok(html.includes('qr-card-shine-beam'));
 });
+
+test('QrCardWidget respects independent card/title/subtitle shine toggles', () => {
+  const html = renderToStaticMarkup(
+    React.createElement(QrCardWidget, {
+      appearance: {
+        ...qrCardDefaults,
+        qr_card_shine_sweep: 'true',
+        qr_card_shine_card: 'false',
+        qr_card_shine_title: 'false',
+        qr_card_shine_subtitle: 'true',
+      },
+    })
+  );
+  assert.ok(!html.includes('qr-card-shine-beam'));
+  assert.ok(html.includes('qr-card-text-shine'));
+});
