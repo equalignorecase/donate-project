@@ -3,6 +3,7 @@ import { supabaseAdmin } from '@/lib/supabaseAdmin';
 import { verifyAdminAuth } from '@/lib/auth';
 import { GoalAppearance, goalAppearanceDefaults, validGoalAppearance } from '@/lib/goalAppearance';
 import { SupporterAppearance, supporterDefaults, validSupporterAppearance } from '@/lib/supporterAppearance';
+import { QrCardAppearance, qrCardDefaults, validQrCardAppearance } from '@/lib/qrCardAppearance';
 import { DONATE_PAGE_SETTING_KEYS, sanitizePublicUrl } from '@/lib/donate-page-profile';
 
 export const dynamic = 'force-dynamic';
@@ -118,6 +119,11 @@ export async function POST(request: Request) {
     for (const key of Object.keys(supporterDefaults) as (keyof SupporterAppearance)[]) {
       if (key in newSettings && !validSupporterAppearance(key, newSettings[key])) {
         return NextResponse.json({ success: false, message: `ค่ารูปแบบอันดับไม่ถูกต้อง: ${key}` }, { status: 400 });
+      }
+    }
+    for (const key of Object.keys(qrCardDefaults) as (keyof QrCardAppearance)[]) {
+      if (key in newSettings && !validQrCardAppearance(key, newSettings[key])) {
+        return NextResponse.json({ success: false, message: `ค่ารูปแบบการ์ดรูป/QR ไม่ถูกต้อง: ${key}` }, { status: 400 });
       }
     }
     const upsertRows = Object.entries(newSettings).map(([key, value]) => ({

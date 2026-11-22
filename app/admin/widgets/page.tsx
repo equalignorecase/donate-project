@@ -2,14 +2,17 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Target, Trophy, ExternalLink, Eye, RotateCcw, Sparkles, Zap } from 'lucide-react';
+import { Target, Trophy, ExternalLink, Eye, RotateCcw, Sparkles, Zap, QrCode } from 'lucide-react';
 import { useAdmin } from '../AdminContext';
 import { GoalAppearance, goalAppearanceDefaults, readGoalAppearance } from '@/lib/goalAppearance';
 import { SupporterAppearance, supporterDefaults, readSupporterAppearance, SupporterMode, supporterModes } from '@/lib/supporterAppearance';
+import { QrCardAppearance, qrCardDefaults, readQrCardAppearance } from '@/lib/qrCardAppearance';
 import GoalAppearanceEditor from './GoalAppearanceEditor';
 import SupporterAppearanceEditor from './SupporterAppearanceEditor';
+import QrCardAppearanceEditor from './QrCardAppearanceEditor';
 import GoalWidget from '@/app/overlay/goal/GoalWidget';
 import SupporterWidget from '@/app/overlay/supporters/SupporterWidget';
+import QrCardWidget from '@/app/overlay/qr/QrCardWidget';
 import { WidgetData } from '@/lib/widgets';
 import { playGoalFanfare } from '@/lib/goalAudio';
 import { supabase } from '@/lib/supabaseClient';
@@ -18,19 +21,21 @@ import './widgets-admin.css';
 
 export default function WidgetsAdmin() {
   const { showToast, handleUnauthorized } = useAdmin();
-  const [section, setSection] = useState<'goal' | 'supporters'>('goal');
+  const [section, setSection] = useState<'goal' | 'supporters' | 'qr'>('goal');
   const [title, setTitle] = useState('เป้าหมายโดเนท');
   const [target, setTarget] = useState('15000');
   const [startedAt, setStartedAt] = useState('');
   const [origin, setOrigin] = useState('');
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
-  const [saving, setSaving] = useState<'goal' | 'supporters' | null>(null);
-  const [errors, setErrors] = useState({ goal: '', supporters: '' });
+  const [saving, setSaving] = useState<'goal' | 'supporters' | 'qr' | null>(null);
+  const [errors, setErrors] = useState({ goal: '', supporters: '', qr: '' });
   const [appearance, setAppearance] = useState<GoalAppearance>({ ...goalAppearanceDefaults });
   const [supporters, setSupporters] = useState<SupporterAppearance>({ ...supporterDefaults });
+  const [qrCard, setQrCard] = useState<QrCardAppearance>({ ...qrCardDefaults });
   const [savedGoal, setSavedGoal] = useState<GoalAppearance>({ ...goalAppearanceDefaults });
   const [savedSupporters, setSavedSupporters] = useState<SupporterAppearance>({ ...supporterDefaults });
+  const [savedQrCard, setSavedQrCard] = useState<QrCardAppearance>({ ...qrCardDefaults });
   const [widgetData, setWidgetData] = useState<WidgetData | null>(null);
   const [previewBg, setPreviewBg] = useState<'checker' | 'game' | 'bright'>('checker');
   const [previewPercentOverride, setPreviewPercentOverride] = useState<number | null>(null);
@@ -45,7 +50,9 @@ export default function WidgetsAdmin() {
       if (active) {
         const goal = readGoalAppearance(result.settings);
         const supporter = readSupporterAppearance(result.settings);
+        const qr = readQrCardAppearance(result.settings);
         setAppearance(goal); setSavedGoal(goal); setSupporters(supporter); setSavedSupporters(supporter);
+        setQrCard(qr); setSavedQrCard(qr);
         setTitle(result.settings.goal_title || 'เป้าหมายโดเนท');
         setTarget(result.settings.goal_target || '15000');
         setStartedAt(result.settings.goal_started_at || '');
@@ -60,19 +67,30 @@ export default function WidgetsAdmin() {
     return () => { active = false; };
   }, [handleUnauthorized]);
 
-  const save = async (event: React.FormEvent, kind: 'goal' | 'supporters') => {
+  const save = async (event: React.FormEvent, kind: 'goal' | 'supporters' | 'qr') => {
     event.preventDefault();
     if (loading || loadError || saving) return;
     setSaving(kind); setErrors(previous => ({ ...previous, [kind]: '' }));
-    const payload = kind === 'goal' ? { goal_title: title.trim(), goal_target: target, goal_started_at: startedAt, ...appearance } : { ...supporters };
+    const payload = kind === 'goal'
+      ? { goal_title: title.trim(), goal_target: target, goal_started_at: startedAt, ...appearance }
+      : kind === 'qr'
+      ? { ...qrCard }
+      : { ...supporters };
     try {
       const response = await fetch('/api/admin/settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
       if (response.status === 401) { handleUnauthorized(); return; }
       const result = await response.json();
       if (!response.ok || !result.success) throw new Error(result.message || 'บันทึกไม่สำเร็จ');
       if (kind === 'goal') setSavedGoal(readGoalAppearance(result.settings));
+      else if (kind === 'qr') setSavedQrCard(readQrCardAppearance(result.settings));
       else setSavedSupporters(readSupporterAppearance(result.settings));
-      showToast(kind === 'goal' ? 'บันทึกเป้าหมายโดเนทแล้ว' : 'บันทึกอันดับผู้โดเนทแล้ว');
+      showToast(
+        kind === 'goal'
+          ? 'บันทึกเป้าหมายโดเนทแล้ว'
+          : kind === 'qr'
+          ? 'บันทึกการ์ดรูป & QR Code แล้ว'
+          : 'บันทึกอันดับผู้โดเนทแล้ว'
+      );
       fetch('/api/widgets', { cache: 'no-store' })
         .then(res => res.json())
         .then(res => { if (res.success) setWidgetData(res.data); })
@@ -217,6 +235,18 @@ export default function WidgetsAdmin() {
           >
             <Trophy size={18} aria-hidden="true" />
             <span>อันดับผู้โดเนท</span>
+          </button>
+          <button
+            id="qr-tab"
+            role="tab"
+            type="button"
+            aria-selected={section === 'qr'}
+            aria-controls="qr-panel"
+            className={`widget-tab${section === 'qr' ? ' active' : ''}`}
+            onClick={() => setSection('qr')}
+          >
+            <QrCode size={18} aria-hidden="true" />
+            <span>การ์ดรูป &amp; QR</span>
           </button>
         </div>
       </div>
@@ -579,6 +609,80 @@ export default function WidgetsAdmin() {
                     <span>แสดงรายชื่อตัวอย่างเพื่อให้เห็นโพเดียมและเอฟเฟกต์สด</span>
                   </div>
                 )}
+              </div>
+            </div>
+          </aside>
+        </div>
+      </section>
+
+      {/* ================= SECTION 3: QR & IMAGE CARD ================= */}
+      <section id="qr-panel" role="tabpanel" aria-labelledby="qr-tab" hidden={section !== 'qr'}>
+        <div className="widgets-layout-grid">
+          <div className="widgets-main-col">
+            <form id="qr-form" onSubmit={event => void save(event, 'qr')}>
+              {errors.qr && <p role="alert" className="widget-error">{errors.qr}</p>}
+              <QrCardAppearanceEditor
+                value={qrCard}
+                onChange={setQrCard}
+                disabled={disabled}
+                origin={origin}
+              />
+            </form>
+          </div>
+
+          <aside className="widgets-side-col">
+            <div className="widgets-sticky-sidebar">
+              <div className="widget-sidebar-card">
+                <button
+                  className="widget-button widget-button-save"
+                  type="submit"
+                  form="qr-form"
+                  disabled={disabled}
+                  style={{ width: '100%', minHeight: '46px', fontSize: '15px' }}
+                >
+                  {saving === 'qr' ? 'กำลังบันทึก…' : 'บันทึกการ์ดรูป & QR Code'}
+                </button>
+                <div style={{ fontSize: '12px', color: 'var(--text-muted)', textAlign: 'center', marginTop: '8px' }}>
+                  บันทึกแล้ว OBS จะอัปเดตภาพและข้อความทันที
+                </div>
+              </div>
+
+              <div className="widget-sidebar-card">
+                <div className="widget-sidebar-card-header">
+                  <div className="widget-sidebar-card-title">
+                    <ExternalLink size={16} />
+                    <span>ลิงก์สำหรับ OBS Browser Source</span>
+                  </div>
+                  <span className="brand-badge">
+                    {savedQrCard.qr_card_width} px
+                  </span>
+                </div>
+
+                {renderSidebarLink('การ์ดรูป & QR Code', '/overlay/qr')}
+
+                <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '12px', lineHeight: 1.5 }}>
+                  💡 <strong>ตั้งค่าใน OBS:</strong> Width = <strong>{Number(savedQrCard.qr_card_width) + 40}</strong> px (เผื่อขอบ) · พื้นหลังโปร่งใสพร้อมใช้งานทันที
+                </div>
+              </div>
+
+              <div className="widget-sidebar-card">
+                <div className="widget-sidebar-card-header">
+                  <div className="widget-sidebar-card-title">
+                    <Eye size={16} />
+                    <span>Live Preview (สดทันที)</span>
+                  </div>
+                  <div className="preview-bg-switch">
+                    <button type="button" className={`preview-bg-pill ${previewBg === 'checker' ? 'active' : ''}`} onClick={() => setPreviewBg('checker')}>Checker</button>
+                    <button type="button" className={`preview-bg-pill ${previewBg === 'game' ? 'active' : ''}`} onClick={() => setPreviewBg('game')}>Dark</button>
+                    <button type="button" className={`preview-bg-pill ${previewBg === 'bright' ? 'active' : ''}`} onClick={() => setPreviewBg('bright')}>Light</button>
+                  </div>
+                </div>
+
+                <div className={`widget-preview-frame bg-${previewBg}`}>
+                  <div className="widget-preview-content">
+                    {section === 'qr' && <QrCardWidget appearance={qrCard} />}
+                  </div>
+                </div>
               </div>
             </div>
           </aside>

@@ -1,9 +1,11 @@
 import { GoalAppearance, readGoalAppearance } from './goalAppearance';
 import { SupporterAppearance, readSupporterAppearance } from './supporterAppearance';
+import { QrCardAppearance, readQrCardAppearance } from './qrCardAppearance';
 export interface Supporter { name: string; amount: number }
 export interface WidgetData {
   goal: { title: string; target: number; current: number; appearance: GoalAppearance };
   supporterAppearance: SupporterAppearance;
+  qrCardAppearance: QrCardAppearance;
   recent: Supporter[];
   daily: Supporter[];
   monthly: Supporter[];
@@ -34,5 +36,5 @@ export function summarizeWidgets(rows: { name: string; amount: number | string; 
   }
   const rank = (map: Map<string, number>) => Array.from(map).map(([name, amount]) => ({ name, amount: Math.round(amount * 100) / 100 })).sort((a, b) => b.amount - a.amount || a.name.localeCompare(b.name, 'th')).slice(0, limit);
   const target = Number(settings.goal_target || 15000);
-  return { goal: { title: settings.goal_title || 'เป้าหมายโดเนท', target: Number.isFinite(target) && target > 0 ? target : 15000, current: Math.round(current * 100) / 100, appearance: readGoalAppearance(settings) }, supporterAppearance, recent, daily: rank(totals[0]), monthly: rank(totals[1]), allTime: rank(totals[2]) };
+  return { goal: { title: settings.goal_title || 'เป้าหมายโดเนท', target: Number.isFinite(target) && target > 0 ? target : 15000, current: Math.round(current * 100) / 100, appearance: readGoalAppearance(settings) }, supporterAppearance, qrCardAppearance: readQrCardAppearance(settings), recent, daily: rank(totals[0]), monthly: rank(totals[1]), allTime: rank(totals[2]) };
 }
