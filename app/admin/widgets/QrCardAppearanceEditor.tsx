@@ -89,13 +89,13 @@ export default function QrCardAppearanceEditor({
         </button>
       </div>
 
-      {/* Sub-Tabs */}
-      <div className="goal-subtabs" role="tablist" aria-label="หมวดหมู่การตั้งค่าการ์ด QR">
+      {/* Segmented Sub-Tabs */}
+      <div className="editor-subtabs" role="tablist" aria-label="หมวดหมู่การตั้งค่าการ์ด QR">
         <button
           type="button"
           role="tab"
           aria-selected={activeTab === 'content'}
-          className={`goal-subtab ${activeTab === 'content' ? 'active' : ''}`}
+          className={`editor-subtab-btn ${activeTab === 'content' ? 'active' : ''}`}
           onClick={() => setActiveTab('content')}
         >
           <QrCode size={15} />
@@ -105,7 +105,7 @@ export default function QrCardAppearanceEditor({
           type="button"
           role="tab"
           aria-selected={activeTab === 'colors'}
-          className={`goal-subtab ${activeTab === 'colors' ? 'active' : ''}`}
+          className={`editor-subtab-btn ${activeTab === 'colors' ? 'active' : ''}`}
           onClick={() => setActiveTab('colors')}
         >
           <Palette size={15} />
@@ -115,7 +115,7 @@ export default function QrCardAppearanceEditor({
           type="button"
           role="tab"
           aria-selected={activeTab === 'sizes'}
-          className={`goal-subtab ${activeTab === 'sizes' ? 'active' : ''}`}
+          className={`editor-subtab-btn ${activeTab === 'sizes' ? 'active' : ''}`}
           onClick={() => setActiveTab('sizes')}
         >
           <Sliders size={15} />
