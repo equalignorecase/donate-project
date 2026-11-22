@@ -55,6 +55,7 @@ test('Capsule displays the amount inside the bar with its optional shine', () =>
   assert.match(html, /goal-track-glass/);
   assert.match(html, /class="goal-bar-percent"/);
   assert.match(html, /goal-bar-shine-sweep/);
+  assert.doesNotMatch(html, /goal-bar-gloss|goal-bar-sparkle/);
 });
 
 test('Segmented renders actual gaps, with progress bounded at zero and full', () => {

@@ -231,7 +231,6 @@ body.widget-overlay-body {
     align-items: center;
     background: rgba(0, 0, 0, .45);
     border-radius: 9999px;
-    border: 1.5px solid rgba(255, 255, 255, 0.22);
 }
 
 .goal-fill {
@@ -255,27 +254,8 @@ body.widget-overlay-body {
     box-shadow: inset 0 2px 5px rgba(0, 0, 0, .4), inset 0 -1px 0 rgba(255, 255, 255, .16);
 }
 
-.goal-track-glass .goal-fill {
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .6), inset 0 -2px 4px rgba(0, 0, 0, .18);
-}
-
-.goal-track-glass .goal-bar-texture {
-    background: linear-gradient(180deg, rgba(255, 255, 255, .42), rgba(255, 255, 255, .08) 48%, rgba(0, 0, 0, .08) 50%, transparent);
-}
-
-.goal-track-glass .goal-bar-shine,
-.goal-track-neon .goal-bar-shine {
-    background: linear-gradient(110deg, transparent 30%, rgba(255, 255, 255, .45) 48%, transparent 65%);
-    background-size: 250% 100%;
-    background-position: 100% 0;
-}
-
 .goal-track-neon {
     box-shadow: 0 0 14px currentColor, inset 0 0 0 1px rgba(255, 255, 255, .25);
-}
-
-.goal-track-neon .goal-fill {
-    box-shadow: inset 0 0 8px rgba(255, 255, 255, .55);
 }
 
 .goal-track-striped .goal-bar-texture {
@@ -370,9 +350,8 @@ body.widget-overlay-body {
             rgba(255, 255, 255, 0.03) 75%,
             transparent 100%);
     transform: rotate(25deg);
-    box-shadow: 0 0 24px 6px rgba(255, 255, 255, 0.55), 0 0 45px 12px rgba(255, 255, 255, 0.25);
-    filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.7));
-    animation: goal-bar-beam-sweep 3.4s cubic-bezier(0.22, 1, 0.36, 1) infinite;
+    box-shadow: 0 0 24px 6px rgba(255, 255, 255, 0.35);
+    animation: goal-bar-beam-sweep 2.2s linear infinite;
 }
 
 /* Crystal Anamorphic Lens Flare (ประกายแสงเลนส์คริสตัลหรูหรา) */
@@ -414,27 +393,21 @@ body.widget-overlay-body {
 
 @keyframes goal-bar-beam-sweep {
     0% {
-        left: -40%;
+        left: -45%;
         opacity: 0;
     }
 
-    8% {
-        opacity: 1;
+    15% {
+        opacity: 0.9;
     }
 
-    48% {
-        left: 115%;
-        opacity: 1;
-    }
-
-    49% {
-        opacity: 0;
-        left: 115%;
+    85% {
+        opacity: 0.9;
     }
 
     100% {
+        left: 120%;
         opacity: 0;
-        left: -40%;
     }
 }
 
@@ -729,18 +702,25 @@ body.widget-overlay-body {
 
 .goal-fill-rainbow {
     background: linear-gradient(90deg, 
-        #ff3d77 0%, 
-        #ff8a3d 14%, 
-        #facc15 28%, 
-        #34d399 44%, 
-        #22d3ee 60%, 
-        #818cf8 76%, 
-        #e879f9 90%, 
-        #ff3d77 100%
+        #5b21b6 0%, 
+        #1d4ed8 7%, 
+        #00bfff 15%, 
+        #00b300 23%, 
+        #ffea00 31%, 
+        #ff7700 38%, 
+        #ff0000 44%, 
+        #5b21b6 50%,
+        #1d4ed8 57%, 
+        #00bfff 65%, 
+        #00b300 73%, 
+        #ffea00 81%, 
+        #ff7700 88%, 
+        #ff0000 94%, 
+        #5b21b6 100%
     ) !important;
     background-size: 200% 100% !important;
-    animation: goalRainbowFlow 4.2s linear infinite !important;
-    box-shadow: 0 0 18px rgba(255, 61, 119, 0.42), 0 0 28px rgba(34, 211, 238, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.45) !important;
+    animation: goalRainbowFlow 4.5s linear infinite !important;
+    box-shadow: 0 0 18px rgba(0, 191, 255, 0.35), 0 0 28px rgba(255, 0, 0, 0.28) !important;
 }
 
 .goal-fill-flowing {

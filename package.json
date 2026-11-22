@@ -3,11 +3,11 @@
   "version": "2.0.0",
   "description": "Serverless OBS Donation Alert System with Next.js and Supabase (TypeScript)",
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "next lint",
-    "type-check": "tsc --noEmit"
+    "dev": "node node_modules/next/dist/bin/next dev",
+    "build": "node node_modules/next/dist/bin/next build",
+    "start": "node node_modules/next/dist/bin/next start",
+    "lint": "node node_modules/next/dist/bin/next lint",
+    "type-check": "node node_modules/typescript/bin/tsc --noEmit"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.49.1",

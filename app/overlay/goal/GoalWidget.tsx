@@ -69,11 +69,11 @@ export default function GoalWidget({
   const isGradient = appearance.goal_gradient === 'true';
   const isGradientFlow = isGradient && appearance.goal_gradient_flow !== 'false';
   const isTipGlow = appearance.goal_bar_tip_glow !== 'false';
-  const barStart = isRainbow ? '#ff3d77' : (appearance.goal_bar_color || '#0038ff');
-  const barMid = isRainbow ? '#34d399' : (appearance.goal_bar_mid_color || appearance.goal_bar_end_color || barStart);
-  const barEnd = isRainbow ? '#22d3ee' : (appearance.goal_bar_end_color || barStart);
+  const barStart = isRainbow ? '#5b21b6' : (appearance.goal_bar_color || '#0038ff');
+  const barMid = isRainbow ? '#00b300' : (appearance.goal_bar_mid_color || appearance.goal_bar_end_color || barStart);
+  const barEnd = isRainbow ? '#ff0000' : (appearance.goal_bar_end_color || barStart);
   const barBackground = isRainbow
-    ? 'linear-gradient(90deg, #ff3d77 0%, #ff8a3d 14%, #facc15 28%, #34d399 44%, #22d3ee 60%, #818cf8 76%, #e879f9 90%, #ff3d77 100%)'
+    ? 'linear-gradient(90deg, #5b21b6 0%, #1d4ed8 7%, #00bfff 15%, #00b300 23%, #ffea00 31%, #ff7700 38%, #ff0000 44%, #5b21b6 50%, #1d4ed8 57%, #00bfff 65%, #00b300 73%, #ffea00 81%, #ff7700 88%, #ff0000 94%, #5b21b6 100%)'
     : isGradient
     ? (isGradientFlow
         ? `linear-gradient(90deg, ${barStart} 0%, ${barMid} 25%, ${barEnd} 50%, ${barMid} 75%, ${barStart} 100%)`
@@ -215,12 +215,13 @@ export default function GoalWidget({
             <defs>
               {isRainbow ? (
                 <linearGradient id="goalRainbowCircleGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="#ff3d77" />
-                  <stop offset="20%" stopColor="#ff8a3d" />
-                  <stop offset="40%" stopColor="#facc15" />
-                  <stop offset="60%" stopColor="#34d399" />
-                  <stop offset="80%" stopColor="#22d3ee" />
-                  <stop offset="100%" stopColor="#e879f9" />
+                  <stop offset="0%" stopColor="#5b21b6" />
+                  <stop offset="18%" stopColor="#1d4ed8" />
+                  <stop offset="35%" stopColor="#00bfff" />
+                  <stop offset="52%" stopColor="#00b300" />
+                  <stop offset="70%" stopColor="#ffea00" />
+                  <stop offset="85%" stopColor="#ff7700" />
+                  <stop offset="100%" stopColor="#ff0000" />
                 </linearGradient>
               ) : (
                 <linearGradient id="goalCircleGradient" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -532,7 +533,7 @@ export default function GoalWidget({
                   background: isSegmented ? `repeating-linear-gradient(90deg, ${trackBg} 0 20px, transparent 20px 24px)` : trackBg,
                   backdropFilter: !isCardTransparent && trackBlur > 0 ? `blur(${trackBlur}px)` : 'none',
                   WebkitBackdropFilter: !isCardTransparent && trackBlur > 0 ? `blur(${trackBlur}px)` : 'none',
-                  border: isFlat ? 'none' : '1.5px solid rgba(255, 255, 255, 0.22)',
+                  border: 'none',
                   boxShadow: isFlat ? 'none' : 'inset 0 2px 6px rgba(0, 0, 0, 0.75), 0 4px 14px rgba(0, 0, 0, 0.45)',
                   color: appearance.goal_bar_color,
                   padding: `${trackPadding}px`,
@@ -554,20 +555,17 @@ export default function GoalWidget({
                     width: `${percent}%`, 
                     height: '100%',
                     borderRadius: fillRadius,
-                    border: percent > 0 && !isFlat ? '1px solid rgba(255, 255, 255, 0.35)' : 'none',
+                    border: 'none',
                     boxShadow: percent > 0
                       ? (!isFlat
-                          ? `0 0 18px ${hexToRgba(barStart, 0.38)}, 0 0 26px ${hexToRgba(barEnd, 0.28)}, inset 0 1px 0 rgba(255, 255, 255, 0.45)`
-                          : `0 0 14px ${hexToRgba(barStart, 0.35)}, inset 0 1px 0 rgba(255, 255, 255, 0.35)`)
+                          ? `0 0 18px ${hexToRgba(barStart, 0.38)}, 0 0 26px ${hexToRgba(barEnd, 0.28)}`
+                          : `0 0 14px ${hexToRgba(barStart, 0.35)}`)
                       : 'none',
                     maskImage: isSegmented ? 'repeating-linear-gradient(90deg, #000 0 20px, transparent 20px 24px)' : undefined,
                     clipPath: isHUD ? 'polygon(4% 0, 100% 0, 100% 80%, 96% 100%, 0 100%, 0 20%)' : undefined,
                     background: barBackground 
                   }}
                 >
-                  {isTipGlow && percent > 2 && percent < 100 && !isSegmented && (
-                    <span className="goal-fill-tip" aria-hidden="true" />
-                  )}
                   {effectivePattern !== 'none' && (
                     <span 
                       className={`goal-bar-texture goal-pattern-${effectivePattern}`} 
@@ -575,20 +573,10 @@ export default function GoalWidget({
                       aria-hidden="true" 
                     />
                   )}
-                  {hasGloss && (
-                    <>
-                      <span className="goal-bar-gloss" aria-hidden="true" />
-                      <span className="goal-bar-shine" aria-hidden="true" />
-                    </>
-                  )}
                   {appearance.goal_bar_shine === 'true' && (
-                    <>
-                      <span className="goal-bar-lead-flare" aria-hidden="true" />
-                      <span className="goal-bar-shine-sweep" aria-hidden="true">
-                        <span className="goal-bar-beam" />
-                        <span className="goal-bar-sparkle" />
-                      </span>
-                    </>
+                    <span className="goal-bar-shine-sweep" aria-hidden="true">
+                      <span className="goal-bar-beam" />
+                    </span>
                   )}
                 </div>
 
