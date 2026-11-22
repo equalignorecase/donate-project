@@ -135,11 +135,16 @@ export default function QrCardWidget({
     animation: `qr-card-text-shine ${totalSec}s cubic-bezier(0.22, 1, 0.36, 1) infinite`,
   });
 
+  const sectionFontFamily =
+    appearance.qr_card_font === 'LINESeedSansTH-ExtraBold'
+      ? `'QrCardExtraBold', sans-serif`
+      : `'${appearance.qr_card_font}', sans-serif`;
+
   return (
     <section
       className={`obs-widget qr-card-widget${isRainbow ? ' supporter-beam-rainbow' : ''}`}
       style={{
-        fontFamily: `'${appearance.qr_card_font}', sans-serif`,
+        fontFamily: sectionFontFamily,
         width: `${width}px`,
         maxWidth: '100%',
         padding: `${padding}px`,
@@ -160,6 +165,15 @@ export default function QrCardWidget({
         ['--row-bg' as any]: bg === 'transparent' ? '#0f172a' : bg,
       }}
     >
+      <style>{`
+        @font-face {
+          font-family: 'QrCardExtraBold';
+          src: url('/font/LINESeedSansTH-ExtraBold.ttf') format('truetype');
+          font-weight: 100 900;
+          font-style: normal;
+          font-display: swap;
+        }
+      `}</style>
       {hasAnyShine && (
         <style>{`
           @keyframes qr-card-beam-glide {
@@ -295,6 +309,10 @@ export default function QrCardWidget({
             <h2
               style={{
                 margin: 0,
+                fontFamily:
+                  appearance.qr_card_font === 'LINESeedSansTH' || appearance.qr_card_font === 'LINESeedSansTH-ExtraBold'
+                    ? `'QrCardExtraBold', 'LINESeedSansTH', sans-serif`
+                    : undefined,
                 fontSize: `${appearance.qr_card_title_size}px`,
                 fontWeight: 800,
                 color: titleBaseColor,
