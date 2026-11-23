@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
@@ -63,6 +63,66 @@ export default function Sidebar({
   const isSimulatorActive = pathname?.startsWith('/admin/simulator') || activeTab === 'tabSimulator';
   const isSlipDebugActive = pathname?.startsWith('/admin/slip-debug') || activeTab === 'tabSlipDebug';
 
+  const isToolsActive = isTestDonateActive || isSimulatorActive || isSlipDebugActive;
+  const [desktopCollapsed, setDesktopCollapsed] = useState(false);
+  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({
+    overview: true,
+    widgets: true,
+    settings: true,
+    tools: isToolsActive,
+  });
+
+  useEffect(() => {
+    try {
+      const saved = window.localStorage.getItem('admin-sidebar-collapsed');
+      if (saved === 'true') setDesktopCollapsed(true);
+    } catch {}
+  }, []);
+
+  useEffect(() => {
+    if (isToolsActive) {
+      setOpenGroups((prev) => (prev.tools ? prev : { ...prev, tools: true }));
+    }
+  }, [isToolsActive]);
+
+  const toggleDesktopSidebar = () => {
+    setDesktopCollapsed((prev) => {
+      const next = !prev;
+      try {
+        window.localStorage.setItem('admin-sidebar-collapsed', String(next));
+      } catch {}
+      return next;
+    });
+  };
+
+  const toggleGroup = (key: string) => {
+    setOpenGroups((prev) => ({ ...prev, [key]: !prev[key] }));
+  };
+
+  const renderGroupHeader = (key: string, label: string) => (
+    <button
+      type="button"
+      className="sidebar-group-btn"
+      onClick={() => toggleGroup(key)}
+      aria-expanded={!!openGroups[key]}
+    >
+      <span>{label}</span>
+      <svg
+        width="14"
+        height="14"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2.2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        className={`sidebar-group-chevron ${openGroups[key] ? 'open' : ''}`}
+      >
+        <polyline points="6 9 12 15 18 9"></polyline>
+      </svg>
+    </button>
+  );
+
   return (
     <>
       {/* Mobile Backdrop */}
@@ -72,8 +132,26 @@ export default function Sidebar({
         aria-hidden="true"
       />
 
+      {/* Desktop Reopen Button */}
+      {desktopCollapsed && (
+        <button
+          type="button"
+          className="sidebar-reopen-btn"
+          onClick={toggleDesktopSidebar}
+          aria-label="เปิดแถบเมนู"
+          title="เปิดแถบเมนู"
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round">
+            <rect x="3" y="3" width="18" height="18" rx="2"></rect>
+            <line x1="9" y1="3" x2="9" y2="21"></line>
+            <polyline points="14 9 17 12 14 15"></polyline>
+          </svg>
+          <span>เมนู</span>
+        </button>
+      )}
+
       {/* Sidebar Navigation */}
-      <aside className={`admin-sidebar ${isOpen ? 'open' : ''}`}>
+      <aside className={`admin-sidebar ${isOpen ? 'open' : ''} ${desktopCollapsed ? 'desktop-collapsed' : ''}`}>
         <div className="sidebar-header">
           <Link href={brandHref} className="sidebar-brand" onClick={() => onClose()}>
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
@@ -85,6 +163,19 @@ export default function Sidebar({
             </svg>
             <span>{brandTitle}</span>
           </Link>
+          <button
+            type="button"
+            className="sidebar-collapse-btn"
+            onClick={toggleDesktopSidebar}
+            aria-label="พับแถบเมนู"
+            title="พับแถบเมนู"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="3" y="3" width="18" height="18" rx="2"></rect>
+              <line x1="9" y1="3" x2="9" y2="21"></line>
+              <polyline points="16 15 13 12 16 9"></polyline>
+            </svg>
+          </button>
           <button
             type="button"
             className="sidebar-close-btn"
@@ -100,227 +191,247 @@ export default function Sidebar({
 
         <div className="sidebar-nav">
           <div>
-            <div className="sidebar-section-title">เมนูจัดการระบบ</div>
-            <ul className="sidebar-menu">
-              <li>
-                <Link
-                  href="/admin"
-                  className={`sidebar-link ${isOverviewActive ? 'active' : ''}`}
-                  onClick={() => handleLinkClick('tabOverview')}
-                >
-                  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <circle cx="12" cy="12" r="10"></circle>
-                    <polygon points="10 8 16 12 10 16 10 8"></polygon>
-                  </svg>
-                  <span>หน้าหลัก</span>
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/admin/analytics"
-                  className={`sidebar-link ${isAnalyticsActive ? 'active' : ''}`}
-                  onClick={() => handleLinkClick('tabAnalytics')}
-                >
-                  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <line x1="18" y1="20" x2="18" y2="10"></line>
-                    <line x1="12" y1="20" x2="12" y2="4"></line>
-                    <line x1="6" y1="20" x2="6" y2="14"></line>
-                  </svg>
-                  <span>สถิติเชิงลึก</span>
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/admin/donations"
-                  className={`sidebar-link ${isDonationsActive ? 'active' : ''}`}
-                  onClick={() => handleLinkClick('tabDonations')}
-                >
-                  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                    <polyline points="14 2 14 8 20 8"></polyline>
-                    <line x1="16" y1="13" x2="8" y2="13"></line>
-                    <line x1="16" y1="17" x2="8" y2="17"></line>
-                  </svg>
-                  <span>ประวัติการโดเนท</span>
-                  {donationCount > 0 && <span className="sidebar-badge">{donationCount}</span>}
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/admin/settings"
-                  className={`sidebar-link ${isSettingsActive ? 'active' : ''}`}
-                  onClick={() => handleLinkClick('tabSettings')}
-                >
-                  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <line x1="4" y1="21" x2="4" y2="14"></line>
-                    <line x1="4" y1="10" x2="4" y2="3"></line>
-                    <line x1="12" y1="21" x2="12" y2="12"></line>
-                    <line x1="12" y1="8" x2="12" y2="3"></line>
-                    <line x1="20" y1="21" x2="20" y2="16"></line>
-                    <line x1="20" y1="12" x2="20" y2="3"></line>
-                    <line x1="1" y1="14" x2="7" y2="14"></line>
-                    <line x1="9" y1="8" x2="15" y2="8"></line>
-                    <line x1="17" y1="16" x2="23" y2="16"></line>
-                  </svg>
-                  <span>ตั้งค่าระบบ & OBS</span>
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/admin/widgets"
-                  className={`sidebar-link ${isWidgetsActive ? 'active' : ''}`}
-                  onClick={() => handleLinkClick('tabWidgets')}
-                >
-                  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                    <rect x="3" y="3" width="7" height="7" rx="1.5"></rect>
-                    <rect x="14" y="3" width="7" height="7" rx="1.5"></rect>
-                    <rect x="3" y="14" width="7" height="7" rx="1.5"></rect>
-                    <rect x="14" y="14" width="7" height="7" rx="1.5"></rect>
-                  </svg>
-                  <span>วิดเจ็ต OBS & เป้าหมาย</span>
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/admin/timer"
-                  className={`sidebar-link ${isTimerActive ? 'active' : ''}`}
-                  onClick={() => handleLinkClick('tabTimer')}
-                >
-                  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                    <circle cx="12" cy="12" r="10"></circle>
-                    <polyline points="12 6 12 12 16 14"></polyline>
-                  </svg>
-                  <span>ระบบจับเวลา (Timer)</span>
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/admin/valorant"
-                  className={`sidebar-link ${isValorantActive ? 'active' : ''}`}
-                  onClick={() => handleLinkClick('tabValorant')}
-                >
-                  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                    <line x1="6" y1="12" x2="10" y2="12"></line>
-                    <line x1="8" y1="10" x2="8" y2="14"></line>
-                    <line x1="15" y1="13" x2="15.01" y2="13"></line>
-                    <line x1="18" y1="11" x2="18.01" y2="11"></line>
-                    <rect x="2" y="6" width="20" height="12" rx="2"></rect>
-                  </svg>
-                  <span>Valorant Rank</span>
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/admin/blacklist"
-                  className={`sidebar-link ${isBlacklistActive ? 'active' : ''}`}
-                  onClick={() => handleLinkClick('tabBlacklist')}
-                >
-                  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-                  </svg>
-                  <span>กรองคำหยาบ</span>
-                  {blacklistCount > 0 && <span className="sidebar-badge">{blacklistCount}</span>}
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/admin/profile"
-                  className={`sidebar-link ${isProfileActive ? 'active' : ''}`}
-                  onClick={() => handleLinkClick('tabProfile')}
-                >
-                  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                    <circle cx="12" cy="7" r="4"></circle>
-                  </svg>
-                  <span>จัดการโปรไฟล์</span>
-                </Link>
-              </li>
-            </ul>
+            {renderGroupHeader('overview', 'ภาพรวม & โดเนท')}
+            {openGroups.overview && (
+              <ul className="sidebar-menu">
+                <li>
+                  <Link
+                    href="/admin"
+                    className={`sidebar-link ${isOverviewActive ? 'active' : ''}`}
+                    onClick={() => handleLinkClick('tabOverview')}
+                  >
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <circle cx="12" cy="12" r="10"></circle>
+                      <polygon points="10 8 16 12 10 16 10 8"></polygon>
+                    </svg>
+                    <span>หน้าหลัก</span>
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/admin/donations"
+                    className={`sidebar-link ${isDonationsActive ? 'active' : ''}`}
+                    onClick={() => handleLinkClick('tabDonations')}
+                  >
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                      <polyline points="14 2 14 8 20 8"></polyline>
+                      <line x1="16" y1="13" x2="8" y2="13"></line>
+                      <line x1="16" y1="17" x2="8" y2="17"></line>
+                    </svg>
+                    <span>ประวัติการโดเนท</span>
+                    {donationCount > 0 && <span className="sidebar-badge">{donationCount}</span>}
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/admin/analytics"
+                    className={`sidebar-link ${isAnalyticsActive ? 'active' : ''}`}
+                    onClick={() => handleLinkClick('tabAnalytics')}
+                  >
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <line x1="18" y1="20" x2="18" y2="10"></line>
+                      <line x1="12" y1="20" x2="12" y2="4"></line>
+                      <line x1="6" y1="20" x2="6" y2="14"></line>
+                    </svg>
+                    <span>สถิติเชิงลึก</span>
+                  </Link>
+                </li>
+              </ul>
+            )}
           </div>
 
           <div>
-            <div className="sidebar-section-title">จอสตรีม & ลิงก์ภายนอก</div>
-            <ul className="sidebar-menu">
-              <li>
-                <Link
-                  href="/admin/test-donate"
-                  className={`sidebar-link ${isTestDonateActive ? 'active' : ''}`}
-                  onClick={() => handleLinkClick('tabTestDonate')}
-                >
-                  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <line x1="22" y1="2" x2="11" y2="13"></line>
-                    <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
-                  </svg>
-                  <span>ทดสอบโดเนท (OBS)</span>
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/admin/simulator"
-                  className={`sidebar-link ${isSimulatorActive ? 'active' : ''}`}
-                  onClick={() => handleLinkClick('tabSimulator')}
-                >
-                  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <rect x="2" y="3" width="20" height="14" rx="2"></rect>
-                    <line x1="8" y1="21" x2="16" y2="21"></line>
-                    <line x1="12" y1="17" x2="12" y2="21"></line>
-                    <circle cx="7" cy="7" r="1.5" fill="currentColor"></circle>
-                    <path d="M12 7h5"></path>
-                    <path d="M7 11h10"></path>
-                  </svg>
-                  <span>จำลองจอไลฟ์สตรีม</span>
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/admin/slip-debug"
-                  className={`sidebar-link ${isSlipDebugActive ? 'active' : ''}`}
-                  onClick={() => handleLinkClick('tabSlipDebug')}
-                >
-                  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <circle cx="11" cy="11" r="8"></circle>
-                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-                    <line x1="11" y1="8" x2="11" y2="14"></line>
-                    <line x1="8" y1="11" x2="14" y2="11"></line>
-                  </svg>
-                  <span>ดีบั๊กสลิป (Slip Debug)</span>
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/customizer"
-                  className={`sidebar-link ${isCustomizerActive ? 'active' : ''}`}
-                  onClick={() => handleLinkClick('tabCustomizer')}
-                >
-                  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <circle cx="12" cy="12" r="10"></circle>
-                    <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"></path>
-                    <path d="M2 12h20"></path>
-                  </svg>
-                  <span>ปรับแต่ง UI Donate</span>
-                </Link>
-              </li>
-              <li>
-                <Link href="/overlay" target="_blank" className="sidebar-link" onClick={onClose}>
-                  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <rect x="2" y="3" width="20" height="14" rx="2"></rect>
-                    <line x1="8" y1="21" x2="16" y2="21"></line>
-                    <line x1="12" y1="17" x2="12" y2="21"></line>
-                  </svg>
-                  <span>ทดสอบ Overlay</span>
-                </Link>
-              </li>
-              <li>
-                <Link href="/" target="_blank" className="sidebar-link" onClick={onClose}>
-                  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
-                    <polyline points="15 3 21 3 21 9"></polyline>
-                    <line x1="10" y1="14" x2="21" y2="3"></line>
-                  </svg>
-                  <span>หน้าบริจาค Donate (/)</span>
-                </Link>
-              </li>
-            </ul>
+            {renderGroupHeader('widgets', 'วิดเจ็ต & จอสตรีม')}
+            {openGroups.widgets && (
+              <ul className="sidebar-menu">
+                <li>
+                  <Link
+                    href="/admin/widgets"
+                    className={`sidebar-link ${isWidgetsActive ? 'active' : ''}`}
+                    onClick={() => handleLinkClick('tabWidgets')}
+                  >
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                      <rect x="3" y="3" width="7" height="7" rx="1.5"></rect>
+                      <rect x="14" y="3" width="7" height="7" rx="1.5"></rect>
+                      <rect x="3" y="14" width="7" height="7" rx="1.5"></rect>
+                      <rect x="14" y="14" width="7" height="7" rx="1.5"></rect>
+                    </svg>
+                    <span>วิดเจ็ต OBS & เป้าหมาย</span>
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/admin/timer"
+                    className={`sidebar-link ${isTimerActive ? 'active' : ''}`}
+                    onClick={() => handleLinkClick('tabTimer')}
+                  >
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                      <circle cx="12" cy="12" r="10"></circle>
+                      <polyline points="12 6 12 12 16 14"></polyline>
+                    </svg>
+                    <span>ระบบจับเวลา (Timer)</span>
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/admin/valorant"
+                    className={`sidebar-link ${isValorantActive ? 'active' : ''}`}
+                    onClick={() => handleLinkClick('tabValorant')}
+                  >
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                      <line x1="6" y1="12" x2="10" y2="12"></line>
+                      <line x1="8" y1="10" x2="8" y2="14"></line>
+                      <line x1="15" y1="13" x2="15.01" y2="13"></line>
+                      <line x1="18" y1="11" x2="18.01" y2="11"></line>
+                      <rect x="2" y="6" width="20" height="12" rx="2"></rect>
+                    </svg>
+                    <span>Valorant Rank</span>
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/customizer"
+                    className={`sidebar-link ${isCustomizerActive ? 'active' : ''}`}
+                    onClick={() => handleLinkClick('tabCustomizer')}
+                  >
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <circle cx="12" cy="12" r="10"></circle>
+                      <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"></path>
+                      <path d="M2 12h20"></path>
+                    </svg>
+                    <span>ปรับแต่ง UI Donate</span>
+                  </Link>
+                </li>
+              </ul>
+            )}
+          </div>
+
+          <div>
+            {renderGroupHeader('settings', 'ตั้งค่าระบบ')}
+            {openGroups.settings && (
+              <ul className="sidebar-menu">
+                <li>
+                  <Link
+                    href="/admin/settings"
+                    className={`sidebar-link ${isSettingsActive ? 'active' : ''}`}
+                    onClick={() => handleLinkClick('tabSettings')}
+                  >
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <line x1="4" y1="21" x2="4" y2="14"></line>
+                      <line x1="4" y1="10" x2="4" y2="3"></line>
+                      <line x1="12" y1="21" x2="12" y2="12"></line>
+                      <line x1="12" y1="8" x2="12" y2="3"></line>
+                      <line x1="20" y1="21" x2="20" y2="16"></line>
+                      <line x1="20" y1="12" x2="20" y2="3"></line>
+                      <line x1="1" y1="14" x2="7" y2="14"></line>
+                      <line x1="9" y1="8" x2="15" y2="8"></line>
+                      <line x1="17" y1="16" x2="23" y2="16"></line>
+                    </svg>
+                    <span>ตั้งค่าระบบ & OBS</span>
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/admin/blacklist"
+                    className={`sidebar-link ${isBlacklistActive ? 'active' : ''}`}
+                    onClick={() => handleLinkClick('tabBlacklist')}
+                  >
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                    </svg>
+                    <span>กรองคำหยาบ</span>
+                    {blacklistCount > 0 && <span className="sidebar-badge">{blacklistCount}</span>}
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/admin/profile"
+                    className={`sidebar-link ${isProfileActive ? 'active' : ''}`}
+                    onClick={() => handleLinkClick('tabProfile')}
+                  >
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                      <circle cx="12" cy="7" r="4"></circle>
+                    </svg>
+                    <span>จัดการโปรไฟล์</span>
+                  </Link>
+                </li>
+              </ul>
+            )}
+          </div>
+
+          <div>
+            {renderGroupHeader('tools', 'เครื่องมือทดสอบ & ลิงก์')}
+            {openGroups.tools && (
+              <ul className="sidebar-menu">
+                <li>
+                  <Link
+                    href="/admin/test-donate"
+                    className={`sidebar-link ${isTestDonateActive ? 'active' : ''}`}
+                    onClick={() => handleLinkClick('tabTestDonate')}
+                  >
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <line x1="22" y1="2" x2="11" y2="13"></line>
+                      <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                    </svg>
+                    <span>ทดสอบโดเนท (OBS)</span>
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/admin/simulator"
+                    className={`sidebar-link ${isSimulatorActive ? 'active' : ''}`}
+                    onClick={() => handleLinkClick('tabSimulator')}
+                  >
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="2" y="3" width="20" height="14" rx="2"></rect>
+                      <line x1="8" y1="21" x2="16" y2="21"></line>
+                      <line x1="12" y1="17" x2="12" y2="21"></line>
+                      <circle cx="7" cy="7" r="1.5" fill="currentColor"></circle>
+                      <path d="M12 7h5"></path>
+                      <path d="M7 11h10"></path>
+                    </svg>
+                    <span>จำลองจอไลฟ์สตรีม</span>
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/admin/slip-debug"
+                    className={`sidebar-link ${isSlipDebugActive ? 'active' : ''}`}
+                    onClick={() => handleLinkClick('tabSlipDebug')}
+                  >
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <circle cx="11" cy="11" r="8"></circle>
+                      <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                      <line x1="11" y1="8" x2="11" y2="14"></line>
+                      <line x1="8" y1="11" x2="14" y2="11"></line>
+                    </svg>
+                    <span>ดีบั๊กสลิป (Slip Debug)</span>
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/overlay" target="_blank" className="sidebar-link" onClick={onClose}>
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="2" y="3" width="20" height="14" rx="2"></rect>
+                      <line x1="8" y1="21" x2="16" y2="21"></line>
+                      <line x1="12" y1="17" x2="12" y2="21"></line>
+                    </svg>
+                    <span>ทดสอบ Overlay</span>
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/" target="_blank" className="sidebar-link" onClick={onClose}>
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                      <polyline points="15 3 21 3 21 9"></polyline>
+                      <line x1="10" y1="14" x2="21" y2="3"></line>
+                    </svg>
+                    <span>หน้าบริจาค Donate (/)</span>
+                  </Link>
+                </li>
+              </ul>
+            )}
           </div>
         </div>
 
