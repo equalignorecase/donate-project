@@ -9,7 +9,7 @@ export const dynamic = 'force-dynamic';
 
 export async function GET(request: Request) {
   try {
-    const { data: settingsRows, error } = await supabaseAdmin.from('settings').select('key, value').in('key', ['goal_title', 'goal_target', 'goal_started_at', ...Object.keys(goalAppearanceDefaults), ...Object.keys(supporterDefaults), ...Object.keys(qrCardDefaults)]);
+    const { data: settingsRows, error } = await supabaseAdmin.from('settings').select('key, value').in('key', ['goal_title', 'goal_target', 'goal_started_at', 'goal_amount_offset', 'supporter_adjustments', ...Object.keys(goalAppearanceDefaults), ...Object.keys(supporterDefaults), ...Object.keys(qrCardDefaults)]);
     if (error) throw error;
     const settings = Object.fromEntries((settingsRows || []).map(row => [row.key, row.value]));
     // ดึงรายการบริจาคที่ยืนยันแล้วทั้งหมดในฐานข้อมูล (สูงสุด 5,000 รายการ) เพื่อสรุปทั้งเป้าหมาย, อันดับล่าสุด, วันนี้, เดือนนี้ และตลอดเวลา

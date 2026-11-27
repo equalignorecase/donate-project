@@ -52,6 +52,7 @@ export default function Sidebar({
   const isOverviewActive = pathname === '/admin' || (!activeTab && pathname === '/admin') || activeTab === 'tabOverview';
   const isAnalyticsActive = pathname?.startsWith('/admin/analytics') || activeTab === 'tabAnalytics';
   const isDonationsActive = pathname?.startsWith('/admin/donations') || activeTab === 'tabDonations';
+  const isManageTotalsActive = pathname?.startsWith('/admin/manage-totals') || activeTab === 'tabManageTotals';
   const isSettingsActive = pathname?.startsWith('/admin/settings') || activeTab === 'tabSettings';
   const isWidgetsActive = pathname?.startsWith('/admin/widgets') || activeTab === 'tabWidgets';
   const isTimerActive = pathname?.startsWith('/admin/timer') || activeTab === 'tabTimer';
@@ -221,6 +222,20 @@ export default function Sidebar({
                     </svg>
                     <span>ประวัติการโดเนท</span>
                     {donationCount > 0 && <span className="sidebar-badge">{donationCount}</span>}
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/admin/manage-totals"
+                    className={`sidebar-link ${isManageTotalsActive ? 'active' : ''}`}
+                    onClick={() => handleLinkClick('tabManageTotals')}
+                  >
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M12 20V10"></path>
+                      <path d="M18 20V4"></path>
+                      <path d="M6 20v-4"></path>
+                    </svg>
+                    <span>จัดการยอด &amp; อันดับ</span>
                   </Link>
                 </li>
                 <li>

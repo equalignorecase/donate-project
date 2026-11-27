@@ -74,6 +74,7 @@ export async function POST(request: Request) {
     }
 
     if (('goal_target' in newSettings && (!Number.isFinite(Number(newSettings.goal_target)) || Number(newSettings.goal_target) <= 0 || Number(newSettings.goal_target) > 9999999999)) ||
+        ('goal_amount_offset' in newSettings && newSettings.goal_amount_offset !== '' && (!Number.isFinite(Number(newSettings.goal_amount_offset)) || Math.abs(Number(newSettings.goal_amount_offset)) > 9999999999)) ||
         ('goal_title' in newSettings && (typeof newSettings.goal_title !== 'string' || !newSettings.goal_title.trim() || newSettings.goal_title.length > 160)) ||
         ('goal_started_at' in newSettings && newSettings.goal_started_at !== '' && !Number.isFinite(Date.parse(newSettings.goal_started_at))) ||
         ('media_share_min_amount' in newSettings && newSettings.media_share_min_amount !== '' && (!Number.isFinite(Number(newSettings.media_share_min_amount)) || Number(newSettings.media_share_min_amount) < 1 || Number(newSettings.media_share_min_amount) > 1000000)) ||

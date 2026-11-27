@@ -141,6 +141,7 @@ export default function AdminLayout({
   const getPageTitle = () => {
     if (pathname?.startsWith('/admin/analytics')) return 'สถิติเชิงลึก & แดชบอร์ด (Analytics)';
     if (pathname?.startsWith('/admin/donations')) return 'ประวัติการโดเนท';
+    if (pathname?.startsWith('/admin/manage-totals')) return 'จัดการยอดหลอดเป้าหมาย & อันดับผู้โดเนท';
     if (pathname?.startsWith('/admin/settings')) return 'ตั้งค่าระบบ & OBS';
     if (pathname?.startsWith('/admin/widgets/templates')) return 'คลังดีไซน์เป้าหมายโดเนท (Goal Gallery)';
     if (pathname?.startsWith('/admin/widgets')) return 'วิดเจ็ต OBS & เป้าหมาย';

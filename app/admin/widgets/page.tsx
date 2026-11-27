@@ -25,6 +25,8 @@ export default function WidgetsAdmin() {
   const [title, setTitle] = useState('เป้าหมายโดเนท');
   const [target, setTarget] = useState('15000');
   const [startedAt, setStartedAt] = useState('');
+  const [goalOffset, setGoalOffset] = useState('0');
+  const [customCurrentInput, setCustomCurrentInput] = useState<string>('');
   const [origin, setOrigin] = useState('');
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
@@ -56,12 +58,18 @@ export default function WidgetsAdmin() {
         setTitle(result.settings.goal_title || 'เป้าหมายโดเนท');
         setTarget(result.settings.goal_target || '15000');
         setStartedAt(result.settings.goal_started_at || '');
+        setGoalOffset(result.settings.goal_amount_offset || '0');
       }
     }).catch(error => { if (active) setLoadError(error.message); }).finally(() => { if (active) setLoading(false); });
 
     fetch('/api/widgets', { cache: 'no-store' })
       .then(res => res.json())
-      .then(res => { if (active && res.success) setWidgetData(res.data); })
+      .then(res => {
+        if (active && res.success) {
+          setWidgetData(res.data);
+          setCustomCurrentInput(String(res.data?.goal?.current ?? 0));
+        }
+      })
       .catch(err => console.warn('Widget data load error:', err));
 
     return () => { active = false; };
@@ -71,8 +79,13 @@ export default function WidgetsAdmin() {
     event.preventDefault();
     if (loading || loadError || saving) return;
     setSaving(kind); setErrors(previous => ({ ...previous, [kind]: '' }));
+    const rawCurrentForSave = widgetData?.goal.rawCurrent ?? 0;
+    const desiredCurrent = Number(customCurrentInput);
+    const computedOffset = Number.isFinite(desiredCurrent) && customCurrentInput.trim() !== ''
+      ? String(Math.round((desiredCurrent - rawCurrentForSave) * 100) / 100)
+      : goalOffset;
     const payload = kind === 'goal'
-      ? { goal_title: title.trim(), goal_target: target, goal_started_at: startedAt, ...appearance }
+      ? { goal_title: title.trim(), goal_target: target, goal_started_at: startedAt, goal_amount_offset: computedOffset, ...appearance }
       : kind === 'qr'
       ? { ...qrCard }
       : { ...supporters };
@@ -114,7 +127,10 @@ export default function WidgetsAdmin() {
   const supporterHeight = Number(savedSupporters.supporter_padding) * 2 + (savedSupporters.supporter_show_title === 'true' ? Number(savedSupporters.supporter_title_size) * 2 : 0) + Number(savedSupporters.supporter_limit) * (Math.max(Number(savedSupporters.supporter_name_size), Number(savedSupporters.supporter_amount_size), 30) * 2 + 28 + Number(savedSupporters.supporter_row_gap)) + 40;
 
   const goalTargetNumber = Number(target) > 0 ? Number(target) : 15000;
-  const realCurrent = widgetData?.goal.current ?? 0;
+  const parsedCustomCurrent = Number(customCurrentInput);
+  const realCurrent = customCurrentInput.trim() !== '' && Number.isFinite(parsedCustomCurrent) && parsedCustomCurrent >= 0
+    ? parsedCustomCurrent
+    : (widgetData?.goal.current ?? 0);
   const isGoalSample = realCurrent <= 0 && previewPercentOverride === null;
   const goalCurrentDisplay = previewPercentOverride !== null
     ? Math.round((goalTargetNumber * previewPercentOverride) / 100)
@@ -262,11 +278,36 @@ export default function WidgetsAdmin() {
               {errors.goal && <p role="alert" className="widget-error">{errors.goal}</p>}
 
               <div className="widget-settings" style={{ marginBottom: '20px' }}>
-                <h2 style={{ fontSize: '16px', fontWeight: 700, margin: '0 0 16px 0' }}>ข้อมูลเป้าหมาย</h2>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '16px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px', marginBottom: '16px' }}>
+                  <h2 style={{ fontSize: '16px', fontWeight: 700, margin: 0 }}>ข้อมูลเป้าหมาย</h2>
+                  <Link
+                    href="/admin/manage-totals"
+                    style={{ fontSize: '12.5px', fontWeight: 600, color: 'var(--accent)', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+                  >
+                    <span>เปิดหน้าจัดการยอด &amp; อันดับแบบละเอียด</span>
+                    <ExternalLink size={13} />
+                  </Link>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
                   <label style={{ margin: 0 }}>
                     <span style={{ fontSize: '13px', fontWeight: 600 }}>ชื่อเป้าหมาย</span>
                     <input value={title} onChange={event => setTitle(event.target.value)} maxLength={160} required disabled={disabled} />
+                  </label>
+                  <label style={{ margin: 0 }}>
+                    <span style={{ fontSize: '13px', fontWeight: 600 }}>ยอดปัจจุบันบนหลอด (บาท)</span>
+                    <input
+                      type="number"
+                      min="0"
+                      max="9999999999"
+                      step="0.01"
+                      value={customCurrentInput}
+                      onChange={event => {
+                        setCustomCurrentInput(event.target.value);
+                        setPreviewPercentOverride(null);
+                      }}
+                      placeholder={String(widgetData?.goal.current ?? 0)}
+                      disabled={disabled}
+                    />
                   </label>
                   <label style={{ margin: 0 }}>
                     <span style={{ fontSize: '13px', fontWeight: 600 }}>ยอดเป้าหมาย (บาท)</span>
@@ -277,16 +318,18 @@ export default function WidgetsAdmin() {
                 <div style={{ marginTop: '16px', paddingTop: '14px', borderTop: '1px solid var(--border)' }}>
                   <div style={{ fontSize: '13px', color: 'var(--text-muted)', marginBottom: '10px' }}>
                     {startedAt ? `กำลังนับยอดตั้งแต่: ${new Date(startedAt).toLocaleString('th-TH', { timeZone: 'Asia/Bangkok' })}` : 'สถานะ: นับยอดบริจาคที่ตรวจสอบแล้วทั้งหมด'}
+                    {' · '}
+                    <span>ยอดสลิปจริง: ฿{(widgetData?.goal.rawCurrent ?? 0).toLocaleString('th-TH')} (เมื่อมีโดเนทใหม่จะบวกต่อจากยอดปัจจุบันให้อัตโนมัติ)</span>
                   </div>
                   <div className="widget-actions">
-                    <button className="widget-button widget-button-month" type="button" disabled={disabled} onClick={() => setStartedAt(getStartOfMonthIso())}>
+                    <button className="widget-button widget-button-month" type="button" disabled={disabled} onClick={() => { setStartedAt(getStartOfMonthIso()); setGoalOffset('0'); }}>
                       นับยอดเดือนนี้
                     </button>
-                    <button className="widget-button widget-button-reset" type="button" disabled={disabled} onClick={() => setStartedAt(new Date().toISOString())}>
+                    <button className="widget-button widget-button-reset" type="button" disabled={disabled} onClick={() => { setStartedAt(new Date().toISOString()); setGoalOffset('0'); setCustomCurrentInput('0'); }}>
                       เริ่มนับเป้าหมายใหม่
                     </button>
-                    <button className="widget-button widget-button-total" type="button" disabled={disabled} onClick={() => setStartedAt('')}>
-                      นับยอดทั้งหมด
+                    <button className="widget-button widget-button-total" type="button" disabled={disabled} onClick={() => { setStartedAt(''); setGoalOffset('0'); setCustomCurrentInput(String(widgetData?.goal.rawCurrent ?? 0)); }}>
+                      คืนค่ายอดสลิปจริงทั้งหมด
                     </button>
                   </div>
                 </div>
